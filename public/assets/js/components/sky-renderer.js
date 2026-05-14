@@ -213,14 +213,26 @@ function cloudMultiplier(az, alt) {
 // STAR GENERATION — Typed Arrays
 // ═══════════════════════════════════════════════════════
 
-// Star color presets (RGB)
-const STAR_COLORS = [
-  [255, 252, 248], [255, 252, 248], [255, 252, 248], [255, 252, 248], // white 50%
-  [255, 252, 248], [255, 248, 240], [255, 245, 230],
-  [255, 240, 210], [255, 240, 210],  // warm 15%
-  [200, 215, 255], [200, 215, 255],  // cool 12%
-  [255, 235, 180],  // yellow 5%
-  [255, 210, 160],  // orange 3%
+// Star color presets (RGB) — subtle tints, not saturated
+const STAR_COLORS_GENERAL = [
+  [255, 252, 248], [255, 252, 248], [255, 250, 245], // white
+  [255, 248, 240], [255, 245, 235],                   // warm white
+  [220, 230, 255], [200, 215, 255],                   // cool blue
+  [255, 235, 180],                                     // yellow
+  [255, 215, 170],                                     // orange
+];
+
+// MW band gets extra colored stars — subtle nebula tints
+const STAR_COLORS_MW = [
+  [255, 252, 248], [255, 252, 248], [255, 250, 245], // white (still majority)
+  [255, 248, 240], [255, 245, 230],                   // warm white
+  [200, 215, 255], [180, 200, 255],                   // cool blue
+  [210, 200, 255], [195, 190, 245],                   // subtle violet/lavender
+  [255, 210, 210], [255, 200, 195],                   // subtle warm pink/red
+  [255, 230, 200],                                     // peach/amber
+  [170, 200, 255],                                     // deep blue
+  [230, 195, 240],                                     // faint purple
+  [255, 195, 180],                                     // salmon/red tint
 ];
 
 function generateStars(count, W, H) {
@@ -266,9 +278,10 @@ function generateStars(count, W, H) {
     const [px, py] = azAltToXY(az, alt, W, H);
     if (px < 0 || px >= W || py < 0 || py >= H) continue;
 
-    // Color — near horizon: shift warm (atmospheric extinction)
-    const colorIdx = floor(rand(0, STAR_COLORS.length));
-    let [cr, cg, cb] = STAR_COLORS[colorIdx];
+    // Color — MW stars get more colorful tints, general sky stays white-ish
+    const palette = mw > 0.15 ? STAR_COLORS_MW : STAR_COLORS_GENERAL;
+    const colorIdx = floor(rand(0, palette.length));
+    let [cr, cg, cb] = palette[colorIdx];
     if (alt < 12) {
       cr = min(255, cr + 10);
       cg = max(0, cg - 5);
