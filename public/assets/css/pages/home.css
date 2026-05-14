@@ -139,6 +139,7 @@
   justify-content: center;
   gap: var(--space-3);
   margin-block-end: var(--space-8);
+  direction: ltr;
 }
 
 .countdown__unit {
