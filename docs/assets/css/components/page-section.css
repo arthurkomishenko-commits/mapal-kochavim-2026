@@ -15,6 +15,41 @@
   padding-inline: var(--space-5);
 }
 
+/* ── Back button ── */
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(245, 239, 224, 0.04);
+  border: 1px solid rgba(245, 239, 224, 0.08);
+  color: var(--color-text-secondary);
+  margin-block-end: var(--space-4);
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+[dir="rtl"] .back-btn svg {
+  transform: scaleX(-1);
+}
+
+.back-btn:active {
+  background: rgba(232, 155, 75, 0.1);
+  border-color: rgba(232, 155, 75, 0.25);
+  color: var(--color-starlight);
+}
+
+@media (min-width: 768px) {
+  .back-btn:hover {
+    background: rgba(232, 155, 75, 0.1);
+    border-color: rgba(232, 155, 75, 0.25);
+    color: var(--color-starlight);
+  }
+}
+
 .page-section__title {
   font-size: clamp(2rem, 6vw, 3.5rem);
   font-weight: 800;
