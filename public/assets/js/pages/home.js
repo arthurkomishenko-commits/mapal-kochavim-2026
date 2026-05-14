@@ -193,7 +193,19 @@ export function renderHome(container) {
   }
 
   initCountdown();
-  initShootingStar(starsContainer);
+
+  // Start meteors only after welcome overlay is dismissed
+  if (document.getElementById('welcome-overlay')) {
+    const obs = new MutationObserver(() => {
+      if (!document.getElementById('welcome-overlay')) {
+        initShootingStar(starsContainer);
+        obs.disconnect();
+      }
+    });
+    obs.observe(document.body, { childList: true });
+  } else {
+    initShootingStar(starsContainer);
+  }
 
   // Hide scroll hint after first scroll
   const scrollHint = container.querySelector('.hero__scroll-hint');
