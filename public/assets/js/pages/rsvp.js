@@ -38,6 +38,7 @@ const BRINGING_CATEGORIES = [
       { id: 'cooler',     i18n: 'rsvp.bCooler' },
       { id: 'kettle',     i18n: 'rsvp.bKettle' },
       { id: 'pot',        i18n: 'rsvp.bPot' },
+      { id: 'stove',      i18n: 'rsvp.bStove' },
       { id: 'dispDishes', i18n: 'rsvp.bDispDishes' },
     ],
   },
