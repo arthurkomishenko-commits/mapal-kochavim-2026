@@ -31,7 +31,8 @@ function createStar() {
 
   // Twinkle timing — each star is unique
   const duration = randomBetween(3, 8);
-  const delay = randomBetween(0, 5);
+  // Negative delay = start mid-cycle, no invisible period on load
+  const delay = -randomBetween(0, duration);
   const minOpacity = randomBetween(0.15, 0.5);
   const maxOpacity = randomBetween(0.6, 1);
 
