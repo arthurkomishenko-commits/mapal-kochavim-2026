@@ -18,7 +18,7 @@
 /* Mobile: photo background instead of canvas galaxy */
 @media (max-width: 767px) {
   .hero {
-    background: url('/images/hero-mobile.jpg') center center / cover no-repeat;
+    background: url('../../images/hero-mobile.jpg') center center / cover no-repeat;
     background-color: var(--color-sky-deepest);
   }
   .sky-canvas {
