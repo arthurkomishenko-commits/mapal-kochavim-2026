@@ -111,7 +111,7 @@ let containerEl = null;
 
 function resetState() {
   formData = {
-    phone: '', name: '', city: '', isDriving: false, hasDog: false,
+    phone: '', name: '', city: '', isDriving: false, hasPet: false,
     companions: [], bringing: {},
     addedByPhone: null, addedByName: null,
   };
@@ -312,13 +312,13 @@ function renderForm() {
 
   // Dog toggle
   const dogToggle = document.createElement('label');
-  dogToggle.className = `form-toggle form-toggle--small ${formData.hasDog ? 'form-toggle--active' : ''}`;
+  dogToggle.className = `form-toggle form-toggle--small ${formData.hasPet ? 'form-toggle--active' : ''}`;
   dogToggle.style.marginBlockStart = '16px';
   dogToggle.innerHTML = `
     <span class="form-toggle__track"><span class="form-toggle__thumb"></span></span>
-    <span class="form-toggle__label" data-i18n="rsvp.dogLabel">${i18n.t('rsvp.dogLabel')}</span>
+    <span class="form-toggle__label" data-i18n="rsvp.petLabel">${i18n.t('rsvp.petLabel')}</span>
   `;
-  dogToggle.id = 'rsvp-dog-toggle';
+  dogToggle.id = 'rsvp-pet-toggle';
   dogToggle.addEventListener('click', (e) => {
     e.preventDefault();
     dogToggle.classList.toggle('form-toggle--active');
@@ -576,7 +576,7 @@ function handleSave() {
   const name = nameInput?.value.trim() || '';
   const city = cityInput?.value.trim() || '';
   const isDriving = document.getElementById('rsvp-driving-toggle')?.classList.contains('form-toggle--active') || false;
-  const hasDog = document.getElementById('rsvp-dog-toggle')?.classList.contains('form-toggle--active') || false;
+  const hasPet = document.getElementById('rsvp-pet-toggle')?.classList.contains('form-toggle--active') || false;
 
   // Validate name
   if (!name) {
@@ -613,7 +613,7 @@ function handleSave() {
     name,
     city,
     isDriving,
-    hasDog,
+    hasPet,
     companions,
     companionPhones,
     bringing,
