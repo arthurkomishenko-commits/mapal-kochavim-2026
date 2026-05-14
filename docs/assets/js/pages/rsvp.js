@@ -16,22 +16,75 @@ import { auth } from '../core/auth.js';
 // CONSTANTS
 // ═══════════════════════════════════════════════════
 
-const BRINGING_ITEMS = [
-  'tent', 'firewood', 'coal', 'grill',
-  'cooler', 'telescope', 'guitar', 'speakers', 'firstAid'
+// Items with qty: value is a number (0 = not bringing)
+// Items without qty: value is boolean
+const BRINGING_CATEGORIES = [
+  {
+    key: 'camp',
+    i18n: 'rsvp.bringCatCamp',
+    items: [
+      { id: 'tent',       i18n: 'rsvp.bTent',       qty: true },
+      { id: 'tarp',       i18n: 'rsvp.bTarp',       qty: true },
+      { id: 'chairs',     i18n: 'rsvp.bChairs',     qty: true },
+      { id: 'tables',     i18n: 'rsvp.bTables',     qty: true },
+      { id: 'blankets',   i18n: 'rsvp.bBlankets',   qty: true },
+      { id: 'hammock',    i18n: 'rsvp.bHammock' },
+      { id: 'trashBags',  i18n: 'rsvp.bTrashBags' },
+    ],
+  },
+  {
+    key: 'cooking',
+    i18n: 'rsvp.bringCatCooking',
+    items: [
+      { id: 'grill',      i18n: 'rsvp.bGrill' },
+      { id: 'coal',       i18n: 'rsvp.bCoal' },
+      { id: 'firewood',   i18n: 'rsvp.bFirewood' },
+      { id: 'cooler',     i18n: 'rsvp.bCooler' },
+      { id: 'kettle',     i18n: 'rsvp.bKettle' },
+      { id: 'dishes',     i18n: 'rsvp.bDishes' },
+    ],
+  },
+  {
+    key: 'tech',
+    i18n: 'rsvp.bringCatTech',
+    items: [
+      { id: 'generator',  i18n: 'rsvp.bGenerator' },
+      { id: 'extension',  i18n: 'rsvp.bExtension' },
+      { id: 'speakers',   i18n: 'rsvp.bSpeakers' },
+      { id: 'projector',  i18n: 'rsvp.bProjector' },
+      { id: 'drone',      i18n: 'rsvp.bDrone' },
+      { id: 'camera',     i18n: 'rsvp.bCamera' },
+    ],
+  },
+  {
+    key: 'stargazing',
+    i18n: 'rsvp.bringCatStars',
+    items: [
+      { id: 'telescope',  i18n: 'rsvp.bTelescope' },
+      { id: 'binoculars', i18n: 'rsvp.bBinoculars' },
+      { id: 'redLight',   i18n: 'rsvp.bRedLight',   qty: true },
+      { id: 'flashlight', i18n: 'rsvp.bFlashlight' },
+    ],
+  },
+  {
+    key: 'fun',
+    i18n: 'rsvp.bringCatFun',
+    items: [
+      { id: 'guitar',     i18n: 'rsvp.bGuitar' },
+      { id: 'games',      i18n: 'rsvp.bGames' },
+      { id: 'ball',       i18n: 'rsvp.bBall' },
+    ],
+  },
+  {
+    key: 'safety',
+    i18n: 'rsvp.bringCatSafety',
+    items: [
+      { id: 'firstAid',     i18n: 'rsvp.bFirstAid' },
+      { id: 'fireExtinguisher', i18n: 'rsvp.bFireExt' },
+      { id: 'walkieTalkie', i18n: 'rsvp.bWalkie' },
+    ],
+  },
 ];
-
-const BRINGING_KEYS = {
-  tent: 'rsvp.bringingTent',
-  firewood: 'rsvp.bringingFirewood',
-  coal: 'rsvp.bringingCoal',
-  grill: 'rsvp.bringingGrill',
-  cooler: 'rsvp.bringingCooler',
-  telescope: 'rsvp.bringingTelescope',
-  guitar: 'rsvp.bringingGuitar',
-  speakers: 'rsvp.bringSpeakers',
-  firstAid: 'rsvp.bringingFirstAid',
-};
 
 // ═══════════════════════════════════════════════════
 // STATE
@@ -257,7 +310,7 @@ function renderForm() {
 
   inner.appendChild(compSection);
 
-  // ── Bringing (subtle) ──
+  // ── Bringing (categorized, subtle) ──
   const bringSection = document.createElement('div');
   bringSection.className = 'form-section';
 
@@ -273,18 +326,86 @@ function renderForm() {
   bringHint.setAttribute('data-i18n', 'rsvp.bringingHelp');
   bringSection.appendChild(bringHint);
 
-  const chipsGrid = document.createElement('div');
-  chipsGrid.className = 'chips-grid';
-  BRINGING_ITEMS.forEach(item => {
-    const chip = document.createElement('button');
-    chip.type = 'button';
-    chip.className = `chip ${formData.bringing[item] ? 'chip--active' : ''}`;
-    chip.textContent = i18n.t(BRINGING_KEYS[item]);
-    chip.dataset.item = item;
-    chip.addEventListener('click', () => chip.classList.toggle('chip--active'));
-    chipsGrid.appendChild(chip);
+  BRINGING_CATEGORIES.forEach(cat => {
+    const catLabel = document.createElement('div');
+    catLabel.className = 'bring-cat-label';
+    catLabel.textContent = i18n.t(cat.i18n);
+    catLabel.setAttribute('data-i18n', cat.i18n);
+    bringSection.appendChild(catLabel);
+
+    const chipsGrid = document.createElement('div');
+    chipsGrid.className = 'chips-grid';
+
+    cat.items.forEach(item => {
+      const val = formData.bringing[item.id];
+
+      if (item.qty) {
+        // Quantity chip with +/-
+        const wrap = document.createElement('div');
+        wrap.className = `chip-qty ${val ? 'chip-qty--active' : ''}`;
+        wrap.dataset.item = item.id;
+
+        const label = document.createElement('span');
+        label.className = 'chip-qty__label';
+        label.textContent = i18n.t(item.i18n);
+
+        const controls = document.createElement('span');
+        controls.className = 'chip-qty__controls';
+
+        const minus = document.createElement('button');
+        minus.type = 'button';
+        minus.className = 'chip-qty__btn';
+        minus.textContent = '\u2212';
+        minus.setAttribute('aria-label', 'Remove');
+
+        const count = document.createElement('span');
+        count.className = 'chip-qty__count';
+        count.textContent = val || 0;
+
+        const plus = document.createElement('button');
+        plus.type = 'button';
+        plus.className = 'chip-qty__btn';
+        plus.textContent = '+';
+        plus.setAttribute('aria-label', 'Add');
+
+        minus.addEventListener('click', (e) => {
+          e.stopPropagation();
+          let n = parseInt(count.textContent) || 0;
+          if (n > 0) n--;
+          count.textContent = n;
+          wrap.classList.toggle('chip-qty--active', n > 0);
+        });
+
+        plus.addEventListener('click', (e) => {
+          e.stopPropagation();
+          let n = parseInt(count.textContent) || 0;
+          n++;
+          count.textContent = n;
+          wrap.classList.add('chip-qty--active');
+        });
+
+        controls.appendChild(minus);
+        controls.appendChild(count);
+        controls.appendChild(plus);
+
+        wrap.appendChild(label);
+        wrap.appendChild(controls);
+        chipsGrid.appendChild(wrap);
+      } else {
+        // Simple toggle chip
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = `chip ${val ? 'chip--active' : ''}`;
+        chip.textContent = i18n.t(item.i18n);
+        chip.dataset.item = item.id;
+        chip.addEventListener('click', () => chip.classList.toggle('chip--active'));
+        chipsGrid.appendChild(chip);
+      }
+    });
+
+    bringSection.appendChild(chipsGrid);
   });
-  bringSection.appendChild(chipsGrid);
+
   inner.appendChild(bringSection);
 
   // ── Save ──
@@ -384,10 +505,14 @@ function handleSave() {
     }
   });
 
-  // Bringing
+  // Bringing — toggles + quantities
   const bringing = {};
   document.querySelectorAll('.chip').forEach(chip => {
     bringing[chip.dataset.item] = chip.classList.contains('chip--active');
+  });
+  document.querySelectorAll('.chip-qty').forEach(wrap => {
+    const n = parseInt(wrap.querySelector('.chip-qty__count')?.textContent) || 0;
+    bringing[wrap.dataset.item] = n;
   });
 
   const data = {

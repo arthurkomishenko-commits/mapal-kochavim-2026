@@ -250,6 +250,90 @@
   border-color: rgba(232, 155, 75, 0.25);
 }
 
+/* ── Bringing category label ── */
+
+.bring-cat-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(165, 160, 154, 0.4);
+  margin-block-start: 14px;
+  margin-block-end: 8px;
+}
+
+.bring-cat-label:first-of-type {
+  margin-block-start: 0;
+}
+
+/* ── Quantity chip (+/-) ── */
+
+.chip-qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 4px 14px;
+  font-size: 0.8rem;
+  color: rgba(165, 160, 154, 0.6);
+  background: rgba(245, 239, 224, 0.03);
+  border: 1px solid rgba(245, 239, 224, 0.06);
+  border-radius: 20px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.chip-qty--active {
+  color: var(--color-ember-bright, #E89B4B);
+  background: rgba(232, 155, 75, 0.08);
+  border-color: rgba(232, 155, 75, 0.25);
+}
+
+.chip-qty__label {
+  font-weight: 500;
+}
+
+.chip-qty__controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.chip-qty__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(245, 239, 224, 0.08);
+  background: rgba(245, 239, 224, 0.04);
+  color: rgba(165, 160, 154, 0.6);
+  font-size: 0.85rem;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 0;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.chip-qty__btn:hover {
+  background: rgba(245, 239, 224, 0.08);
+  color: var(--color-starlight, #F5EFE0);
+}
+
+.chip-qty--active .chip-qty__btn {
+  border-color: rgba(232, 155, 75, 0.2);
+}
+
+.chip-qty__count {
+  min-width: 18px;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Section divider ── */
 
 .form-section {
