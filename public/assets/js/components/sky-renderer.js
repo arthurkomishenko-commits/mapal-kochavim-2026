@@ -80,14 +80,22 @@ function hexToRGB(hex) {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-// Projection center at az=300° — puts the wrap seam at az=120°
-// where there's NO Milky Way. MW band stays continuous across screen.
-// Left edge ≈ SSE, center ≈ NW, right edge ≈ ESE
-const AZ_CENTER = 300;
-
+/**
+ * Zenithal (looking UP) projection.
+ * Center of screen = zenith. Edges = horizon.
+ * South is at the bottom, North at top.
+ * MW appears as a near-vertical band through center.
+ */
 function azAltToXY(az, alt, W, H) {
-  const x = ((az - AZ_CENTER + 540) % 360) / 360 * W;
-  const y = (1 - sin(alt * PI / 180)) * H * 0.95;
+  // Distance from center: 0 at zenith, 1 at horizon
+  const r = 1 - alt / 90;
+  // Angle: south (180°) = bottom, north (0°) = top
+  // Rotate so south is at bottom of screen
+  const theta = (az - 180) * PI / 180;
+  // Scale to fit screen — use smaller dimension to keep circle
+  const scale = max(W, H) * 0.55;
+  const x = W / 2 + sin(theta) * r * scale;
+  const y = H / 2 + cos(theta) * r * scale;
   return [x, y];
 }
 
@@ -105,38 +113,24 @@ function skyBrightness(alt) {
   return 1.0;
 }
 
-// MW path with azimuths unwrapped to continuous range (no 0/360 jump)
-// Path goes from az=212 through 340, 0(=360), 5(=365)... to 75(=435)
-const MW_UNWRAPPED = MW_PATH.map((pt, i) => {
-  let az = pt.az;
-  // Points after the zenith crossing (originally az < 180) get +360
-  if (i > 0 && az < MW_PATH[i - 1].az - 90) az += 360;
-  // Propagate: if previous was unwrapped, this should be too
-  return { ...pt, uaz: az };
+// MW path with unwrapped azimuths (continuous, no 0/360 jump)
+// Path goes 212→215→...→340→365(=5)→...→435(=75)
+const MW_U = MW_PATH.map(pt => {
+  let uaz = pt.az;
+  if (uaz < 180) uaz += 360; // unwrap across 0° boundary
+  return { ...pt, uaz };
 });
-// Fix: ensure monotonic
-for (let i = 1; i < MW_UNWRAPPED.length; i++) {
-  if (MW_UNWRAPPED[i].uaz < MW_UNWRAPPED[i-1].uaz - 90) {
-    MW_UNWRAPPED[i].uaz += 360;
-  }
-}
 
 // Distance from a point to MW center line (returns 0-1, 1=on center)
 function mwProximity(az, alt) {
-  // Unwrap query azimuth to same range as MW path
+  // Unwrap query azimuth same way
   let uaz = az;
-  const pathStart = MW_UNWRAPPED[0].uaz;
-  const pathEnd = MW_UNWRAPPED[MW_UNWRAPPED.length - 1].uaz;
-  // Try both az and az+360, pick whichever is closer to path range
-  if (abs(uaz + 360 - (pathStart + pathEnd) / 2) < abs(uaz - (pathStart + pathEnd) / 2)) {
-    uaz += 360;
-  }
+  if (uaz < 180) uaz += 360;
 
   let best = 0;
-  for (let i = 0; i < MW_UNWRAPPED.length - 1; i++) {
-    const a = MW_UNWRAPPED[i], b = MW_UNWRAPPED[i + 1];
+  for (let i = 0; i < MW_U.length - 1; i++) {
+    const a = MW_U[i], b = MW_U[i + 1];
 
-    // Project point onto segment
     const dAz = b.uaz - a.uaz;
     const dAlt = b.alt - a.alt;
     const len2 = dAz * dAz + dAlt * dAlt + 0.001;
@@ -147,10 +141,8 @@ function mwProximity(az, alt) {
     const pW = a.w + t * (b.w - a.w);
     const pB = a.b + t * (b.b - a.b);
 
-    // Distance to closest point on segment
     const dist = sqrt((uaz - pAz) ** 2 + (alt - pAlt) ** 2);
 
-    // Gaussian: sigma = 40% of band width. Smooth center-to-edge falloff.
     const sigma = pW * 0.4;
     if (dist < pW * 1.5) {
       const factor = Math.exp(-(dist * dist) / (2 * sigma * sigma));
@@ -235,8 +227,9 @@ function generateStars(count, W, H) {
     attempts++;
 
     // Random sky position in az/alt
+    // Full sky hemisphere
     const az = rand(0, 360);
-    const alt = rand(-2, 90);
+    const alt = rand(0, 90);
     if (alt < 0) continue;
 
     // Probability density
@@ -326,6 +319,24 @@ export default class SkyRenderer {
     this.rafId = null;
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // Parallax — subtle shift on mouse/gyro
+    this.parallaxX = 0;
+    this.parallaxY = 0;
+    this._onMouse = (e) => {
+      // -15px to +15px based on mouse position
+      this.parallaxX = (e.clientX / window.innerWidth - 0.5) * 30;
+      this.parallaxY = (e.clientY / window.innerHeight - 0.5) * 20;
+    };
+    this._onGyro = (e) => {
+      // Mobile device orientation
+      if (e.gamma != null) {
+        this.parallaxX = (e.gamma / 45) * 25; // tilt left/right
+        this.parallaxY = ((e.beta - 45) / 45) * 15; // tilt forward/back
+      }
+    };
+    window.addEventListener('mousemove', this._onMouse, { passive: true });
+    window.addEventListener('deviceorientation', this._onGyro, { passive: true });
+
     // Bind
     this._onResize = this._debounce(() => this.render(), 200);
     window.addEventListener('resize', this._onResize);
@@ -334,15 +345,23 @@ export default class SkyRenderer {
   render() {
     const W = window.innerWidth;
     const H = window.innerHeight;
+    // Render buffer wider for parallax headroom
+    const PAD = 40;
+    const BW = W + PAD * 2;
+    const BH = H + PAD * 2;
 
-    // Size all canvases
+    this.W = W;
+    this.H = H;
+    this.PAD = PAD;
+
+    // Size main canvas
     this.canvas.width = W;
     this.canvas.height = H;
 
-    // Static buffer
+    // Static buffer (wider than viewport for parallax room)
     this.staticCanvas = document.createElement('canvas');
-    this.staticCanvas.width = W;
-    this.staticCanvas.height = H;
+    this.staticCanvas.width = BW;
+    this.staticCanvas.height = BH;
     this.staticCtx = this.staticCanvas.getContext('2d');
 
     // Overlay for twinkling
@@ -358,21 +377,21 @@ export default class SkyRenderer {
     const sCtx = this.staticCtx;
 
     // ── Layer 1: Sky gradient ──
-    const grad = sCtx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, '#060A1A');    // zenith — near black
+    const grad = sCtx.createLinearGradient(0, 0, 0, BH);
+    grad.addColorStop(0, '#060A1A');
     grad.addColorStop(0.7, '#080D22');
-    grad.addColorStop(1, '#0E1230');    // horizon — slightly lighter
+    grad.addColorStop(1, '#0E1230');
     sCtx.fillStyle = grad;
-    sCtx.fillRect(0, 0, W, H);
+    sCtx.fillRect(0, 0, BW, BH);
 
     // ── Layer 2: 35K background stars via ImageData ──
     const isMobile = W < 768;
     const starCount = isMobile ? 12000 : 35000;
 
-    this.bgStars = generateStars(starCount, W, H);
+    this.bgStars = generateStars(starCount, BW, BH);
     const s = this.bgStars;
 
-    const imgData = sCtx.getImageData(0, 0, W, H);
+    const imgData = sCtx.getImageData(0, 0, BW, BH);
     const data = imgData.data;
 
     for (let i = 0; i < s.count; i++) {
@@ -381,13 +400,12 @@ export default class SkyRenderer {
       const sz = s.size[i];
       const al = s.alpha[i];
 
-      // Write star pixel(s) — direct color set, brighter = higher alpha
       const wr = floor(s.r[i] * al);
       const wg = floor(s.g[i] * al);
       const wb = floor(s.b[i] * al);
 
       if (sz === 1) {
-        const idx = (py * W + px) * 4;
+        const idx = (py * BW + px) * 4;
         if (idx >= 0 && idx < data.length - 3) {
           data[idx]     = max(data[idx], wr);
           data[idx + 1] = max(data[idx + 1], wg);
@@ -399,8 +417,8 @@ export default class SkyRenderer {
           for (let dx = -half; dx <= half; dx++) {
             const nx = px + dx;
             const ny = py + dy;
-            if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
-            const idx = (ny * W + nx) * 4;
+            if (nx < 0 || nx >= BW || ny < 0 || ny >= BH) continue;
+            const idx = (ny * BW + nx) * 4;
             const fade = (dx === 0 && dy === 0) ? 1 : 0.55;
             data[idx]     = max(data[idx], floor(wr * fade));
             data[idx + 1] = max(data[idx + 1], floor(wg * fade));
@@ -413,13 +431,13 @@ export default class SkyRenderer {
     sCtx.putImageData(imgData, 0, 0);
 
     // ── Layer 3: MW glow (offscreen blur) ──
-    this._renderMWGlow(sCtx, W, H);
+    this._renderMWGlow(sCtx, BW, BH);
 
     // ── Layer 4: Named stars with glow ──
-    this._renderNamedStars(sCtx, W, H);
+    this._renderNamedStars(sCtx, BW, BH);
 
-    // ── Composite static buffer to main canvas ──
-    this.ctx.drawImage(this.staticCanvas, 0, 0);
+    // ── Composite static buffer to main canvas (centered, with parallax room) ──
+    this.ctx.drawImage(this.staticCanvas, -PAD, -PAD);
 
     // ── Start twinkling ──
     if (!this.reducedMotion) {
@@ -441,7 +459,7 @@ export default class SkyRenderer {
     for (const pt of MW_PATH) {
       const [px, py] = azAltToXY(pt.az, pt.alt, gW, gH);
       // Many smaller circles along the path for smooth blending
-      const radius = max(pt.w * gW / 360 * 2.5, 8);
+      const radius = max(pt.w * max(gW, gH) / 180 * 0.55, 8);
       const alpha = pt.b * 0.06;
       const isCenter = pt.b >= 0.95;
       const color = isCenter ? '215,210,200' : '205,210,220';
@@ -461,8 +479,8 @@ export default class SkyRenderer {
     // Star clouds — subtle brighter patches
     for (const c of STAR_CLOUDS) {
       const [px, py] = azAltToXY(c.az, c.alt, gW, gH);
-      const rx = max(c.w * gW / 360 * 2, 4);
-      const ry = max(c.h * gH / 90 * 2, 3);
+      const rx = max(c.w * max(gW,gH) / 180 * 0.5, 4);
+      const ry = max(c.h * max(gW,gH) / 180 * 0.5, 3);
       gCtx.beginPath();
       gCtx.ellipse(px, py, rx, ry, 0, 0, PI * 2);
       gCtx.fillStyle = `rgba(220,215,205,${(c.b * 0.05).toFixed(3)})`;
@@ -592,11 +610,17 @@ export default class SkyRenderer {
     const self = this;
 
     function frame(ts) {
+      // ── Parallax: redraw static at offset ──
+      const mainCtx = self.ctx;
+      const px = self.parallaxX;
+      const py = self.parallaxY;
+      mainCtx.clearRect(0, 0, self.W, self.H);
+      mainCtx.drawImage(self.staticCanvas, -self.PAD + px, -self.PAD + py);
+
+      // ── Twinkle overlay ──
       const ctx = self.overlayCtx;
       const W = self.overlayCanvas.width;
       const H = self.overlayCanvas.height;
-
-      // Clear overlay efficiently
       ctx.clearRect(0, 0, W, H);
 
       for (const s of self.twinkleStars) {
