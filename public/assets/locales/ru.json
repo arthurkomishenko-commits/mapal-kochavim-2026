@@ -34,7 +34,24 @@
       "hours": "часов",
       "minutes": "минут",
       "seconds": "секунд"
-    }
+    },
+    "highlightsTitle": "Что ждёт",
+    "card1Title": "Персеиды",
+    "card1Text": "Пик метеорного потока — до 100 падающих звёзд в час. Луна почти не мешает.",
+    "card2Title": "Borot Lotz",
+    "card2Text": "Кемпинг в сердце Негева. Минимум света — максимум звёзд. Виден Млечный Путь.",
+    "card3Title": "3 дня вместе",
+    "card3Text": "Мангал, телескоп, рассвет в пустыне, ночные разговоры у костра.",
+    "detailsTitle": "Коротко о главном",
+    "detailWhen": "Когда",
+    "detailWhenVal": "13–15 августа",
+    "detailWhere": "Где",
+    "detailWhereVal": "Borot Lotz, Негев",
+    "detailWho": "Сколько нас",
+    "detailWhoVal": "до 45 человек",
+    "detailHighlight": "Главное",
+    "detailHighlightVal": "Ночь Персеид",
+    "ctaBottomText": "Место ограничено. Записывайся — и увидимся под звёздами."
   },
   "place": {
     "title": "Место",

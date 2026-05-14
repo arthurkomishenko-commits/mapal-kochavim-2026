@@ -34,7 +34,24 @@
       "hours": "שעות",
       "minutes": "דקות",
       "seconds": "שניות"
-    }
+    },
+    "highlightsTitle": "מה מחכה",
+    "card1Title": "פרסאידים",
+    "card1Text": "שיא מטח המטאורים — עד 100 כוכבים נופלים בשעה. הירח כמעט לא מפריע.",
+    "card2Title": "בורות לוץ",
+    "card2Text": "קמפינג בלב הנגב. מינימום אור — מקסימום כוכבים. רואים את שביל החלב.",
+    "card3Title": "3 ימים ביחד",
+    "card3Text": "מנגל, טלסקופ, זריחה במדבר, שיחות לילה סביב המדורה.",
+    "detailsTitle": "בקצרה",
+    "detailWhen": "מתי",
+    "detailWhenVal": "13–15 באוגוסט",
+    "detailWhere": "איפה",
+    "detailWhereVal": "בורות לוץ, הנגב",
+    "detailWho": "כמה אנחנו",
+    "detailWhoVal": "עד 45 איש",
+    "detailHighlight": "הדגש",
+    "detailHighlightVal": "ליל הפרסאידים",
+    "ctaBottomText": "המקום מוגבל. הירשמו — ונתראה מתחת לכוכבים."
   },
   "place": {
     "title": "המקום",

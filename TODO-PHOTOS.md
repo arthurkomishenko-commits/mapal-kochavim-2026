@@ -40,6 +40,13 @@ Download from Unsplash/Pexels/Pixabay (free, no attribution needed).
 - **Search:** "telescope stargazing" or "amateur astronomy night"
 - **Where used:** telescope card in `sky.js`
 
+### 6. PWA icons (from icon.svg)
+- **Source:** `public/icons/icon.svg`
+- **Generate:** 192×192 and 512×512 PNG from SVG
+- **Command:** `npx svg2png icon.svg --width 192 --output icon-192.png` (or use Figma)
+- **Files needed:** `icon-192.png`, `icon-512.png`
+- **Where used:** `manifest.json`, `<link rel="apple-touch-icon">`
+
 ## How to add
 1. Download photos from free stock sites
 2. Convert to WebP: `cwebp -q 80 input.jpg -o output.webp`
