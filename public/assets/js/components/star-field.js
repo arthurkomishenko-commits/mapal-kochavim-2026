@@ -137,12 +137,12 @@ function rand(min, max) {
 // ═══════════════════════════════════════════════════════
 
 function magToSize(mag) {
-  if (mag < 0) return 4.5;
-  if (mag < 1) return 3.5;
-  if (mag < 2) return 2.8;
-  if (mag < 3) return 2.0;
-  if (mag < 4) return 1.3;
-  return rand(0.6, 1.0);
+  if (mag < 0) return 5.5;
+  if (mag < 1) return 4.5;
+  if (mag < 2) return 3.5;
+  if (mag < 3) return 2.5;
+  if (mag < 4) return 1.6;
+  return rand(0.7, 1.2);
 }
 
 function twinkleClass(mag, alt) {
@@ -162,8 +162,11 @@ function createStarElement(x, y, size, color, twinkCls, baseOpacity) {
   const delay = -rand(0, 12);
 
   let shadow = '';
-  if (size >= 2.5) {
-    shadow = `box-shadow: 0 0 ${size}px ${color}4D;`; // 30% opacity hex
+  if (size >= 3.5) {
+    // Bright stars: prominent glow
+    shadow = `box-shadow: 0 0 ${size * 1.5}px ${color}66, 0 0 ${size * 3}px ${color}22;`;
+  } else if (size >= 2.5) {
+    shadow = `box-shadow: 0 0 ${size}px ${color}4D;`;
   }
 
   el.style.cssText = `
@@ -217,15 +220,15 @@ function createMilkyWay(container) {
   // Build multiple radial-gradients from the path points
   const gradients = MILKY_WAY.map(pt => {
     const pos = azAltToXY(pt.az, pt.alt);
-    const spreadX = pt.w * 0.8;
-    const spreadY = pt.w * 1.2;
-    const opacity = pt.b * 0.055; // max ~0.055
+    const spreadX = pt.w * 1.5;
+    const spreadY = pt.w * 2.0;
+    const opacity = pt.b * 0.12; // visible but subtle
 
-    // Galactic center (brightness 1.0) gets slightly warmer tint
+    // Galactic center (brightness 1.0) gets warmer tint
     const isCenter = pt.b >= 0.95;
     const color = isCenter
-      ? `rgba(200,190,170,${opacity})`
-      : `rgba(180,200,255,${opacity})`;
+      ? `rgba(210,200,180,${opacity})`
+      : `rgba(190,205,240,${opacity})`;
 
     return `radial-gradient(ellipse ${spreadX}% ${spreadY}% at ${pos.x}% ${pos.y}%, ${color}, transparent)`;
   });
