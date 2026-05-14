@@ -460,8 +460,15 @@ export default class SkyRenderer {
       const color = SPECTRAL[star.cl] || '#F0F0FF';
       const [cr, cg, cb] = hexToRGB(color);
 
-      // Glow radius — much larger for bright stars
-      const glowR = max(4, (3.5 - star.mag) * 5);
+      // Glow radius — scales with brightness but not too big for dim stars
+      let glowR;
+      if (star.mag < 0) glowR = 14;       // Arcturus, Vega — biggest
+      else if (star.mag < 0.5) glowR = 11;
+      else if (star.mag < 1) glowR = 8;
+      else if (star.mag < 1.5) glowR = 6;
+      else if (star.mag < 2) glowR = 4.5;
+      else if (star.mag < 2.5) glowR = 3.5;
+      else glowR = 2.5; // dim named stars — small glow
 
       // Outer glow
       const outerGrad = ctx.createRadialGradient(px, py, 0, px, py, glowR);
@@ -475,8 +482,8 @@ export default class SkyRenderer {
       ctx.fillStyle = outerGrad;
       ctx.fill();
 
-      // Bright white core
-      const coreR = max(1, (2.5 - star.mag) * 0.9);
+      // White core — proportional to glow
+      const coreR = max(0.6, glowR * 0.15);
       ctx.beginPath();
       ctx.arc(px, py, coreR, 0, PI * 2);
       ctx.fillStyle = 'rgba(255,255,255,0.95)';
