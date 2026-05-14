@@ -6,7 +6,7 @@
 
 .people-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: var(--space-4);
   margin-block-end: var(--space-8);
 }
@@ -37,6 +37,53 @@
   .people-stat__number {
     font-size: var(--text-3xl);
   }
+}
+
+/* ── People list ── */
+
+.people-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.people-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(245, 239, 224, 0.02);
+  border-radius: 8px;
+}
+
+.people-item__main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.people-item__name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-starlight, #F5EFE0);
+}
+
+.people-item__badge--car {
+  font-size: 0.85rem;
+}
+
+.people-item__extra {
+  font-size: 0.75rem;
+  color: rgba(165, 160, 154, 0.5);
+  background: rgba(245, 239, 224, 0.04);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.people-item__city {
+  font-size: 0.75rem;
+  color: rgba(165, 160, 154, 0.4);
 }
 
 /* ── Auth gate (login required) ── */

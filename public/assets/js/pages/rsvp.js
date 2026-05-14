@@ -204,13 +204,28 @@ function handlePhoneSubmit() {
   const saved = localStorage.getItem('mapal-rsvp-' + phone);
   if (saved) {
     try {
-      const parsed = JSON.parse(saved);
-      formData = { ...formData, ...parsed, phone };
-      isEditing = true;
+      JSON.parse(saved); // validate
+      auth.login(phone, JSON.parse(saved).name);
+      window.location.hash = 'me';
+      return;
     } catch {}
   }
 
-  // TODO: When Firebase connected — check Firestore + companion links
+  // Check if listed as companion by someone else
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key.startsWith('mapal-rsvp-')) continue;
+    try {
+      const p = JSON.parse(localStorage.getItem(key));
+      if (p.companionPhones && p.companionPhones.includes(phone)) {
+        const comp = p.companions.find(c => auth.normalizePhone(c.phone) === phone);
+        formData.addedByPhone = p.phone;
+        formData.addedByName = p.name;
+        if (comp) formData.name = comp.name;
+        break;
+      }
+    } catch {}
+  }
 
   renderForm();
 }
@@ -675,14 +690,14 @@ export function renderRsvp(container) {
 
   const user = auth.getUser();
   if (user && user.phone) {
-    formData.phone = user.phone;
     const saved = localStorage.getItem('mapal-rsvp-' + user.phone);
     if (saved) {
-      try {
-        formData = { ...formData, ...JSON.parse(saved), phone: user.phone };
-        isEditing = true;
-      } catch {}
+      // Already registered — go to My Cabinet
+      window.location.hash = 'me';
+      return;
     }
+    // Logged in but not registered — show form
+    formData.phone = user.phone;
     renderForm();
   } else {
     renderPhoneEntry();
