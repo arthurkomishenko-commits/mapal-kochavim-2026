@@ -166,8 +166,8 @@ function renderProfile(data) {
         ${companionsHtml}
         ${bringingHtml}
 
-        <a href="#rsvp" class="form-submit" style="display:block;text-align:center;text-decoration:none;margin-top:24px;">
-          ${i18n.t('rsvp.save').replace(i18n.t('rsvp.save'), isEditing())}
+        <a href="#rsvp" class="form-submit" style="display:block;text-align:center;text-decoration:none;margin-top:24px;" data-i18n="me.edit">
+          ${i18n.t('me.edit')}
         </a>
 
         ${!isCancelled ? `
@@ -210,11 +210,6 @@ function esc(str) {
   const d = document.createElement('div');
   d.textContent = str || '';
   return d.innerHTML;
-}
-
-// Helper to determine edit button text
-function isEditing() {
-  return i18n.t('rsvp.save');
 }
 
 export function renderMe(container) {
