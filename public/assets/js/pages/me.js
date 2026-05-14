@@ -117,11 +117,11 @@ function renderProfile(data) {
         <div class="me-section">
           <div class="form-section__title" data-i18n="rsvp.bringingTitle">${i18n.t('rsvp.bringingTitle')}</div>
           <div class="chips-grid">
-            ${active.map(([k]) => {
-              const key = 'rsvp.bringing' + k.charAt(0).toUpperCase() + k.slice(1);
-              let label = i18n.t(key);
-              if (label === key) label = i18n.t('rsvp.bring' + k.charAt(0).toUpperCase() + k.slice(1));
-              return `<span class="chip chip--active">${label}</span>`;
+            ${active.map(([k, v]) => {
+              const key = 'rsvp.b' + k.charAt(0).toUpperCase() + k.slice(1);
+              const label = i18n.t(key);
+              const qty = typeof v === 'number' && v > 1 ? ` x${v}` : '';
+              return `<span class="chip chip--active">${label}${qty}</span>`;
             }).join('')}
           </div>
         </div>
