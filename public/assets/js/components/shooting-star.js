@@ -1,118 +1,111 @@
 /**
- * Shooting Stars — realistic Perseid meteors
+ * Shooting Stars — Perseid meteor shower
  *
- * Simple correct physics:
- * - All meteors fly TOP-LEFT → BOTTOM-RIGHT (or slight variations)
- * - Flight angle: 25°–65° from horizontal (always downward-right)
- * - Start in upper portion of sky (top 35%)
- * - The CSS `rotate` property aligns the entire element (head + tail)
- *   with the flight direction. translateX moves along that axis.
- *   Tail is behind the head via `right: 100%`.
+ * Architecture (from best CodePen/Gist implementations):
+ * - Each meteor is a .meteor element with a .meteor__trail child
+ * - The .meteor gets a rotate + translate animation (movement)
+ * - The .meteor__trail gets a scaleX animation (trail appears/disappears)
+ * - Two separate @keyframes = independent control of speed vs trail
+ * - Meteor is visible only ~5% of its animation cycle (rest is delay)
  *
- * 5 visual types. 1-2 meteors every 3-7 seconds.
+ * All fly top→bottom at 25-65° angles. 1-2 every 3-7 seconds.
  */
 
 const MIN_INTERVAL_MS = 3_000;
 const MAX_INTERVAL_MS = 7_000;
 
-const METEOR_TYPES = [
-  { cls: 'shooting-star--classic',  weight: 35, durationRange: [1200, 2000],  distRange: [18, 32] },
-  { cls: 'shooting-star--fireball', weight: 10, durationRange: [1800, 2800],  distRange: [25, 42] },
-  { cls: 'shooting-star--swift',    weight: 25, durationRange: [700, 1200],   distRange: [10, 20] },
-  { cls: 'shooting-star--fragment', weight: 15, durationRange: [1400, 2200],  distRange: [18, 30] },
-  { cls: 'shooting-star--glider',   weight: 15, durationRange: [2200, 3500],  distRange: [22, 40] },
+// 5 visual variants with different trail widths, speeds, colors
+const VARIANTS = [
+  { cls: '',            weight: 40, speedRange: [1.2, 2.0], travelRange: [25, 40], trailScale: [1.5, 2.5] },
+  { cls: 'meteor--bright', weight: 12, speedRange: [1.6, 2.8], travelRange: [30, 50], trailScale: [2.5, 4]   },
+  { cls: 'meteor--faint',  weight: 25, speedRange: [0.8, 1.4], travelRange: [15, 28], trailScale: [1, 1.8]   },
+  { cls: 'meteor--flash',  weight: 13, speedRange: [1.0, 1.8], travelRange: [20, 35], trailScale: [1.8, 3]   },
+  { cls: 'meteor--cold',   weight: 10, speedRange: [1.8, 3.2], travelRange: [28, 45], trailScale: [2, 3.5]   },
 ];
 
 let container = null;
 let timeoutId = null;
 
-function prefersReducedMotion() {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
-
 function rand(min, max) {
   return min + Math.random() * (max - min);
 }
 
-function pickType() {
-  const totalWeight = METEOR_TYPES.reduce((sum, t) => sum + t.weight, 0);
-  let roll = Math.random() * totalWeight;
-  for (const type of METEOR_TYPES) {
-    roll -= type.weight;
-    if (roll <= 0) return type;
+function prefersReducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function pickVariant() {
+  const total = VARIANTS.reduce((s, v) => s + v.weight, 0);
+  let roll = Math.random() * total;
+  for (const v of VARIANTS) {
+    roll -= v.weight;
+    if (roll <= 0) return v;
   }
-  return METEOR_TYPES[0];
+  return VARIANTS[0];
 }
 
 function spawnMeteor() {
   if (!container || !container.isConnected) return;
 
-  const type = pickType();
-  const meteor = document.createElement('div');
-  meteor.className = `shooting-star ${type.cls}`;
-  meteor.setAttribute('aria-hidden', 'true');
+  const v = pickVariant();
 
-  // Start position: upper part of sky, spread across width
-  const startX = rand(5, 85);
-  const startY = rand(2, 35);
+  const el = document.createElement('div');
+  el.className = `meteor ${v.cls}`.trim();
+  el.setAttribute('aria-hidden', 'true');
 
-  // Flight angle: 25°–65° from horizontal = always going DOWN and to the RIGHT
-  // This is the CSS `rotate` value. 0° = horizontal right, 90° = straight down.
-  const flightAngle = rand(25, 65);
+  const trail = document.createElement('div');
+  trail.className = 'meteor__trail';
+  el.appendChild(trail);
 
-  // Travel distance
-  const dist = rand(type.distRange[0], type.distRange[1]);
+  // Position: upper sky
+  const x = rand(5, 90);
+  const y = rand(2, 35);
 
-  // Duration
-  const duration = rand(type.durationRange[0], type.durationRange[1]);
+  // Angle: always down-right, 25-65°
+  const angle = rand(25, 65);
 
-  meteor.style.setProperty('--start-x', `${startX}%`);
-  meteor.style.setProperty('--start-y', `${startY}%`);
-  meteor.style.setProperty('--travel-dist', `${dist}vw`);
-  meteor.style.setProperty('--duration', `${duration}ms`);
-  meteor.style.setProperty('--flight-angle', `${flightAngle}deg`);
+  // Speed & travel distance
+  const speed = rand(v.speedRange[0], v.speedRange[1]);
+  const travel = rand(v.travelRange[0], v.travelRange[1]);
+  const trailScale = rand(v.trailScale[0], v.trailScale[1]);
 
-  container.appendChild(meteor);
-  meteor.addEventListener('animationend', () => meteor.remove(), { once: true });
+  el.style.setProperty('--x', x);
+  el.style.setProperty('--y', y);
+  el.style.setProperty('--angle', angle);
+  el.style.setProperty('--speed', speed);
+  el.style.setProperty('--travel', travel);
+  el.style.setProperty('--trail', trailScale);
+
+  container.appendChild(el);
+
+  // Remove after one cycle
+  const durationMs = speed * 1000;
+  setTimeout(() => el.remove(), durationMs + 100);
 }
 
 function tick() {
   if (!container || !container.isConnected || prefersReducedMotion()) return;
 
-  const count = Math.random() < 0.4 ? 2 : 1;
+  const count = Math.random() < 0.35 ? 2 : 1;
   for (let i = 0; i < count; i++) {
-    if (i === 0) {
-      spawnMeteor();
-    } else {
-      setTimeout(spawnMeteor, rand(100, 500));
-    }
+    if (i === 0) spawnMeteor();
+    else setTimeout(spawnMeteor, rand(100, 500));
   }
-
   scheduleNext();
 }
 
 function scheduleNext() {
-  const delay = rand(MIN_INTERVAL_MS, MAX_INTERVAL_MS);
-  timeoutId = setTimeout(tick, delay);
+  timeoutId = setTimeout(tick, rand(MIN_INTERVAL_MS, MAX_INTERVAL_MS));
 }
 
 export function initShootingStar(containerEl) {
-  if (timeoutId) {
-    clearTimeout(timeoutId);
-    timeoutId = null;
-  }
-
+  if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
   container = containerEl;
   if (!container || prefersReducedMotion()) return;
-
-  timeoutId = setTimeout(tick, rand(800, 1500));
+  timeoutId = setTimeout(tick, rand(600, 1200));
 
   window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
-    if (e.matches && timeoutId) {
-      clearTimeout(timeoutId);
-      timeoutId = null;
-    } else if (!e.matches && !timeoutId) {
-      scheduleNext();
-    }
+    if (e.matches && timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+    else if (!e.matches && !timeoutId) scheduleNext();
   });
 }

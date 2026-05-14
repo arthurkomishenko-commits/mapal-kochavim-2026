@@ -186,242 +186,217 @@
 }
 
 /* ══════════════════════════════════════════════════════
-   Shooting Stars — 5 animation variants
+   Meteors — two-animation architecture (shoot + spark)
 
-   Architecture: the entire .shooting-star element is ROTATED
-   to match the travel direction. Movement is along the X axis
-   only (translateX). The tail naturally points backward.
-   This means the head+tail always align with the flight path.
+   Based on proven CodePen/Gist pattern:
+   - .meteor container: positioned, animated with rotate+translate
+   - .meteor__trail child: gradient line, animated with scaleX
+   - Two independent @keyframes = trail grows/shrinks separately
+   - CSS variables: --x, --y, --angle, --speed, --travel, --trail
+
+   No head element — the bright tip is the end of the trail gradient.
    ══════════════════════════════════════════════════════ */
 
-.shooting-star {
+.meteor {
   position: absolute;
-  top: var(--start-y);
-  left: var(--start-x);
+  top: calc(var(--y) * 1vh);
+  left: calc(var(--x) * 1vw);
   z-index: 3;
-  opacity: 0;
   pointer-events: none;
-  rotate: var(--flight-angle, 45deg);
-  /* Small bright head — not a lamp, a hot particle */
-  width: var(--head-size, 3px);
-  height: var(--head-size, 3px);
-  border-radius: 50%;
-  background: var(--head-color, #FFFBE8);
-  box-shadow:
-    0 0 3px 1px rgba(255, 251, 232, 0.8),
-    0 0 8px 2px rgba(248, 217, 160, 0.25);
+  animation: shoot calc(var(--speed) * 1s) linear both;
 }
 
-/* ── Tail: always trails BEHIND the head along the flight axis ── */
-.shooting-star::before {
-  content: '';
+.meteor__trail {
+  height: 2px;
+  width: 40px;
   position: absolute;
-  top: 50%;
-  /* Tail extends to the LEFT (behind the head, since head moves RIGHT) */
-  right: 100%;
-  width: var(--tail-length, 120px);
-  height: var(--tail-width, 2px);
-  transform: translateY(-50%);
-  /* Gradient: bright near head → fades to nothing at tail end */
   background: linear-gradient(
-    to right,
-    rgba(100, 140, 210, 0) 0%,
-    rgba(140, 170, 230, 0.08) 15%,
-    rgba(200, 200, 255, 0.15) 30%,
-    rgba(232, 200, 140, 0.3) 50%,
-    rgba(248, 217, 160, 0.5) 70%,
-    rgba(255, 240, 210, 0.7) 85%,
-    rgba(255, 251, 232, 0.3) 100%
+    90deg,
+    transparent 0%,
+    rgba(180, 200, 255, 0.12) 15%,
+    rgba(220, 220, 255, 0.3) 40%,
+    rgba(255, 255, 255, 0.7) 80%,
+    rgba(255, 255, 255, 0.9) 100%
   );
-  border-radius: 1px;
+  border-radius: 100% 25% 25% 100%;
+  filter: blur(0.5px) drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+  animation: spark calc(var(--speed) * 1s) linear both;
 }
 
-/* ── Inner core tail: thin hot-white line ── */
-.shooting-star::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: 100%;
-  width: calc(var(--tail-length, 120px) * 0.45);
-  height: 1px;
-  transform: translateY(-50%);
-  background: linear-gradient(
-    to right,
-    rgba(255, 240, 220, 0) 0%,
-    rgba(255, 250, 240, 0.3) 30%,
-    rgba(255, 255, 255, 0.8) 70%,
-    rgba(255, 255, 255, 0.4) 100%
-  );
+@media (min-width: 768px) {
+  .meteor__trail {
+    height: 3px;
+    width: 70px;
+  }
 }
 
-/*
- * METEOR PHYSICS — atmospheric entry with acceleration
- *
- * Architecture: the .shooting-star element is rotated via CSS `rotate`
- * to match the flight direction. All keyframe movement uses translateX()
- * only — moving along the flight axis. The tail (::before/::after) is
- * positioned behind the head via `right: 100%` so it ALWAYS trails.
- *
- * Acceleration: keyframes use quadratic position distribution:
- *   first 30% of time  →  ~5% of distance  (slow atmospheric entry)
- *   next 30% of time   →  ~35% of distance  (heating, accelerating)
- *   last 40% of time   →  ~60% of distance  (full speed burnout)
- *
- * Color shift: warm white → golden yellow → cooling blue via hue-rotate
- * All use `animation-timing-function: linear` — speed lives in keyframes.
- */
-
-
-/* ═══ Type 1: Classic Perseid ═══ */
-
-.shooting-star--classic {
-  --head-size: 3px;
-  --tail-length: 120px;
-  --tail-width: 1.5px;
-  animation: meteor-classic var(--duration) linear forwards;
-}
-
-@keyframes meteor-classic {
-  /* ── Slow appearance ── */
-  0%   { opacity: 0;    transform: translateX(0); }
-  8%   { opacity: 0.15; transform: translateX(calc(var(--travel-dist) * 0.005)); }
-  18%  { opacity: 0.5;  transform: translateX(calc(var(--travel-dist) * 0.02)); }
-  25%  { opacity: 0.9;  transform: translateX(calc(var(--travel-dist) * 0.05)); }
-  /* ── Fast bright streak ── */
-  35%  { opacity: 1;    transform: translateX(calc(var(--travel-dist) * 0.2));  filter: brightness(1.5); }
-  45%  { opacity: 1;    transform: translateX(calc(var(--travel-dist) * 0.45)); filter: brightness(1.2); }
-  55%  { opacity: 0.8;  transform: translateX(calc(var(--travel-dist) * 0.65)); filter: brightness(0.9) hue-rotate(-12deg); }
-  /* ── Slow fade out, cooling ── */
-  70%  { opacity: 0.4;  transform: translateX(calc(var(--travel-dist) * 0.78)); filter: brightness(0.5) hue-rotate(-25deg); }
-  85%  { opacity: 0.12; transform: translateX(calc(var(--travel-dist) * 0.9));  filter: brightness(0.2) hue-rotate(-35deg); }
-  100% { opacity: 0;    transform: translateX(var(--travel-dist));              filter: brightness(0.05) hue-rotate(-40deg); }
-}
-
-
-/* ═══ Type 2: Fireball — big, dramatic, slow entry ═══ */
-
-.shooting-star--fireball {
-  --head-size: 4px;
-  --head-color: #FFE8C0;
-  --tail-length: 180px;
-  --tail-width: 2px;
-  animation: meteor-fireball var(--duration) linear forwards;
-}
-
-.shooting-star--fireball::before {
-  background: linear-gradient(
-    to right,
-    rgba(80, 120, 200, 0) 0%,
-    rgba(200, 150, 100, 0.15) 30%,
-    rgba(255, 180, 80, 0.4) 60%,
-    rgba(255, 230, 170, 0.3) 100%
-  );
-}
-
-@keyframes meteor-fireball {
-  /* ── Slow appearance ── */
-  0%   { opacity: 0;    transform: translateX(0); }
-  6%   { opacity: 0.1;  transform: translateX(calc(var(--travel-dist) * 0.003)); }
-  14%  { opacity: 0.4;  transform: translateX(calc(var(--travel-dist) * 0.015)); }
-  22%  { opacity: 0.8;  transform: translateX(calc(var(--travel-dist) * 0.04)); }
-  /* ── Fast bright core ── */
-  30%  { opacity: 1;    transform: translateX(calc(var(--travel-dist) * 0.12)); filter: brightness(1.8); }
-  36%  { opacity: 1;    transform: translateX(calc(var(--travel-dist) * 0.25)); filter: brightness(1.4); }
-  48%  { opacity: 0.85; transform: translateX(calc(var(--travel-dist) * 0.5));  filter: brightness(1) hue-rotate(-8deg); }
-  /* ── Long slow fade ── */
-  65%  { opacity: 0.4;  transform: translateX(calc(var(--travel-dist) * 0.7));  filter: brightness(0.5) hue-rotate(-20deg); }
-  80%  { opacity: 0.15; transform: translateX(calc(var(--travel-dist) * 0.85)); filter: brightness(0.2) hue-rotate(-32deg); }
-  100% { opacity: 0;    transform: translateX(var(--travel-dist));              filter: brightness(0.05) hue-rotate(-40deg); }
-}
-
-
-/* ═══ Type 3: Swift — blink and miss ═══ */
-
-.shooting-star--swift {
-  --head-size: 2px;
-  --tail-length: 60px;
-  --tail-width: 1px;
-  animation: meteor-swift var(--duration) linear forwards;
-}
-
-@keyframes meteor-swift {
-  0%   { opacity: 0;    transform: translateX(0); }
-  5%   { opacity: 0.3;  transform: translateX(calc(var(--travel-dist) * 0.01)); }
-  12%  { opacity: 0.8;  transform: translateX(calc(var(--travel-dist) * 0.04)); }
-  /* Fast streak */
-  30%  { opacity: 0.9;  transform: translateX(calc(var(--travel-dist) * 0.35)); }
-  50%  { opacity: 0.5;  transform: translateX(calc(var(--travel-dist) * 0.6));  filter: hue-rotate(-15deg); }
+/* Movement: slow entry → accelerate → fade out slowly */
+@keyframes shoot {
+  0% {
+    transform: rotate(calc(var(--angle) * 1deg));
+    opacity: 1;
+  }
+  /* Slow entry — barely moves */
+  12% {
+    transform: rotate(calc(var(--angle) * 1deg)) translate(calc(var(--travel) * 0.02vw), 0);
+    opacity: 1;
+  }
+  /* Accelerating */
+  30% {
+    transform: rotate(calc(var(--angle) * 1deg)) translate(calc(var(--travel) * 0.15vw), 0);
+    opacity: 1;
+  }
+  /* Fast core */
+  55% {
+    transform: rotate(calc(var(--angle) * 1deg)) translate(calc(var(--travel) * 0.55vw), 0);
+    opacity: 0.8;
+  }
+  /* Decelerating */
+  75% {
+    transform: rotate(calc(var(--angle) * 1deg)) translate(calc(var(--travel) * 0.8vw), 0);
+    opacity: 0.3;
+  }
   /* Slow fade */
-  75%  { opacity: 0.1;  transform: translateX(calc(var(--travel-dist) * 0.82)); filter: hue-rotate(-25deg); }
-  100% { opacity: 0;    transform: translateX(var(--travel-dist));              filter: hue-rotate(-30deg); }
+  100% {
+    transform: rotate(calc(var(--angle) * 1deg)) translate(calc(var(--travel) * 1vw), 0);
+    opacity: 0;
+  }
 }
 
-
-/* ═══ Type 4: Fragment — breaks apart mid-flight ═══ */
-
-.shooting-star--fragment {
-  --head-size: 3px;
-  --tail-length: 130px;
-  --tail-width: 1.5px;
-  animation: meteor-fragment var(--duration) linear forwards;
+/* Trail: grows → holds → shrinks (independent of movement) */
+@keyframes spark {
+  0%, 8% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  15% {
+    transform: scaleX(0.3);
+    opacity: 0.5;
+  }
+  25% {
+    transform: scaleX(0.8);
+    opacity: 0.9;
+  }
+  35%, 50% {
+    transform: scaleX(var(--trail));
+    opacity: 1;
+  }
+  70% {
+    transform: scaleX(calc(var(--trail) * 0.6));
+    opacity: 0.5;
+  }
+  85% {
+    transform: scaleX(calc(var(--trail) * 0.2));
+    opacity: 0.15;
+  }
+  100% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
 }
 
-@keyframes meteor-fragment {
-  /* ── Slow appearance ── */
-  0%   { opacity: 0;    transform: translateX(0); }
-  7%   { opacity: 0.2;  transform: translateX(calc(var(--travel-dist) * 0.005)); }
-  16%  { opacity: 0.6;  transform: translateX(calc(var(--travel-dist) * 0.025)); }
-  24%  { opacity: 0.9;  transform: translateX(calc(var(--travel-dist) * 0.06)); }
-  /* ── Fast streak ── */
-  35%  { opacity: 1;    transform: translateX(calc(var(--travel-dist) * 0.2));  filter: brightness(1.2); }
-  /* ── Instant split flash — 2% window ── */
-  42%  { opacity: 1;    transform: translateX(calc(var(--travel-dist) * 0.35)); filter: brightness(2); }
-  44%  { opacity: 0.9;  transform: translateX(calc(var(--travel-dist) * 0.38)); filter: brightness(1); }
-  /* ── Slow fade ── */
-  60%  { opacity: 0.4;  transform: translateX(calc(var(--travel-dist) * 0.6));  filter: brightness(0.6) hue-rotate(-15deg); }
-  80%  { opacity: 0.1;  transform: translateX(calc(var(--travel-dist) * 0.82)); filter: brightness(0.2) hue-rotate(-30deg); }
-  100% { opacity: 0;    transform: translateX(var(--travel-dist));              filter: brightness(0.05) hue-rotate(-38deg); }
-}
-
-
-/* ═══ Type 5: Glider — long, graceful, cool-toned ═══ */
-
-.shooting-star--glider {
-  --head-size: 2.5px;
-  --head-color: #E8EEFF;
-  --tail-length: 150px;
-  --tail-width: 1px;
-  animation: meteor-glider var(--duration) linear forwards;
-}
-
-.shooting-star--glider::before {
+/* ── Variant: Bright — warmer, bigger trail ── */
+.meteor--bright .meteor__trail {
+  height: 3px;
+  width: 55px;
   background: linear-gradient(
-    to right,
-    rgba(100, 140, 210, 0) 0%,
-    rgba(160, 185, 240, 0.15) 40%,
-    rgba(200, 215, 255, 0.3) 70%,
-    rgba(224, 232, 255, 0.15) 100%
+    90deg,
+    transparent 0%,
+    rgba(255, 220, 150, 0.1) 15%,
+    rgba(255, 240, 200, 0.35) 40%,
+    rgba(255, 255, 240, 0.75) 80%,
+    rgba(255, 255, 255, 0.95) 100%
   );
+  filter: blur(0.8px) drop-shadow(0 0 6px rgba(255, 230, 150, 0.7));
 }
 
-.shooting-star--glider::after {
+@media (min-width: 768px) {
+  .meteor--bright .meteor__trail {
+    height: 4px;
+    width: 90px;
+  }
+}
+
+/* ── Variant: Faint — tiny, barely visible ── */
+.meteor--faint .meteor__trail {
+  height: 1px;
+  width: 25px;
   background: linear-gradient(
-    to right,
-    rgba(200, 220, 255, 0) 0%,
-    rgba(230, 240, 255, 0.4) 60%,
-    rgba(255, 255, 255, 0.2) 100%
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 40%,
+    rgba(255, 255, 255, 0.5) 100%
   );
+  filter: blur(0.3px) drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
 }
 
-@keyframes meteor-glider {
-  0%   { opacity: 0;    transform: translateX(0); }
-  8%   { opacity: 0.2;  transform: translateX(calc(var(--travel-dist) * 0.01)); }
-  18%  { opacity: 0.6;  transform: translateX(calc(var(--travel-dist) * 0.04)); }
-  30%  { opacity: 0.9;  transform: translateX(calc(var(--travel-dist) * 0.1));  filter: brightness(1.3); }
-  45%  { opacity: 0.7;  transform: translateX(calc(var(--travel-dist) * 0.35)); filter: brightness(1) hue-rotate(-5deg); }
-  65%  { opacity: 0.4;  transform: translateX(calc(var(--travel-dist) * 0.6));  filter: brightness(0.7) hue-rotate(-15deg); }
-  82%  { opacity: 0.15; transform: translateX(calc(var(--travel-dist) * 0.82)); filter: brightness(0.3) hue-rotate(-22deg); }
-  100% { opacity: 0;    transform: translateX(var(--travel-dist));              filter: brightness(0.05) hue-rotate(-30deg); }
+/* ── Variant: Flash — brief flare mid-flight ── */
+.meteor--flash .meteor__trail {
+  animation-name: spark-flash;
+}
+
+@keyframes spark-flash {
+  0%, 8% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  15% {
+    transform: scaleX(0.3);
+    opacity: 0.4;
+  }
+  30% {
+    transform: scaleX(var(--trail));
+    opacity: 0.8;
+  }
+  /* Instant flare */
+  42% {
+    transform: scaleX(calc(var(--trail) * 1.5));
+    opacity: 1;
+    filter: blur(0.5px) drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
+  }
+  48% {
+    transform: scaleX(var(--trail));
+    opacity: 0.7;
+    filter: blur(0.5px) drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+  }
+  70% {
+    transform: scaleX(calc(var(--trail) * 0.4));
+    opacity: 0.3;
+  }
+  100% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+}
+
+/* ── Variant: Cold — blue-tinted ── */
+.meteor--cold .meteor__trail {
+  height: 2px;
+  width: 50px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(150, 180, 255, 0.1) 20%,
+    rgba(180, 210, 255, 0.35) 50%,
+    rgba(210, 230, 255, 0.7) 80%,
+    rgba(230, 240, 255, 0.85) 100%
+  );
+  filter: blur(0.5px) drop-shadow(0 0 5px rgba(180, 210, 255, 0.5));
+}
+
+@media (min-width: 768px) {
+  .meteor--cold .meteor__trail {
+    width: 80px;
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .meteor,
+  .meteor__trail {
+    animation: none;
+    display: none;
+  }
 }
 
 /* ── Scroll hint ── */
