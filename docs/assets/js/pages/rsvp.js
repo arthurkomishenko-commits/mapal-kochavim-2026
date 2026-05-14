@@ -84,6 +84,13 @@ const BRINGING_CATEGORIES = [
       { id: 'walkieTalkie', i18n: 'rsvp.bWalkie' },
     ],
   },
+  {
+    key: 'tools',
+    i18n: 'rsvp.bringCatTools',
+    items: [
+      { id: 'tools', i18n: 'rsvp.bTools' },
+    ],
+  },
 ];
 
 // ═══════════════════════════════════════════════════
@@ -408,6 +415,13 @@ function renderForm() {
 
   inner.appendChild(bringSection);
 
+  // ── Live stats (what everyone is bringing) ──
+  const statsWrap = document.createElement('div');
+  statsWrap.className = 'form-section';
+  statsWrap.id = 'bring-stats';
+  inner.appendChild(statsWrap);
+  renderBringStats(statsWrap);
+
   // ── Save ──
   const saveBtn = document.createElement('button');
   saveBtn.type = 'button';
@@ -431,6 +445,74 @@ function renderForm() {
   if (formData.companions && formData.companions.length > 0) {
     formData.companions.forEach(c => addCompanionRow(compList, c.name, c.phone));
   }
+}
+
+// ═══════════════════════════════════════════════════
+// LIVE STATS — what everyone is bringing (aggregated)
+// ═══════════════════════════════════════════════════
+
+// Build a flat id→i18nKey map from categories
+const ITEM_I18N = {};
+BRINGING_CATEGORIES.forEach(cat => {
+  cat.items.forEach(item => { ITEM_I18N[item.id] = item.i18n; });
+});
+
+function aggregateBringing() {
+  const totals = {};
+  // Scan all registrations in localStorage
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key.startsWith('mapal-rsvp-')) continue;
+    try {
+      const data = JSON.parse(localStorage.getItem(key));
+      if (!data.bringing || data.cancelled) continue;
+      for (const [id, val] of Object.entries(data.bringing)) {
+        if (!val) continue;
+        const n = (typeof val === 'number') ? val : 1;
+        totals[id] = (totals[id] || 0) + n;
+      }
+    } catch {}
+  }
+  return totals;
+}
+
+function renderBringStats(container) {
+  const totals = aggregateBringing();
+  const entries = Object.entries(totals).filter(([, v]) => v > 0);
+
+  if (entries.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const title = document.createElement('div');
+  title.className = 'form-section__title';
+  title.textContent = i18n.t('rsvp.statsTitle');
+  title.setAttribute('data-i18n', 'rsvp.statsTitle');
+
+  const grid = document.createElement('div');
+  grid.className = 'bring-stats-grid';
+
+  entries.forEach(([id, count]) => {
+    const cell = document.createElement('div');
+    cell.className = 'bring-stat';
+
+    const num = document.createElement('span');
+    num.className = 'bring-stat__count';
+    num.textContent = count;
+
+    const label = document.createElement('span');
+    label.className = 'bring-stat__label';
+    label.textContent = i18n.t(ITEM_I18N[id] || id);
+
+    cell.appendChild(num);
+    cell.appendChild(label);
+    grid.appendChild(cell);
+  });
+
+  container.innerHTML = '';
+  container.appendChild(title);
+  container.appendChild(grid);
 }
 
 // ═══════════════════════════════════════════════════

@@ -334,6 +334,35 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ── Bringing stats grid ── */
+
+.bring-stats-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bring-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: rgba(107, 203, 119, 0.06);
+  border: 1px solid rgba(107, 203, 119, 0.12);
+  border-radius: 16px;
+  font-size: 0.75rem;
+}
+
+.bring-stat__count {
+  font-weight: 700;
+  color: #6BCB77;
+  font-variant-numeric: tabular-nums;
+}
+
+.bring-stat__label {
+  color: rgba(165, 160, 154, 0.7);
+}
+
 /* ── Section divider ── */
 
 .form-section {
