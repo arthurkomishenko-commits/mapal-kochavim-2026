@@ -23,13 +23,9 @@ const BRINGING_CATEGORIES = [
     key: 'camp',
     i18n: 'rsvp.bringCatCamp',
     items: [
-      { id: 'tent',       i18n: 'rsvp.bTent',       qty: true },
       { id: 'tarp',       i18n: 'rsvp.bTarp',       qty: true },
       { id: 'chairs',     i18n: 'rsvp.bChairs',     qty: true },
       { id: 'tables',     i18n: 'rsvp.bTables',     qty: true },
-      { id: 'blankets',   i18n: 'rsvp.bBlankets',   qty: true },
-      { id: 'hammock',    i18n: 'rsvp.bHammock' },
-      { id: 'trashBags',  i18n: 'rsvp.bTrashBags' },
     ],
   },
   {
@@ -41,7 +37,9 @@ const BRINGING_CATEGORIES = [
       { id: 'firewood',   i18n: 'rsvp.bFirewood' },
       { id: 'cooler',     i18n: 'rsvp.bCooler' },
       { id: 'kettle',     i18n: 'rsvp.bKettle' },
-      { id: 'dishes',     i18n: 'rsvp.bDishes' },
+      { id: 'pot',        i18n: 'rsvp.bPot' },
+      { id: 'stove',      i18n: 'rsvp.bStove' },
+      { id: 'dispDishes', i18n: 'rsvp.bDispDishes' },
     ],
   },
   {
@@ -61,9 +59,7 @@ const BRINGING_CATEGORIES = [
     i18n: 'rsvp.bringCatStars',
     items: [
       { id: 'telescope',  i18n: 'rsvp.bTelescope' },
-      { id: 'binoculars', i18n: 'rsvp.bBinoculars' },
-      { id: 'redLight',   i18n: 'rsvp.bRedLight',   qty: true },
-      { id: 'flashlight', i18n: 'rsvp.bFlashlight' },
+      { id: 'redFlash',   i18n: 'rsvp.bRedFlash',   qty: true },
     ],
   },
   {
@@ -79,16 +75,14 @@ const BRINGING_CATEGORIES = [
     key: 'safety',
     i18n: 'rsvp.bringCatSafety',
     items: [
-      { id: 'firstAid',     i18n: 'rsvp.bFirstAid' },
-      { id: 'fireExtinguisher', i18n: 'rsvp.bFireExt' },
-      { id: 'walkieTalkie', i18n: 'rsvp.bWalkie' },
+      { id: 'firstAid',   i18n: 'rsvp.bFirstAid' },
     ],
   },
   {
     key: 'tools',
     i18n: 'rsvp.bringCatTools',
     items: [
-      { id: 'tools', i18n: 'rsvp.bTools' },
+      { id: 'tools',      i18n: 'rsvp.bTools' },
     ],
   },
 ];
@@ -117,7 +111,7 @@ let containerEl = null;
 
 function resetState() {
   formData = {
-    phone: '', name: '', city: '', isDriving: false,
+    phone: '', name: '', city: '', isDriving: false, hasDog: false,
     companions: [], bringing: {},
     addedByPhone: null, addedByName: null,
   };
@@ -276,6 +270,7 @@ function renderForm() {
   drivingSection.className = 'form-section';
 
   const toggle = document.createElement('label');
+  toggle.id = 'rsvp-driving-toggle';
   toggle.className = `form-toggle ${formData.isDriving ? 'form-toggle--active' : ''}`;
   toggle.innerHTML = `
     <span class="form-toggle__track"><span class="form-toggle__thumb"></span></span>
@@ -314,6 +309,21 @@ function renderForm() {
   addBtn.textContent = '+ ' + i18n.t('rsvp.addCompanion');
   addBtn.addEventListener('click', () => addCompanionRow(compList));
   compSection.appendChild(addBtn);
+
+  // Dog toggle
+  const dogToggle = document.createElement('label');
+  dogToggle.className = `form-toggle form-toggle--small ${formData.hasDog ? 'form-toggle--active' : ''}`;
+  dogToggle.style.marginBlockStart = '16px';
+  dogToggle.innerHTML = `
+    <span class="form-toggle__track"><span class="form-toggle__thumb"></span></span>
+    <span class="form-toggle__label" data-i18n="rsvp.dogLabel">${i18n.t('rsvp.dogLabel')}</span>
+  `;
+  dogToggle.id = 'rsvp-dog-toggle';
+  dogToggle.addEventListener('click', (e) => {
+    e.preventDefault();
+    dogToggle.classList.toggle('form-toggle--active');
+  });
+  compSection.appendChild(dogToggle);
 
   inner.appendChild(compSection);
 
@@ -565,7 +575,8 @@ function handleSave() {
   const cityInput = document.getElementById('rsvp-city');
   const name = nameInput?.value.trim() || '';
   const city = cityInput?.value.trim() || '';
-  const isDriving = document.querySelector('.form-toggle')?.classList.contains('form-toggle--active') || false;
+  const isDriving = document.getElementById('rsvp-driving-toggle')?.classList.contains('form-toggle--active') || false;
+  const hasDog = document.getElementById('rsvp-dog-toggle')?.classList.contains('form-toggle--active') || false;
 
   // Validate name
   if (!name) {
@@ -602,6 +613,7 @@ function handleSave() {
     name,
     city,
     isDriving,
+    hasDog,
     companions,
     companionPhones,
     bringing,
