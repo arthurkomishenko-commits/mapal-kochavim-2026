@@ -123,7 +123,9 @@ const SPECTRAL_COLORS = {
  * Y uses sine compression (natural dome feel).
  */
 function azAltToXY(az, alt) {
-  const x = ((az + 180) % 360) / 360 * 100;
+  // South (180°) = center (50%). East (90°) = left (25%). West (270°) = right (75%).
+  const x = ((az - 180 + 540) % 360) / 360 * 100;
+  // Sine compression: zenith tight, horizon spread
   const y = 95 - Math.sin((alt * Math.PI) / 180) * 90;
   return { x, y };
 }
@@ -220,15 +222,15 @@ function createMilkyWay(container) {
   // Build multiple radial-gradients from the path points
   const gradients = MILKY_WAY.map(pt => {
     const pos = azAltToXY(pt.az, pt.alt);
-    const spreadX = pt.w * 1.5;
-    const spreadY = pt.w * 2.0;
-    const opacity = pt.b * 0.12; // visible but subtle
+    const spreadX = pt.w * 2.0;
+    const spreadY = pt.w * 2.5;
+    const opacity = pt.b * 0.18;
 
-    // Galactic center (brightness 1.0) gets warmer tint
+    // Galactic center gets warmer tint
     const isCenter = pt.b >= 0.95;
     const color = isCenter
-      ? `rgba(210,200,180,${opacity})`
-      : `rgba(190,205,240,${opacity})`;
+      ? `rgba(220,210,190,${opacity})`
+      : `rgba(195,210,240,${opacity})`;
 
     return `radial-gradient(ellipse ${spreadX}% ${spreadY}% at ${pos.x}% ${pos.y}%, ${color}, transparent)`;
   });
@@ -292,7 +294,7 @@ function milkyWayProximity(x, y) {
     const dx = x - pos.x;
     const dy = y - pos.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    const threshold = pt.w * 0.5;
+    const threshold = pt.w * 1.5;
     if (dist < threshold) return 1 - (dist / threshold);
     if (dist < minDist) minDist = dist;
   }
@@ -325,9 +327,11 @@ function createBackgroundStars(container, count) {
     // Skip if too close to horizon
     if (y > 92) continue;
 
-    const size = rand(0.5, 1.2);
+    // Stars along Milky Way are slightly brighter and denser
+    const mwProx = milkyWayProximity(x, y);
+    const size = mwProx > 0.3 ? rand(0.5, 1.4) : rand(0.4, 1.0);
     const color = BG_COLORS[Math.floor(Math.random() * BG_COLORS.length)];
-    const opacity = rand(0.2, 0.55);
+    const opacity = mwProx > 0.3 ? rand(0.3, 0.65) : rand(0.15, 0.45);
 
     const el = document.createElement('div');
     el.className = 'star star--faint';
@@ -356,7 +360,7 @@ export function initStarField(container) {
 
   const isMobile = window.innerWidth < 768;
   const maxMag = isMobile ? 3.2 : 4.5;
-  const bgCount = isMobile ? 55 : 100;
+  const bgCount = isMobile ? 80 : 250;
 
   // Layer 1: Milky Way haze
   createMilkyWay(container);
