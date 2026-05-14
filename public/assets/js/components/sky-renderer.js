@@ -105,27 +105,54 @@ function skyBrightness(alt) {
   return 1.0;
 }
 
-// Distance from a point to MW center line (returns 0-1, 1=on the line)
+// MW path with azimuths unwrapped to continuous range (no 0/360 jump)
+// Path goes from az=212 through 340, 0(=360), 5(=365)... to 75(=435)
+const MW_UNWRAPPED = MW_PATH.map((pt, i) => {
+  let az = pt.az;
+  // Points after the zenith crossing (originally az < 180) get +360
+  if (i > 0 && az < MW_PATH[i - 1].az - 90) az += 360;
+  // Propagate: if previous was unwrapped, this should be too
+  return { ...pt, uaz: az };
+});
+// Fix: ensure monotonic
+for (let i = 1; i < MW_UNWRAPPED.length; i++) {
+  if (MW_UNWRAPPED[i].uaz < MW_UNWRAPPED[i-1].uaz - 90) {
+    MW_UNWRAPPED[i].uaz += 360;
+  }
+}
+
+// Distance from a point to MW center line (returns 0-1, 1=on center)
 function mwProximity(az, alt) {
+  // Unwrap query azimuth to same range as MW path
+  let uaz = az;
+  const pathStart = MW_UNWRAPPED[0].uaz;
+  const pathEnd = MW_UNWRAPPED[MW_UNWRAPPED.length - 1].uaz;
+  // Try both az and az+360, pick whichever is closer to path range
+  if (abs(uaz + 360 - (pathStart + pathEnd) / 2) < abs(uaz - (pathStart + pathEnd) / 2)) {
+    uaz += 360;
+  }
+
   let best = 0;
-  for (let i = 0; i < MW_PATH.length - 1; i++) {
-    const a = MW_PATH[i], b = MW_PATH[i + 1];
+  for (let i = 0; i < MW_UNWRAPPED.length - 1; i++) {
+    const a = MW_UNWRAPPED[i], b = MW_UNWRAPPED[i + 1];
+
     // Project point onto segment
-    const t = max(0, min(1,
-      ((az - a.az) * (b.az - a.az) + (alt - a.alt) * (b.alt - a.alt)) /
-      ((b.az - a.az) ** 2 + (b.alt - a.alt) ** 2 + 0.001)
-    ));
-    const pAz = a.az + t * (b.az - a.az);
-    const pAlt = a.alt + t * (b.alt - a.alt);
+    const dAz = b.uaz - a.uaz;
+    const dAlt = b.alt - a.alt;
+    const len2 = dAz * dAz + dAlt * dAlt + 0.001;
+    const t = max(0, min(1, ((uaz - a.uaz) * dAz + (alt - a.alt) * dAlt) / len2));
+
+    const pAz = a.uaz + t * dAz;
+    const pAlt = a.alt + t * dAlt;
     const pW = a.w + t * (b.w - a.w);
     const pB = a.b + t * (b.b - a.b);
 
-    const dist = sqrt((az - pAz) ** 2 + (alt - pAlt) ** 2);
-    const halfW = pW; // Full width, not half — MW is WIDE
+    // Distance to closest point on segment
+    const dist = sqrt((uaz - pAz) ** 2 + (alt - pAlt) ** 2);
 
-    if (dist < halfW) {
-      // Gaussian with wide sigma — gradual falloff
-      const sigma = halfW * 0.4;
+    // Gaussian: sigma = 40% of band width. Smooth center-to-edge falloff.
+    const sigma = pW * 0.4;
+    if (dist < pW * 1.5) {
       const factor = Math.exp(-(dist * dist) / (2 * sigma * sigma));
       const val = factor * pB;
       if (val > best) best = val;
