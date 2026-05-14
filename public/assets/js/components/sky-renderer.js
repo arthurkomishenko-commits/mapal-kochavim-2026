@@ -86,16 +86,21 @@ function hexToRGB(hex) {
  * South is at the bottom, North at top.
  * MW appears as a near-vertical band through center.
  */
+/**
+ * Zenithal projection — visually tuned so MW core lands near screen center.
+ * Projection center offset left+up so the bright Sagittarius region
+ * (az≈218, alt≈18) appears at roughly (45%, 40%) of screen.
+ */
 function azAltToXY(az, alt, W, H) {
-  // Distance from center: 0 at zenith, 1 at horizon
   const r = 1 - alt / 90;
-  // Angle: south (180°) = bottom, north (0°) = top
-  // Rotate so south is at bottom of screen
-  const theta = (az - 180) * PI / 180;
-  // Scale to fit screen — use smaller dimension to keep circle
-  const scale = max(W, H) * 0.55;
-  const x = W / 2 + sin(theta) * r * scale;
-  const y = H / 2 + cos(theta) * r * scale;
+  // Rotate: az=220 (MW core direction) points toward bottom-center
+  const theta = (az - 220) * PI / 180;
+  const scale = min(W, H) * 0.5;
+  // Center offset: push left and up so MW core moves to screen center
+  const cx = W * 0.32;
+  const cy = H * 0.12;
+  const x = cx + sin(theta) * r * scale;
+  const y = cy + cos(theta) * r * scale;
   return [x, y];
 }
 
@@ -462,7 +467,7 @@ export default class SkyRenderer {
       const [px, py] = azAltToXY(pt.az, pt.alt, gW, gH);
       // Many smaller circles along the path for smooth blending
       const radius = max(pt.w * max(gW, gH) / 180 * 0.55, 8);
-      const alpha = pt.b * 0.04;
+      const alpha = pt.b * 0.025;
       const isCenter = pt.b >= 0.95;
       const color = isCenter ? '215,210,200' : '205,210,220';
 
@@ -485,7 +490,7 @@ export default class SkyRenderer {
       const ry = max(c.h * max(gW,gH) / 180 * 0.5, 3);
       gCtx.beginPath();
       gCtx.ellipse(px, py, rx, ry, 0, 0, PI * 2);
-      gCtx.fillStyle = `rgba(220,215,205,${(c.b * 0.04).toFixed(3)})`;
+      gCtx.fillStyle = `rgba(220,215,205,${(c.b * 0.025).toFixed(3)})`;
       gCtx.fill();
     }
 
