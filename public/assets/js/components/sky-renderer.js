@@ -262,16 +262,16 @@ function generateStars(count, W, H) {
       cb = max(0, cb - 15);
     }
 
-    // Alpha — MW center MUCH brighter than surroundings
+    // Alpha — MW brighter than surroundings, but not white blobs
     let a;
     if (mw > 0.5) {
-      a = rand(0.40, 1.0);   // MW core — bright and dense
+      a = rand(0.25, 0.75);  // MW core
     } else if (mw > 0.2) {
-      a = rand(0.20, 0.70);  // MW band
+      a = rand(0.15, 0.55);  // MW band
     } else if (mw > 0.05) {
-      a = rand(0.10, 0.45);  // MW fringe
+      a = rand(0.08, 0.35);  // MW fringe
     } else {
-      a = rand(0.05, 0.30);  // general sky — noticeably dimmer
+      a = rand(0.04, 0.22);  // general sky
     }
     // Sky brightness (horizon dimmer)
     a *= (0.4 + sb * 0.6); // floor at 40% so horizon isn't empty
@@ -462,7 +462,7 @@ export default class SkyRenderer {
       const [px, py] = azAltToXY(pt.az, pt.alt, gW, gH);
       // Many smaller circles along the path for smooth blending
       const radius = max(pt.w * max(gW, gH) / 180 * 0.55, 8);
-      const alpha = pt.b * 0.18;
+      const alpha = pt.b * 0.04;
       const isCenter = pt.b >= 0.95;
       const color = isCenter ? '215,210,200' : '205,210,220';
 
@@ -485,7 +485,7 @@ export default class SkyRenderer {
       const ry = max(c.h * max(gW,gH) / 180 * 0.5, 3);
       gCtx.beginPath();
       gCtx.ellipse(px, py, rx, ry, 0, 0, PI * 2);
-      gCtx.fillStyle = `rgba(220,215,205,${(c.b * 0.15).toFixed(3)})`;
+      gCtx.fillStyle = `rgba(220,215,205,${(c.b * 0.04).toFixed(3)})`;
       gCtx.fill();
     }
 
@@ -503,7 +503,7 @@ export default class SkyRenderer {
 
     // Composite — gentle glow, not bright patches
     ctx.save();
-    ctx.globalAlpha = 0.75;
+    ctx.globalAlpha = 0.35;
     ctx.drawImage(blurSrc, 0, 0, W, H);
     ctx.restore();
   }
@@ -626,7 +626,6 @@ export default class SkyRenderer {
       ctx.clearRect(0, 0, W, H);
 
       for (const s of self.twinkleStars) {
-        // Multi-frequency sine — no obvious periodicity
         const t = ts / 1000;
         const flicker =
           0.55 +
@@ -636,14 +635,18 @@ export default class SkyRenderer {
 
         const alpha = s.minFlicker + flicker * (1 - s.minFlicker);
 
+        // Apply parallax offset to twinkle stars too
+        const sx = s.px + px;
+        const sy = s.py + py;
+
         const [cr, cg, cb] = hexToRGB(s.color);
-        const grad = ctx.createRadialGradient(s.px, s.py, 0, s.px, s.py, s.glowR);
+        const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, s.glowR);
         grad.addColorStop(0, `rgba(255,255,255,${(alpha * 0.9).toFixed(2)})`);
         grad.addColorStop(0.3, `rgba(${cr},${cg},${cb},${(alpha * 0.35).toFixed(2)})`);
         grad.addColorStop(1, 'transparent');
 
         ctx.beginPath();
-        ctx.arc(s.px, s.py, s.glowR, 0, PI * 2);
+        ctx.arc(sx, sy, s.glowR, 0, PI * 2);
         ctx.fillStyle = grad;
         ctx.fill();
       }
