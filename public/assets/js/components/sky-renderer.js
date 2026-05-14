@@ -129,21 +129,21 @@ function skyBrightness(alt) {
 let _mwScreenW = 0, _mwScreenH = 0;
 
 function mwScreenProximity(screenX, screenY, W, H) {
-  // MW center line: from top-center to bottom-center, slight tilt
-  const topX = W * 0.47;
-  const botX = W * 0.53;
-  const t = screenY / H; // 0=top, 1=bottom
+  // MW center line: from left-center to right-center, slight tilt
+  const leftY = H * 0.47;
+  const rightY = H * 0.53;
+  const t = screenX / W; // 0=left, 1=right
 
-  // Center X at this Y
-  const centerX = topX + (botX - topX) * t;
+  // Center Y at this X
+  const centerY = leftY + (rightY - leftY) * t;
 
   // Width: wider band, peaks at Galactic Center (t≈0.55)
-  const baseWidth = W * 0.14;
+  const baseWidth = H * 0.14;
   const widthMult = 1 + 1.8 * Math.exp(-((t - 0.55) ** 2) / (2 * 0.18 ** 2));
   const bandWidth = baseWidth * widthMult;
 
   // Distance from center line
-  const dist = abs(screenX - centerX);
+  const dist = abs(screenY - centerY);
   if (dist > bandWidth * 2) return 0;
 
   // Gaussian falloff
@@ -466,25 +466,23 @@ export default class SkyRenderer {
     gCanvas.height = gH;
     const gCtx = gCanvas.getContext('2d');
 
-    // MW glow: screen-space vertical band, centered
-    // Draw 20 circles along the center line from top to bottom
-    for (let i = 0; i < 20; i++) {
-      const t = i / 19; // 0=top, 1=bottom
-      const cx = gW * (0.47 + 0.06 * t); // slight tilt
-      const cy = gH * (0.02 + 0.96 * t);
+    // MW glow: horizontal band, left to right
+    for (let i = 0; i < 24; i++) {
+      const t = i / 23; // 0=left, 1=right
+      const cx = gW * (0.02 + 0.96 * t);
+      const cy = gH * (0.47 + 0.06 * t); // slight tilt
 
-      // Width + brightness peak at t≈0.55 (Galactic Center)
+      // Brightness peak at t≈0.55 (Galactic Center)
       const bPeak = Math.exp(-((t - 0.55) ** 2) / (2 * 0.18 ** 2));
-      const radius = gW * 0.06 * (1 + 2 * bPeak);
+      const radius = gH * 0.06 * (1 + 2 * bPeak);
       const alpha = 0.015 + 0.04 * bPeak;
 
-      // Warmer near center, cooler at edges
       const warm = bPeak > 0.5;
       const color = warm ? '215,210,195' : '200,208,220';
 
       for (let j = 0; j < 4; j++) {
-        const ox = cx + (Math.random() - 0.5) * radius * 0.5;
-        const oy = cy + (Math.random() - 0.5) * gH * 0.04;
+        const ox = cx + (Math.random() - 0.5) * gW * 0.04;
+        const oy = cy + (Math.random() - 0.5) * radius * 0.5;
         const r = radius * (0.7 + Math.random() * 0.4);
         gCtx.beginPath();
         gCtx.arc(ox, oy, r, 0, PI * 2);
