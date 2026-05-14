@@ -288,10 +288,6 @@ export function renderHome(container) {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a4 4 0 0 0-8 0v2"/></svg>
             <span data-i18n="nav.pack">${i18n.t('nav.pack')}</span>
           </a>
-          <a href="#safety" class="home-nav-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            <span data-i18n="nav.safety">${i18n.t('nav.safety')}</span>
-          </a>
           <a href="#gallery" class="home-nav-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
             <span data-i18n="nav.gallery">${i18n.t('nav.gallery')}</span>
