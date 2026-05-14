@@ -111,7 +111,7 @@ let containerEl = null;
 
 function resetState() {
   formData = {
-    phone: '', name: '', city: '', isDriving: false, hasPet: false,
+    phone: '', name: '', city: '', isDriving: false, kids: 0,
     companions: [], bringing: {},
     addedByPhone: null, addedByName: null,
   };
@@ -310,20 +310,30 @@ function renderForm() {
   addBtn.addEventListener('click', () => addCompanionRow(compList));
   compSection.appendChild(addBtn);
 
-  // Dog toggle
-  const dogToggle = document.createElement('label');
-  dogToggle.className = `form-toggle form-toggle--small ${formData.hasPet ? 'form-toggle--active' : ''}`;
-  dogToggle.style.marginBlockStart = '16px';
-  dogToggle.innerHTML = `
-    <span class="form-toggle__track"><span class="form-toggle__thumb"></span></span>
-    <span class="form-toggle__label" data-i18n="rsvp.petLabel">${i18n.t('rsvp.petLabel')}</span>
+  // Children counter
+  const kidsWrap = document.createElement('div');
+  kidsWrap.className = 'chip-qty chip-qty--standalone' + (formData.kids > 0 ? ' chip-qty--active' : '');
+  kidsWrap.id = 'rsvp-kids';
+  kidsWrap.style.marginBlockStart = '16px';
+  kidsWrap.innerHTML = `
+    <span class="chip-qty__label" data-i18n="rsvp.kidsLabel">${i18n.t('rsvp.kidsLabel')}</span>
+    <span class="chip-qty__controls">
+      <button type="button" class="chip-qty__btn" data-dir="-1" aria-label="Remove">\u2212</button>
+      <span class="chip-qty__count">${formData.kids || 0}</span>
+      <button type="button" class="chip-qty__btn" data-dir="1" aria-label="Add">+</button>
+    </span>
   `;
-  dogToggle.id = 'rsvp-pet-toggle';
-  dogToggle.addEventListener('click', (e) => {
-    e.preventDefault();
-    dogToggle.classList.toggle('form-toggle--active');
+  kidsWrap.querySelectorAll('.chip-qty__btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const count = kidsWrap.querySelector('.chip-qty__count');
+      let n = parseInt(count.textContent) || 0;
+      n = Math.max(0, n + parseInt(btn.dataset.dir));
+      count.textContent = n;
+      kidsWrap.classList.toggle('chip-qty--active', n > 0);
+    });
   });
-  compSection.appendChild(dogToggle);
+  compSection.appendChild(kidsWrap);
 
   inner.appendChild(compSection);
 
@@ -576,7 +586,7 @@ function handleSave() {
   const name = nameInput?.value.trim() || '';
   const city = cityInput?.value.trim() || '';
   const isDriving = document.getElementById('rsvp-driving-toggle')?.classList.contains('form-toggle--active') || false;
-  const hasPet = document.getElementById('rsvp-pet-toggle')?.classList.contains('form-toggle--active') || false;
+  const kids = parseInt(document.querySelector('#rsvp-kids .chip-qty__count')?.textContent) || 0;
 
   // Validate name
   if (!name) {
@@ -613,7 +623,7 @@ function handleSave() {
     name,
     city,
     isDriving,
-    hasPet,
+    kids,
     companions,
     companionPhones,
     bringing,
