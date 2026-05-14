@@ -186,216 +186,161 @@
 }
 
 /* ══════════════════════════════════════════════════════
-   Meteors — two-animation architecture (shoot + spark)
+   Meteors — realistic Perseid physics
 
-   Based on proven CodePen/Gist pattern:
-   - .meteor container: positioned, animated with rotate+translate
-   - .meteor__trail child: gradient line, animated with scaleX
-   - Two independent @keyframes = trail grows/shrinks separately
-   - CSS variables: --x, --y, --angle, --speed, --travel, --trail
-
-   No head element — the bright tip is the end of the trail gradient.
+   Architecture (GPT-consulted):
+   - .meteor-layer: fixed overlay
+   - .meteor: tiny radial-gradient core with glow box-shadow
+   - .meteor__trail: long gradient line, independent scaleX animation
+   - Two @keyframes: meteor-flight (movement) + meteor-trail (trail)
+   - cubic-bezier(.22,.61,.36,1) — NOT linear
+   - Peak brightness in MIDDLE of flight
+   - Color: cold blue tail → warm white → pure white core
+   - Rare bolide events (super bright, every 40-90s)
    ══════════════════════════════════════════════════════ */
+
+.meteor-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ── Core: tiny bright particle ── */
 
 .meteor {
   position: absolute;
-  top: calc(var(--y) * 1vh);
-  left: calc(var(--x) * 1vw);
-  z-index: 3;
-  pointer-events: none;
-  animation: shoot calc(var(--speed) * 1s) linear both;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 999px;
+  opacity: 0;
+  background: radial-gradient(circle,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 245, 210, 1) 35%,
+    rgba(255, 210, 120, 0.9) 60%,
+    rgba(255, 210, 120, 0) 100%
+  );
+  box-shadow:
+    0 0 6px rgba(255, 255, 255, 0.9),
+    0 0 12px rgba(255, 220, 150, 0.6),
+    0 0 20px rgba(255, 180, 80, 0.25);
+  transform: rotate(var(--angle)) translate3d(0, 0, 0);
+  will-change: transform, opacity, filter;
+  animation: meteor-flight var(--duration) cubic-bezier(.22, .61, .36, 1) forwards;
 }
+
+/* ── Trail: long gradient, grows/shrinks independently ── */
 
 .meteor__trail {
-  height: 2px;
-  width: 40px;
   position: absolute;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(180, 200, 255, 0.12) 15%,
-    rgba(220, 220, 255, 0.3) 40%,
-    rgba(255, 255, 255, 0.7) 80%,
-    rgba(255, 255, 255, 0.9) 100%
+  top: 50%;
+  left: calc(-1 * var(--trail-length));
+  width: var(--trail-length);
+  height: 1.5px;
+  transform: translateY(-50%);
+  transform-origin: right center;
+  border-radius: 999px;
+  background: linear-gradient(90deg,
+    rgba(80, 140, 255, 0) 0%,
+    rgba(120, 170, 255, 0.1) 20%,
+    rgba(180, 220, 255, 0.3) 40%,
+    rgba(255, 230, 180, 0.65) 72%,
+    rgba(255, 255, 255, 1) 100%
   );
-  border-radius: 100% 25% 25% 100%;
-  filter: blur(0.5px) drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
-  animation: spark calc(var(--speed) * 1s) linear both;
+  filter: blur(0.35px);
+  opacity: 0;
+  animation: meteor-trail var(--duration) ease-out forwards;
 }
 
-@media (min-width: 768px) {
-  .meteor__trail {
-    height: 3px;
-    width: 70px;
-  }
-}
+/* ── Flight: slow entry → accelerate → peak → slow fade ── */
 
-/* Movement: slow entry → accelerate → fade out slowly */
-@keyframes shoot {
+@keyframes meteor-flight {
   0% {
-    transform: rotate(calc(var(--angle) * 1deg));
-    opacity: 1;
+    opacity: 0;
+    transform: rotate(var(--angle)) translate3d(0, 0, 0) scale(0.65);
+    filter: brightness(0.7) saturate(0.8);
   }
-  /* Slow entry — barely moves */
   12% {
-    transform: rotate(calc(var(--angle) * 1deg)) translate(calc(var(--travel) * 0.02vw), 0);
-    opacity: 1;
+    opacity: 0.45;
+    transform: rotate(var(--angle)) translate3d(calc(var(--travel) * 0.04), 0, 0);
+    filter: brightness(1) saturate(1);
   }
-  /* Accelerating */
-  30% {
-    transform: rotate(calc(var(--angle) * 1deg)) translate(calc(var(--travel) * 0.15vw), 0);
+  28% {
     opacity: 1;
+    transform: rotate(var(--angle)) translate3d(calc(var(--travel) * 0.15), 0, 0) scale(1);
+    filter: brightness(1.35) saturate(1.1);
   }
-  /* Fast core */
   55% {
-    transform: rotate(calc(var(--angle) * 1deg)) translate(calc(var(--travel) * 0.55vw), 0);
-    opacity: 0.8;
+    opacity: 1;
+    transform: rotate(var(--angle)) translate3d(calc(var(--travel) * 0.55), 0, 0) scale(1.05);
+    filter: brightness(1.8) saturate(1.2);
   }
-  /* Decelerating */
-  75% {
-    transform: rotate(calc(var(--angle) * 1deg)) translate(calc(var(--travel) * 0.8vw), 0);
-    opacity: 0.3;
+  78% {
+    opacity: 0.5;
+    transform: rotate(var(--angle)) translate3d(calc(var(--travel) * 0.8), 0, 0);
+    filter: brightness(1.1) saturate(0.9);
   }
-  /* Slow fade */
   100% {
-    transform: rotate(calc(var(--angle) * 1deg)) translate(calc(var(--travel) * 1vw), 0);
     opacity: 0;
+    transform: rotate(var(--angle)) translate3d(var(--travel), 0, 0) scale(0.85);
+    filter: brightness(0.6) saturate(0.6);
   }
 }
 
-/* Trail: grows → holds → shrinks (independent of movement) */
-@keyframes spark {
-  0%, 8% {
-    transform: scaleX(0);
+/* ── Trail: grow → hold → shrink ── */
+
+@keyframes meteor-trail {
+  0% {
     opacity: 0;
+    transform: translateY(-50%) scaleX(0.15);
   }
   15% {
-    transform: scaleX(0.3);
-    opacity: 0.5;
+    opacity: 0.35;
   }
-  25% {
-    transform: scaleX(0.8);
-    opacity: 0.9;
-  }
-  35%, 50% {
-    transform: scaleX(var(--trail));
+  35% {
     opacity: 1;
+    transform: translateY(-50%) scaleX(1);
   }
   70% {
-    transform: scaleX(calc(var(--trail) * 0.6));
-    opacity: 0.5;
-  }
-  85% {
-    transform: scaleX(calc(var(--trail) * 0.2));
-    opacity: 0.15;
-  }
-  100% {
-    transform: scaleX(0);
-    opacity: 0;
-  }
-}
-
-/* ── Variant: Bright — warmer, bigger trail ── */
-.meteor--bright .meteor__trail {
-  height: 3px;
-  width: 55px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 220, 150, 0.1) 15%,
-    rgba(255, 240, 200, 0.35) 40%,
-    rgba(255, 255, 240, 0.75) 80%,
-    rgba(255, 255, 255, 0.95) 100%
-  );
-  filter: blur(0.8px) drop-shadow(0 0 6px rgba(255, 230, 150, 0.7));
-}
-
-@media (min-width: 768px) {
-  .meteor--bright .meteor__trail {
-    height: 4px;
-    width: 90px;
-  }
-}
-
-/* ── Variant: Faint — tiny, barely visible ── */
-.meteor--faint .meteor__trail {
-  height: 1px;
-  width: 25px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.15) 40%,
-    rgba(255, 255, 255, 0.5) 100%
-  );
-  filter: blur(0.3px) drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
-}
-
-/* ── Variant: Flash — brief flare mid-flight ── */
-.meteor--flash .meteor__trail {
-  animation-name: spark-flash;
-}
-
-@keyframes spark-flash {
-  0%, 8% {
-    transform: scaleX(0);
-    opacity: 0;
-  }
-  15% {
-    transform: scaleX(0.3);
-    opacity: 0.4;
-  }
-  30% {
-    transform: scaleX(var(--trail));
-    opacity: 0.8;
-  }
-  /* Instant flare */
-  42% {
-    transform: scaleX(calc(var(--trail) * 1.5));
-    opacity: 1;
-    filter: blur(0.5px) drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
-  }
-  48% {
-    transform: scaleX(var(--trail));
     opacity: 0.7;
-    filter: blur(0.5px) drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
-  }
-  70% {
-    transform: scaleX(calc(var(--trail) * 0.4));
-    opacity: 0.3;
   }
   100% {
-    transform: scaleX(0);
     opacity: 0;
+    transform: translateY(-50%) scaleX(0.4);
   }
 }
 
-/* ── Variant: Cold — blue-tinted ── */
-.meteor--cold .meteor__trail {
-  height: 2px;
-  width: 50px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(150, 180, 255, 0.1) 20%,
-    rgba(180, 210, 255, 0.35) 50%,
-    rgba(210, 230, 255, 0.7) 80%,
-    rgba(230, 240, 255, 0.85) 100%
+/* ── Bolide: rare super-bright meteor ── */
+
+.meteor--bolide {
+  box-shadow:
+    0 0 8px rgba(255, 255, 255, 1),
+    0 0 20px rgba(255, 220, 150, 0.8),
+    0 0 40px rgba(255, 180, 80, 0.4),
+    0 0 60px rgba(255, 150, 50, 0.15);
+}
+
+.meteor--bolide .meteor__trail {
+  height: 2.5px;
+  background: linear-gradient(90deg,
+    rgba(60, 120, 255, 0) 0%,
+    rgba(100, 160, 255, 0.08) 15%,
+    rgba(160, 200, 255, 0.25) 30%,
+    rgba(255, 220, 160, 0.6) 55%,
+    rgba(255, 240, 200, 0.85) 80%,
+    rgba(255, 255, 255, 1) 100%
   );
-  filter: blur(0.5px) drop-shadow(0 0 5px rgba(180, 210, 255, 0.5));
-}
-
-@media (min-width: 768px) {
-  .meteor--cold .meteor__trail {
-    width: 80px;
-  }
+  filter: blur(0.5px) drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
 }
 
 /* ── Reduced motion ── */
+
 @media (prefers-reduced-motion: reduce) {
   .meteor,
   .meteor__trail {
-    animation: none;
-    display: none;
+    animation: none !important;
+    display: none !important;
   }
 }
 

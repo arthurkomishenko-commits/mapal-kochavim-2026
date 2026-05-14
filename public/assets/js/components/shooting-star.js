@@ -1,111 +1,130 @@
 /**
- * Shooting Stars — Perseid meteor shower
+ * Shooting Stars — realistic Perseid meteor physics
  *
- * Architecture (from best CodePen/Gist implementations):
- * - Each meteor is a .meteor element with a .meteor__trail child
- * - The .meteor gets a rotate + translate animation (movement)
- * - The .meteor__trail gets a scaleX animation (trail appears/disappears)
- * - Two separate @keyframes = independent control of speed vs trail
- * - Meteor is visible only ~5% of its animation cycle (rest is delay)
+ * Based on GPT consultation + CodePen best practices.
  *
- * All fly top→bottom at 25-65° angles. 1-2 every 3-7 seconds.
+ * Key principles:
+ * - Tiny core (1.5–3px), long trail (90–220px)
+ * - cubic-bezier easing, NOT linear
+ * - Peak brightness in the MIDDLE of flight, not at start
+ * - Color: blue→warm white→pure white (trail gradient)
+ * - Rare "bolide" super-bright events every 40-90s
+ * - Natural spawning: 3-8s gaps with occasional 0.4-0.9s bursts
  */
 
-const MIN_INTERVAL_MS = 3_000;
-const MAX_INTERVAL_MS = 7_000;
-
-// 5 visual variants with different trail widths, speeds, colors
-const VARIANTS = [
-  { cls: '',            weight: 40, speedRange: [1.2, 2.0], travelRange: [25, 40], trailScale: [1.5, 2.5] },
-  { cls: 'meteor--bright', weight: 12, speedRange: [1.6, 2.8], travelRange: [30, 50], trailScale: [2.5, 4]   },
-  { cls: 'meteor--faint',  weight: 25, speedRange: [0.8, 1.4], travelRange: [15, 28], trailScale: [1, 1.8]   },
-  { cls: 'meteor--flash',  weight: 13, speedRange: [1.0, 1.8], travelRange: [20, 35], trailScale: [1.8, 3]   },
-  { cls: 'meteor--cold',   weight: 10, speedRange: [1.8, 3.2], travelRange: [28, 45], trailScale: [2, 3.5]   },
-];
-
-let container = null;
-let timeoutId = null;
+let meteorLayer = null;
+let loopTimeout = null;
+let bolideTimeout = null;
 
 function rand(min, max) {
-  return min + Math.random() * (max - min);
+  return Math.random() * (max - min) + min;
 }
 
 function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-function pickVariant() {
-  const total = VARIANTS.reduce((s, v) => s + v.weight, 0);
-  let roll = Math.random() * total;
-  for (const v of VARIANTS) {
-    roll -= v.weight;
-    if (roll <= 0) return v;
-  }
-  return VARIANTS[0];
-}
+function spawnMeteor(isBolide = false) {
+  if (!meteorLayer || !meteorLayer.isConnected || prefersReducedMotion()) return;
 
-function spawnMeteor() {
-  if (!container || !container.isConnected) return;
-
-  const v = pickVariant();
-
-  const el = document.createElement('div');
-  el.className = `meteor ${v.cls}`.trim();
-  el.setAttribute('aria-hidden', 'true');
+  const meteor = document.createElement('div');
+  meteor.className = isBolide ? 'meteor meteor--bolide' : 'meteor';
 
   const trail = document.createElement('div');
   trail.className = 'meteor__trail';
-  el.appendChild(trail);
+  meteor.appendChild(trail);
 
-  // Position: upper sky
-  const x = rand(5, 90);
-  const y = rand(2, 35);
+  // Start position: upper sky, spread across width
+  const startX = rand(-10, 80);
+  const startY = rand(-15, 25);
 
-  // Angle: always down-right, 25-65°
-  const angle = rand(25, 65);
+  // Always downward: 28–62° from horizontal
+  const angle = rand(28, 62);
 
-  // Speed & travel distance
-  const speed = rand(v.speedRange[0], v.speedRange[1]);
-  const travel = rand(v.travelRange[0], v.travelRange[1]);
-  const trailScale = rand(v.trailScale[0], v.trailScale[1]);
+  // Duration: bolides are slower, regular vary
+  const duration = isBolide
+    ? rand(2200, 3200)
+    : rand(1400, 2600);
 
-  el.style.setProperty('--x', x);
-  el.style.setProperty('--y', y);
-  el.style.setProperty('--angle', angle);
-  el.style.setProperty('--speed', speed);
-  el.style.setProperty('--travel', travel);
-  el.style.setProperty('--trail', trailScale);
+  // Core size: tiny
+  const size = isBolide
+    ? rand(3, 4.5)
+    : rand(1.5, 3);
 
-  container.appendChild(el);
+  // Trail: long is key to realism
+  const trailLength = isBolide
+    ? rand(180, 300)
+    : rand(90, 200);
 
-  // Remove after one cycle
-  const durationMs = speed * 1000;
-  setTimeout(() => el.remove(), durationMs + 100);
+  // Travel distance along the rotated axis
+  const travel = isBolide
+    ? rand(50, 75)
+    : rand(30, 60);
+
+  meteor.style.left = `${startX}vw`;
+  meteor.style.top = `${startY}vh`;
+  meteor.style.setProperty('--angle', `${angle}deg`);
+  meteor.style.setProperty('--duration', `${duration}ms`);
+  meteor.style.setProperty('--size', `${size}px`);
+  meteor.style.setProperty('--trail-length', `${trailLength}px`);
+  meteor.style.setProperty('--travel', `${travel}vw`);
+
+  meteorLayer.appendChild(meteor);
+
+  setTimeout(() => meteor.remove(), duration + 300);
 }
 
-function tick() {
-  if (!container || !container.isConnected || prefersReducedMotion()) return;
+function meteorLoop() {
+  if (!meteorLayer || !meteorLayer.isConnected || prefersReducedMotion()) return;
 
-  const count = Math.random() < 0.35 ? 2 : 1;
-  for (let i = 0; i < count; i++) {
-    if (i === 0) spawnMeteor();
-    else setTimeout(spawnMeteor, rand(100, 500));
-  }
-  scheduleNext();
+  spawnMeteor();
+
+  // 18% chance of quick burst (second meteor within 0.4-0.9s)
+  const next = Math.random() < 0.18
+    ? rand(400, 900)
+    : rand(3500, 8000);
+
+  loopTimeout = setTimeout(meteorLoop, next);
 }
 
-function scheduleNext() {
-  timeoutId = setTimeout(tick, rand(MIN_INTERVAL_MS, MAX_INTERVAL_MS));
+function bolideLoop() {
+  if (!meteorLayer || !meteorLayer.isConnected || prefersReducedMotion()) return;
+
+  spawnMeteor(true);
+
+  // Next bolide in 40-90 seconds
+  bolideTimeout = setTimeout(bolideLoop, rand(40_000, 90_000));
 }
 
 export function initShootingStar(containerEl) {
-  if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
-  container = containerEl;
-  if (!container || prefersReducedMotion()) return;
-  timeoutId = setTimeout(tick, rand(600, 1200));
+  // Cleanup previous
+  if (loopTimeout) { clearTimeout(loopTimeout); loopTimeout = null; }
+  if (bolideTimeout) { clearTimeout(bolideTimeout); bolideTimeout = null; }
+
+  // Create or find meteor layer
+  meteorLayer = containerEl?.querySelector('.meteor-layer');
+  if (!meteorLayer && containerEl) {
+    meteorLayer = document.createElement('div');
+    meteorLayer.className = 'meteor-layer';
+    meteorLayer.setAttribute('aria-hidden', 'true');
+    containerEl.appendChild(meteorLayer);
+  }
+
+  if (!meteorLayer || prefersReducedMotion()) return;
+
+  // Start regular loop
+  loopTimeout = setTimeout(meteorLoop, rand(800, 1500));
+
+  // Start bolide loop (first one in 15-30s)
+  bolideTimeout = setTimeout(bolideLoop, rand(15_000, 30_000));
 
   window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
-    if (e.matches && timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
-    else if (!e.matches && !timeoutId) scheduleNext();
+    if (e.matches) {
+      if (loopTimeout) { clearTimeout(loopTimeout); loopTimeout = null; }
+      if (bolideTimeout) { clearTimeout(bolideTimeout); bolideTimeout = null; }
+    } else {
+      meteorLoop();
+      bolideTimeout = setTimeout(bolideLoop, rand(15_000, 30_000));
+    }
   });
 }
