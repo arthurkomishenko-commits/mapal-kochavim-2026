@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+functions/node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build
+functions/lib/
+
+# Logs
+*.log
+npm-debug.log*

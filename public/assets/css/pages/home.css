@@ -1,0 +1,277 @@
+/* ═══════════════════════════════════════════════════
+   Home page — Hero + Star field
+   ═══════════════════════════════════════════════════ */
+
+/* ── Navigation ── */
+
+.nav {
+  position: fixed;
+  top: 0;
+  inset-inline: 0;
+  z-index: var(--z-nav);
+  padding: var(--space-3) var(--space-5);
+  background: linear-gradient(
+    to bottom,
+    rgba(7, 11, 31, 0.9) 0%,
+    rgba(7, 11, 31, 0) 100%
+  );
+}
+
+.nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+}
+
+.nav__logo {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-starlight);
+  letter-spacing: 0.02em;
+}
+
+.nav__lang-btn {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-normal) var(--ease-natural);
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav__lang-btn:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-accent);
+}
+
+.nav__lang-btn:active {
+  transform: scale(0.96);
+}
+
+/* ── Hero section ── */
+
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: radial-gradient(
+    ellipse 120% 80% at 50% 100%,
+    var(--color-horizon) 0%,
+    var(--color-sky-deep) 40%,
+    var(--color-sky-deepest) 70%
+  );
+}
+
+.hero__content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: var(--space-5);
+  padding-block-start: var(--nav-height);
+}
+
+.hero__title {
+  font-size: clamp(2.5rem, 10vw, 7rem);
+  font-weight: 800;
+  line-height: var(--leading-tight);
+  color: var(--color-starlight);
+  margin-block-end: var(--space-4);
+  /* Subtle text glow */
+  text-shadow:
+    0 0 40px rgba(248, 217, 160, 0.1),
+    0 0 80px rgba(248, 217, 160, 0.05);
+}
+
+.hero__subtitle {
+  font-size: var(--text-xl);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-block-end: var(--space-8);
+}
+
+@media (min-width: 768px) {
+  .hero__subtitle {
+    font-size: var(--text-2xl);
+    letter-spacing: 0.2em;
+  }
+}
+
+/* ── Countdown ── */
+
+.hero__countdown {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-block-end: var(--space-8);
+}
+
+.countdown__unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 56px;
+}
+
+.countdown__number {
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  color: var(--color-ember-bright);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 768px) {
+  .countdown__number {
+    font-size: var(--text-5xl);
+  }
+}
+
+.countdown__label {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-block-start: var(--space-1);
+}
+
+.countdown__separator {
+  font-size: var(--text-3xl);
+  color: var(--color-text-tertiary);
+  line-height: 1;
+  opacity: 0.5;
+  /* Blink animation — subtle */
+  animation: blink 2s var(--ease-natural) infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.15; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .countdown__separator {
+    animation: none;
+  }
+}
+
+/* ── CTA Button ── */
+
+.hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4) var(--space-7);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-sky-deepest);
+  background: linear-gradient(
+    135deg,
+    var(--color-ember) 0%,
+    var(--color-ember-bright) 100%
+  );
+  border-radius: var(--radius-md);
+  min-height: 52px;
+  transition: all var(--duration-normal) var(--ease-natural);
+  /* Subtle inner glow */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    var(--shadow-glow-ember);
+}
+
+.hero__cta:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 0 30px rgba(232, 155, 75, 0.25),
+    0 0 80px rgba(232, 155, 75, 0.1);
+}
+
+.hero__cta:active {
+  transform: translateY(0);
+}
+
+/* ── Star field (CSS-only) ── */
+
+.hero__stars {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* Generate star layers with different sizes and animation speeds */
+.hero__stars::before,
+.hero__stars::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+/* Small stars — using radial gradients as dots */
+.hero__stars::before {
+  background-image:
+    radial-gradient(1px 1px at 10% 15%, rgba(245, 239, 224, 0.8), transparent),
+    radial-gradient(1px 1px at 25% 35%, rgba(245, 239, 224, 0.6), transparent),
+    radial-gradient(1px 1px at 40% 10%, rgba(245, 239, 224, 0.7), transparent),
+    radial-gradient(1px 1px at 55% 45%, rgba(245, 239, 224, 0.5), transparent),
+    radial-gradient(1px 1px at 70% 20%, rgba(245, 239, 224, 0.9), transparent),
+    radial-gradient(1px 1px at 85% 55%, rgba(245, 239, 224, 0.6), transparent),
+    radial-gradient(1px 1px at 15% 65%, rgba(245, 239, 224, 0.7), transparent),
+    radial-gradient(1px 1px at 30% 80%, rgba(245, 239, 224, 0.5), transparent),
+    radial-gradient(1px 1px at 50% 70%, rgba(245, 239, 224, 0.8), transparent),
+    radial-gradient(1px 1px at 65% 85%, rgba(245, 239, 224, 0.6), transparent),
+    radial-gradient(1px 1px at 80% 40%, rgba(245, 239, 224, 0.7), transparent),
+    radial-gradient(1px 1px at 95% 75%, rgba(245, 239, 224, 0.5), transparent),
+    radial-gradient(1px 1px at 5% 90%, rgba(245, 239, 224, 0.6), transparent),
+    radial-gradient(1px 1px at 45% 25%, rgba(245, 239, 224, 0.8), transparent),
+    radial-gradient(1px 1px at 75% 60%, rgba(245, 239, 224, 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 20% 50%, rgba(245, 239, 224, 0.9), transparent),
+    radial-gradient(1.5px 1.5px at 60% 30%, rgba(245, 239, 224, 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 90% 15%, rgba(245, 239, 224, 0.7), transparent);
+  animation: twinkle-slow 8s var(--ease-natural) infinite alternate;
+}
+
+/* Larger stars — fewer, brighter */
+.hero__stars::after {
+  background-image:
+    radial-gradient(2px 2px at 12% 28%, rgba(248, 217, 160, 0.9), transparent),
+    radial-gradient(2px 2px at 38% 62%, rgba(245, 239, 224, 0.8), transparent),
+    radial-gradient(2px 2px at 62% 18%, rgba(248, 217, 160, 0.7), transparent),
+    radial-gradient(2px 2px at 82% 72%, rgba(245, 239, 224, 0.9), transparent),
+    radial-gradient(2px 2px at 48% 88%, rgba(248, 217, 160, 0.6), transparent),
+    radial-gradient(2.5px 2.5px at 28% 42%, rgba(248, 217, 160, 1), transparent),
+    radial-gradient(2.5px 2.5px at 72% 52%, rgba(245, 239, 224, 0.9), transparent);
+  animation: twinkle-fast 5s var(--ease-natural) infinite alternate;
+}
+
+@keyframes twinkle-slow {
+  0% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+@keyframes twinkle-fast {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__stars::before,
+  .hero__stars::after {
+    animation: none;
+    opacity: 0.8;
+  }
+}

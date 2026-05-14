@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-base-path=".">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#070B1F">
+  <meta name="description" content="מפל כוכבים 2026 — קמפינג בנגב, פרסאידים">
+  <title>מפל כוכבים 2026</title>
+
+  <!-- Preload critical CSS -->
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/reset.css">
+  <link rel="stylesheet" href="assets/css/typography.css">
+  <link rel="stylesheet" href="assets/css/pages/home.css">
+
+  <!-- Prevent FOUC: set dark bg immediately -->
+  <style>
+    html { background-color: #070B1F; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ Navigation ═══ -->
+  <header class="nav" role="banner">
+    <nav class="nav__inner" aria-label="Main navigation">
+      <a href="#" class="nav__logo" data-i18n="home.heroTitle">מפל כוכבים 2026</a>
+      <button
+        id="lang-toggle"
+        class="nav__lang-btn"
+        type="button"
+        aria-label="Switch language"
+        data-i18n="lang.switchTo"
+      >Русский</button>
+    </nav>
+  </header>
+
+  <!-- ═══ Hero ═══ -->
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <!-- Star field (CSS-only, created in home.css) -->
+      <div class="hero__stars" aria-hidden="true"></div>
+
+      <div class="hero__content">
+        <h1 id="hero-title" class="hero__title" data-i18n="home.heroTitle">
+          מפל כוכבים 2026
+        </h1>
+        <p class="hero__subtitle" data-i18n="home.heroSubtitle">
+          הנגב. פרסאידים. אש.
+        </p>
+
+        <!-- Countdown -->
+        <div class="hero__countdown" aria-label="Countdown to event">
+          <div class="countdown__unit">
+            <span class="countdown__number tabular-nums" id="countdown-days">--</span>
+            <span class="countdown__label" data-i18n="home.countdown.days">ימים</span>
+          </div>
+          <div class="countdown__separator" aria-hidden="true">:</div>
+          <div class="countdown__unit">
+            <span class="countdown__number tabular-nums" id="countdown-hours">--</span>
+            <span class="countdown__label" data-i18n="home.countdown.hours">שעות</span>
+          </div>
+          <div class="countdown__separator" aria-hidden="true">:</div>
+          <div class="countdown__unit">
+            <span class="countdown__number tabular-nums" id="countdown-minutes">--</span>
+            <span class="countdown__label" data-i18n="home.countdown.minutes">דקות</span>
+          </div>
+          <div class="countdown__separator" aria-hidden="true">:</div>
+          <div class="countdown__unit">
+            <span class="countdown__number tabular-nums" id="countdown-seconds">--</span>
+            <span class="countdown__label" data-i18n="home.countdown.seconds">שניות</span>
+          </div>
+        </div>
+
+        <a href="#rsvp" class="hero__cta" data-i18n="home.cta">להירשם</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- ═══ Scripts ═══ -->
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>
