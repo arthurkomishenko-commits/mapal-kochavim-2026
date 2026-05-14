@@ -38,7 +38,7 @@
   display: inline-block;
   margin-block-start: var(--space-4);
   font-size: var(--text-xs);
-  color: rgba(165, 160, 154, 0.35);
+  color: rgba(165, 160, 154, 0.6);
   text-decoration: none;
   transition: color 0.2s ease;
 }
