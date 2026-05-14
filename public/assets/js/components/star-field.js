@@ -163,20 +163,33 @@ function createStarElement(x, y, size, color, twinkCls, baseOpacity) {
 
   const delay = -rand(0, 12);
 
+  // Render size: actual DOM element is larger than "visual" core
+  // so the radial-gradient fades softly to transparent
+  const renderSize = size * 3;
+
   let shadow = '';
   if (size >= 3.5) {
-    // Bright stars: prominent glow
-    shadow = `box-shadow: 0 0 ${size * 1.5}px ${color}66, 0 0 ${size * 3}px ${color}22;`;
+    shadow = `box-shadow: 0 0 ${size * 2}px ${color}55, 0 0 ${size * 4}px ${color}18;`;
   } else if (size >= 2.5) {
-    shadow = `box-shadow: 0 0 ${size}px ${color}4D;`;
+    shadow = `box-shadow: 0 0 ${size * 1.5}px ${color}33;`;
   }
+
+  // Soft radial glow — bright core fading to transparent
+  // Each star slightly different spread for organic look
+  const coreSize = Math.round(20 + rand(0, 15));
+  const midSize = Math.round(45 + rand(0, 15));
 
   el.style.cssText = `
     left:${x.toFixed(2)}%;
     top:${y.toFixed(2)}%;
-    width:${size}px;
-    height:${size}px;
-    background:${color};
+    width:${renderSize.toFixed(1)}px;
+    height:${renderSize.toFixed(1)}px;
+    background: radial-gradient(circle,
+      ${color} 0%,
+      ${color}BB ${coreSize}%,
+      ${color}44 ${midSize}%,
+      transparent 72%
+    );
     opacity:${baseOpacity.toFixed(2)};
     animation-delay:${delay.toFixed(1)}s;
     ${shadow}
@@ -192,19 +205,22 @@ function createHorizonStar(x, y, size, color, baseOpacity) {
 
   const delay = -rand(0, 6);
 
-  // Chromatic dispersion via static colored box-shadow offsets
+  const renderSize = size * 3;
+
   el.style.cssText = `
     left:${x.toFixed(2)}%;
     top:${y.toFixed(2)}%;
-    width:${size}px;
-    height:${size}px;
-    background:${color};
+    width:${renderSize.toFixed(1)}px;
+    height:${renderSize.toFixed(1)}px;
+    background: radial-gradient(circle,
+      ${color} 0%, ${color}88 25%, transparent 65%
+    );
     opacity:${baseOpacity.toFixed(2)};
     animation-delay:${delay.toFixed(1)}s;
     box-shadow:
-      -1px 0 0 rgba(255,120,120,0.15),
-       1px 0 0 rgba(120,180,255,0.15),
-       0 0 ${size}px ${color}33;
+      -2px 0 3px rgba(255,100,100,0.2),
+       2px 0 3px rgba(100,160,255,0.2),
+       0 0 ${size * 2}px ${color}22;
   `;
 
   return el;
@@ -336,10 +352,12 @@ function createBackgroundStars(container, count) {
     const el = document.createElement('div');
     el.className = 'star star--faint';
     el.setAttribute('aria-hidden', 'true');
+    const rs = size * 2.5;
     el.style.cssText = `
       left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;
-      width:${size.toFixed(1)}px;height:${size.toFixed(1)}px;
-      background:${color};opacity:${opacity.toFixed(2)};
+      width:${rs.toFixed(1)}px;height:${rs.toFixed(1)}px;
+      background:radial-gradient(circle,${color} 0%,${color}66 30%,transparent 70%);
+      opacity:${opacity.toFixed(2)};
       animation-delay:${-rand(0, 10).toFixed(1)}s;
     `;
     fragment.appendChild(el);

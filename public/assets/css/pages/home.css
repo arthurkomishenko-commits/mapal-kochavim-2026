@@ -159,10 +159,60 @@
    Stars — real Negev sky, opacity-only animations
    ══════════════════════════════════════════════════════ */
 
+/* Stars: radial-gradient core (soft edges, not solid dots)
+   + diffraction spikes on bright stars via pseudo-elements */
 .star {
   position: absolute;
   border-radius: 50%;
   transform: translate(-50%, -50%);
+  /* Override solid background with radial-gradient in JS,
+     but set a soft default here */
+  image-rendering: auto;
+}
+
+/* ── Diffraction spikes on bright stars (mag < 2) ── */
+.star--brilliant::before,
+.star--brilliant::after,
+.star--bright::before,
+.star--bright::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: inherit;
+  border-radius: 0;
+  opacity: 0.35;
+}
+
+/* Horizontal spike */
+.star--brilliant::before,
+.star--bright::before {
+  width: 250%;
+  height: 1px;
+}
+
+/* Vertical spike */
+.star--brilliant::after,
+.star--bright::after {
+  width: 1px;
+  height: 250%;
+}
+
+/* Brilliant stars: longer, brighter spikes */
+.star--brilliant::before { width: 400%; opacity: 0.45; }
+.star--brilliant::after  { height: 400%; opacity: 0.45; }
+
+/* Medium stars: subtle tiny cross */
+.star--medium::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 180%;
+  height: 1px;
+  background: inherit;
+  opacity: 0.15;
 }
 
 /* ── Milky Way haze layer ── */
