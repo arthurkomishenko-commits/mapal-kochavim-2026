@@ -230,30 +230,82 @@ function createHorizonStar(x, y, size, color, baseOpacity) {
 // MILKY WAY
 // ═══════════════════════════════════════════════════════
 
-function createMilkyWay(container) {
-  const mw = document.createElement('div');
-  mw.className = 'milky-way';
-  mw.setAttribute('aria-hidden', 'true');
+/**
+ * Milky Way — two layers:
+ * 1. Subtle gradient haze (very low opacity)
+ * 2. Hundreds of micro-dots (0.2-0.7px) packed along the band
+ *    THIS is what makes it look real — not gradients, but dust.
+ */
+function createMilkyWay(container, isMobile) {
+  // Layer 1: faint haze
+  const haze = document.createElement('div');
+  haze.className = 'milky-way';
+  haze.setAttribute('aria-hidden', 'true');
 
-  // Build multiple radial-gradients from the path points
   const gradients = MILKY_WAY.map(pt => {
     const pos = azAltToXY(pt.az, pt.alt);
-    const spreadX = pt.w * 2.0;
-    const spreadY = pt.w * 2.5;
-    const opacity = pt.b * 0.18;
-
-    // Galactic center gets warmer tint
+    const spreadX = pt.w * 1.8;
+    const spreadY = pt.w * 2.2;
+    const opacity = pt.b * 0.06; // very subtle
     const isCenter = pt.b >= 0.95;
     const color = isCenter
-      ? `rgba(220,210,190,${opacity})`
-      : `rgba(195,210,240,${opacity})`;
-
+      ? `rgba(210,200,185,${opacity})`
+      : `rgba(190,205,235,${opacity})`;
     return `radial-gradient(ellipse ${spreadX}% ${spreadY}% at ${pos.x}% ${pos.y}%, ${color}, transparent)`;
   });
 
-  mw.style.background = gradients.join(', ');
+  haze.style.background = gradients.join(', ');
+  container.appendChild(haze);
 
-  container.appendChild(mw);
+  // Layer 2: star dust — hundreds of micro-dots along the band
+  const dustCount = isMobile ? 300 : 700;
+  const fragment = document.createDocumentFragment();
+
+  for (let i = 0; i < dustCount; i++) {
+    // Pick a random point along the MW path
+    const segIdx = Math.floor(rand(0, MILKY_WAY.length - 1));
+    const seg = MILKY_WAY[segIdx];
+    const nextSeg = MILKY_WAY[segIdx + 1] || seg;
+
+    // Interpolate between two path points
+    const t = Math.random();
+    const az = seg.az + (nextSeg.az - seg.az) * t;
+    const alt = seg.alt + (nextSeg.alt - seg.alt) * t;
+    const width = seg.w + (nextSeg.w - seg.w) * t;
+    const brightness = seg.b + (nextSeg.b - seg.b) * t;
+
+    // Scatter perpendicular to path
+    const scatter = (Math.random() - 0.5) * width * 0.8;
+    const scatterAngle = Math.atan2(
+      nextSeg.alt - seg.alt,
+      nextSeg.az - seg.az
+    ) + Math.PI / 2;
+
+    const finalAz = az + scatter * Math.cos(scatterAngle) * 0.3;
+    const finalAlt = alt + scatter * Math.sin(scatterAngle) * 0.15;
+
+    if (finalAlt < 0 || finalAlt > 90) continue;
+
+    const pos = azAltToXY(finalAz, finalAlt);
+
+    // Micro-dot
+    const size = rand(0.2, 0.7);
+    const opacity = rand(0.08, 0.3) * brightness;
+
+    const dot = document.createElement('div');
+    dot.className = 'mw-dust';
+    dot.setAttribute('aria-hidden', 'true');
+    dot.style.cssText = `
+      left:${pos.x.toFixed(1)}%;
+      top:${pos.y.toFixed(1)}%;
+      width:${size.toFixed(1)}px;
+      height:${size.toFixed(1)}px;
+      opacity:${opacity.toFixed(2)};
+    `;
+    fragment.appendChild(dot);
+  }
+
+  container.appendChild(fragment);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -374,14 +426,14 @@ export function initStarField(container) {
   if (!container) return;
 
   // Clear previous
-  container.querySelectorAll('.star, .milky-way, .dso').forEach(el => el.remove());
+  container.querySelectorAll('.star, .milky-way, .mw-dust, .dso').forEach(el => el.remove());
 
   const isMobile = window.innerWidth < 768;
   const maxMag = isMobile ? 3.2 : 4.5;
   const bgCount = isMobile ? 80 : 250;
 
-  // Layer 1: Milky Way haze
-  createMilkyWay(container);
+  // Layer 1: Milky Way haze + star dust
+  createMilkyWay(container, isMobile);
 
   // Layer 2: Background faint stars
   createBackgroundStars(container, bgCount);

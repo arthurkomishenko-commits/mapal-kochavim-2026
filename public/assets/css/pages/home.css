@@ -12,11 +12,11 @@
   justify-content: center;
   min-height: 100dvh;
   overflow: hidden;
+  /* Deep dark sky — very subtle horizon glow, almost pure black */
   background: radial-gradient(
-    ellipse 120% 80% at 50% 100%,
-    var(--color-horizon) 0%,
-    var(--color-sky-deep) 40%,
-    var(--color-sky-deepest) 70%
+    ellipse 100% 30% at 50% 100%,
+    rgba(25, 18, 14, 0.4) 0%,
+    var(--color-sky-deepest) 50%
   );
 }
 
@@ -194,11 +194,19 @@
   background: linear-gradient(180deg, transparent, rgba(255,255,255,0.15) 30%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.15) 70%, transparent);
 }
 
-/* ── Milky Way haze layer ── */
+/* ── Milky Way ── */
 
 .milky-way {
   position: absolute;
   inset: 0;
+  pointer-events: none;
+}
+
+/* Star dust particles — hundreds of micro-dots forming the MW band */
+.mw-dust {
+  position: absolute;
+  border-radius: 50%;
+  background: #dde4f0;
   pointer-events: none;
 }
 
