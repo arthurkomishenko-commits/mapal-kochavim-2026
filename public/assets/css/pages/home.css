@@ -275,3 +275,59 @@
     opacity: 0.8;
   }
 }
+
+/* ── Shooting star ── */
+
+.shooting-star {
+  position: absolute;
+  top: var(--start-y);
+  left: var(--start-x);
+  width: 2px;
+  height: 2px;
+  background: var(--color-meteor);
+  border-radius: 50%;
+  z-index: 2;
+  opacity: 0;
+  animation: shoot var(--duration) var(--ease-out-expo) forwards;
+}
+
+/* Glowing tail */
+.shooting-star::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(
+    to left,
+    transparent 0%,
+    rgba(248, 217, 160, 0.6) 40%,
+    rgba(248, 217, 160, 0) 100%
+  );
+  transform-origin: right center;
+  /* Rotate tail to point opposite of travel direction */
+  transform: rotate(180deg) translateY(-50%);
+}
+
+[dir="rtl"] .shooting-star {
+  left: auto;
+  right: var(--start-x);
+}
+
+@keyframes shoot {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  10% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--travel-x), var(--travel-y));
+  }
+}

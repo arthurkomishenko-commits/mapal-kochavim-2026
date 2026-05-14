@@ -1,0 +1,97 @@
+/* ═══════════════════════════════════════════════════
+   Placeholder images — CSS gradient stand-ins
+   TODO: Replace with real photos (see TODO-PHOTOS.md)
+   ═══════════════════════════════════════════════════ */
+
+.placeholder-img {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+}
+
+.placeholder-img::after {
+  content: 'PHOTO';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  letter-spacing: 0.2em;
+  color: rgba(245, 239, 224, 0.15);
+  pointer-events: none;
+}
+
+/* ── Night sky ── */
+.placeholder-img--night-sky {
+  background:
+    radial-gradient(1px 1px at 20% 30%, rgba(245,239,224,0.8), transparent),
+    radial-gradient(1px 1px at 50% 15%, rgba(245,239,224,0.6), transparent),
+    radial-gradient(1px 1px at 75% 45%, rgba(248,217,160,0.9), transparent),
+    radial-gradient(1.5px 1.5px at 40% 70%, rgba(245,239,224,0.7), transparent),
+    radial-gradient(1px 1px at 85% 20%, rgba(245,239,224,0.5), transparent),
+    radial-gradient(1px 1px at 10% 80%, rgba(248,217,160,0.6), transparent),
+    linear-gradient(
+      to bottom,
+      #070B1F 0%,
+      #0A0E27 40%,
+      #1A1E3F 70%,
+      #2C1F1A 100%
+    );
+}
+
+/* ── Desert landscape ── */
+.placeholder-img--desert {
+  background:
+    linear-gradient(
+      to bottom,
+      #4A7AB5 0%,
+      #7BADD4 25%,
+      #C9A96E 50%,
+      #A67B45 65%,
+      #8B6F47 80%,
+      #6B5640 100%
+    );
+}
+
+/* ── Camping ── */
+.placeholder-img--camping {
+  background:
+    radial-gradient(
+      circle at 50% 85%,
+      rgba(232, 155, 75, 0.4) 0%,
+      transparent 30%
+    ),
+    linear-gradient(
+      to bottom,
+      #0A0E27 0%,
+      #1A1E3F 50%,
+      #2C1F1A 85%,
+      #3D2E20 100%
+    );
+}
+
+/* ── Meteor shower ── */
+.placeholder-img--meteors {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(248, 217, 160, 0.3) 0%,
+      transparent 3%
+    ),
+    linear-gradient(
+      140deg,
+      rgba(248, 217, 160, 0.2) 5%,
+      transparent 7%
+    ),
+    radial-gradient(1px 1px at 30% 20%, rgba(245,239,224,0.9), transparent),
+    radial-gradient(1px 1px at 60% 40%, rgba(245,239,224,0.7), transparent),
+    radial-gradient(1.5px 1.5px at 45% 60%, rgba(248,217,160,0.8), transparent),
+    linear-gradient(
+      to bottom,
+      #070B1F 0%,
+      #0A0E27 60%,
+      #1A1E3F 100%
+    );
+}

@@ -1,0 +1,107 @@
+/* ═══════════════════════════════════════════════════
+   Welcome Overlay
+   First visit → full-screen mood-setter → dismiss → 7 days
+   ═══════════════════════════════════════════════════ */
+
+.welcome {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-sky-deepest);
+  opacity: 0;
+  transition: opacity var(--duration-dramatic) var(--ease-out-cubic);
+}
+
+.welcome--visible {
+  opacity: 1;
+}
+
+.welcome--leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.welcome__content {
+  text-align: center;
+  padding: var(--space-6);
+  max-width: 560px;
+}
+
+.welcome__icon {
+  font-size: 3rem;
+  margin-block-end: var(--space-7);
+  opacity: 0.8;
+}
+
+.welcome__title {
+  font-size: clamp(2rem, 8vw, 4rem);
+  font-weight: 800;
+  line-height: var(--leading-tight);
+  color: var(--color-starlight);
+  margin-block-end: var(--space-7);
+  text-shadow:
+    0 0 40px rgba(248, 217, 160, 0.08),
+    0 0 80px rgba(248, 217, 160, 0.04);
+}
+
+.welcome__text {
+  font-size: var(--text-lg);
+  color: var(--color-text-secondary);
+  line-height: var(--leading-relaxed);
+  margin-block-end: var(--space-5);
+}
+
+@media (min-width: 768px) {
+  .welcome__text {
+    font-size: var(--text-xl);
+  }
+}
+
+.welcome__dates {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-ember-bright);
+  margin-block-start: var(--space-7);
+  margin-block-end: var(--space-8);
+  letter-spacing: 0.05em;
+}
+
+.welcome__enter {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  padding: var(--space-4) var(--space-7);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  min-height: 52px;
+  transition: all var(--duration-normal) var(--ease-natural);
+  cursor: pointer;
+  background: transparent;
+}
+
+.welcome__enter:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-ember);
+  box-shadow: var(--shadow-glow-ember);
+}
+
+.welcome__enter:active {
+  transform: scale(0.97);
+}
+
+.welcome__enter:focus-visible {
+  outline: 2px solid var(--color-ember);
+  outline-offset: 4px;
+}
+
+/* RTL: arrow direction */
+[dir="ltr"] .welcome__enter::after {
+  content: ' \2192'; /* → */
+}
+
+[dir="rtl"] .welcome__enter::after {
+  content: ' \2190'; /* ← */
+}
