@@ -1,31 +1,26 @@
 /**
- * Shooting Stars — realistic Perseid meteor shower
+ * Shooting Stars — realistic Perseid meteors
  *
- * Real meteor physics:
- * - All meteors radiate FROM a single point (radiant) in the upper sky
- * - They travel OUTWARD and DOWNWARD from that radiant
- * - Steep angles (mostly 50-80° from horizontal)
- * - Never go upward
- * - Speed varies but direction is consistent
- * - Short streaks are more common than long ones
+ * Simple correct physics:
+ * - All meteors fly TOP-LEFT → BOTTOM-RIGHT (or slight variations)
+ * - Flight angle: 25°–65° from horizontal (always downward-right)
+ * - Start in upper portion of sky (top 35%)
+ * - The CSS `rotate` property aligns the entire element (head + tail)
+ *   with the flight direction. translateX moves along that axis.
+ *   Tail is behind the head via `right: 100%`.
  *
- * 5 visual types with different brightness/tail characteristics.
- * Spawns 1-2 every 3-7 seconds.
+ * 5 visual types. 1-2 meteors every 3-7 seconds.
  */
 
 const MIN_INTERVAL_MS = 3_000;
 const MAX_INTERVAL_MS = 7_000;
 
-// Radiant point: upper-right area of sky (Perseus rises NE from Israel)
-const RADIANT_X = 75; // % from left
-const RADIANT_Y = 8;  // % from top
-
 const METEOR_TYPES = [
-  { cls: 'shooting-star--classic',  weight: 35, durationRange: [500, 900],   distRange: [18, 32] },
-  { cls: 'shooting-star--fireball', weight: 10, durationRange: [800, 1400],  distRange: [25, 42] },
-  { cls: 'shooting-star--swift',    weight: 25, durationRange: [250, 500],   distRange: [10, 20] },
-  { cls: 'shooting-star--fragment', weight: 15, durationRange: [600, 1100],  distRange: [18, 30] },
-  { cls: 'shooting-star--glider',   weight: 15, durationRange: [900, 1600],  distRange: [22, 40] },
+  { cls: 'shooting-star--classic',  weight: 35, durationRange: [1200, 2000],  distRange: [18, 32] },
+  { cls: 'shooting-star--fireball', weight: 10, durationRange: [1800, 2800],  distRange: [25, 42] },
+  { cls: 'shooting-star--swift',    weight: 25, durationRange: [700, 1200],   distRange: [10, 20] },
+  { cls: 'shooting-star--fragment', weight: 15, durationRange: [1400, 2200],  distRange: [18, 30] },
+  { cls: 'shooting-star--glider',   weight: 15, durationRange: [2200, 3500],  distRange: [22, 40] },
 ];
 
 let container = null;
@@ -57,52 +52,25 @@ function spawnMeteor() {
   meteor.className = `shooting-star ${type.cls}`;
   meteor.setAttribute('aria-hidden', 'true');
 
-  // ── Radiant-based direction ──
-  // Meteor starts somewhere in upper sky, direction points AWAY from radiant
-  // Scatter the start position around the radiant with some spread
-  const startX = RADIANT_X + rand(-35, 25);
-  const startY = RADIANT_Y + rand(-5, 20);
+  // Start position: upper part of sky, spread across width
+  const startX = rand(5, 85);
+  const startY = rand(2, 35);
 
-  // Direction angle: vector from radiant to start point, then continue outward
-  // This gives the "radiating from a point" effect
-  const dx = startX - RADIANT_X;
-  const dy = startY - RADIANT_Y;
+  // Flight angle: 25°–65° from horizontal = always going DOWN and to the RIGHT
+  // This is the CSS `rotate` value. 0° = horizontal right, 90° = straight down.
+  const flightAngle = rand(25, 65);
 
-  // Base angle from radiant to this point (in degrees)
-  // Add some randomness but keep it "outward"
-  let angleDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
-  angleDeg += rand(-15, 15); // slight scatter
-
-  // Ensure meteor always goes DOWNWARD: angle between 20° and 160° (below horizontal)
-  // 90° = straight down, 0° = right, 180° = left
-  if (angleDeg < 20) angleDeg = rand(25, 60);
-  if (angleDeg > 160) angleDeg = rand(120, 155);
-  // Never go upward
-  if (angleDeg < 0) angleDeg = Math.abs(angleDeg);
-  if (angleDeg > 180) angleDeg = 360 - angleDeg;
-
-  // Convert angle to travel vector
-  const angleRad = (angleDeg * Math.PI) / 180;
+  // Travel distance
   const dist = rand(type.distRange[0], type.distRange[1]);
-  const travelX = Math.cos(angleRad) * dist;
-  const travelY = Math.sin(angleRad) * dist; // always positive = downward
 
   // Duration
   const duration = rand(type.durationRange[0], type.durationRange[1]);
 
-  // Tail angle: points opposite to travel direction
-  const tailAngle = angleDeg + 180;
-
-  // Clamp start position to visible area
-  const clampedX = Math.max(2, Math.min(98, startX));
-  const clampedY = Math.max(1, Math.min(45, startY));
-
-  meteor.style.setProperty('--start-x', `${clampedX}%`);
-  meteor.style.setProperty('--start-y', `${clampedY}%`);
-  meteor.style.setProperty('--travel-x', `${travelX}vw`);
-  meteor.style.setProperty('--travel-y', `${travelY}vh`);
+  meteor.style.setProperty('--start-x', `${startX}%`);
+  meteor.style.setProperty('--start-y', `${startY}%`);
+  meteor.style.setProperty('--travel-dist', `${dist}vw`);
   meteor.style.setProperty('--duration', `${duration}ms`);
-  meteor.style.setProperty('--tail-angle', `${tailAngle}deg`);
+  meteor.style.setProperty('--flight-angle', `${flightAngle}deg`);
 
   container.appendChild(meteor);
   meteor.addEventListener('animationend', () => meteor.remove(), { once: true });

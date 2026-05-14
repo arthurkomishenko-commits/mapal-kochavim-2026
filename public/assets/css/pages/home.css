@@ -187,7 +187,11 @@
 
 /* ══════════════════════════════════════════════════════
    Shooting Stars — 5 animation variants
-   Real meteor physics: bright head → color shift → fade
+
+   Architecture: the entire .shooting-star element is ROTATED
+   to match the travel direction. Movement is along the X axis
+   only (translateX). The tail naturally points backward.
+   This means the head+tail always align with the flight path.
    ══════════════════════════════════════════════════════ */
 
 .shooting-star {
@@ -197,6 +201,8 @@
   z-index: 3;
   opacity: 0;
   pointer-events: none;
+  /* Rotate entire element to match flight direction */
+  rotate: var(--flight-angle, 45deg);
   /* Head glow */
   width: var(--head-size, 4px);
   height: var(--head-size, 4px);
@@ -208,49 +214,67 @@
     0 0 var(--glow-lg, 30px) var(--glow-lg, 30px) rgba(232, 155, 75, 0.15);
 }
 
-/* ── Tail: long gradient trail ── */
+/* ── Tail: always trails BEHIND the head along the flight axis ── */
 .shooting-star::before {
   content: '';
   position: absolute;
   top: 50%;
-  right: calc(var(--head-size, 4px) * 0.5);
+  /* Tail extends to the LEFT (behind the head, since head moves RIGHT) */
+  right: 100%;
   width: var(--tail-length, 120px);
   height: var(--tail-width, 2px);
-  transform-origin: right center;
-  transform: translateY(-50%) rotate(var(--tail-angle, 0deg));
+  transform: translateY(-50%);
+  /* Gradient: bright near head → fades to nothing at tail end */
   background: linear-gradient(
-    to left,
-    rgba(255, 251, 232, 0) 0%,
-    rgba(255, 240, 200, 0.05) 5%,
-    rgba(248, 217, 160, 0.25) 15%,
-    rgba(232, 180, 100, 0.5) 30%,
-    rgba(200, 220, 255, 0.3) 55%,
-    rgba(140, 170, 230, 0.15) 75%,
-    rgba(100, 140, 210, 0) 100%
+    to right,
+    rgba(100, 140, 210, 0) 0%,
+    rgba(140, 170, 230, 0.08) 15%,
+    rgba(200, 200, 255, 0.15) 30%,
+    rgba(232, 200, 140, 0.3) 50%,
+    rgba(248, 217, 160, 0.5) 70%,
+    rgba(255, 240, 210, 0.7) 85%,
+    rgba(255, 251, 232, 0.3) 100%
   );
-  border-radius: 0 1px 1px 0;
+  border-radius: 1px;
 }
 
-/* ── Secondary inner tail: hot white core ── */
+/* ── Inner core tail: thin hot-white line ── */
 .shooting-star::after {
   content: '';
   position: absolute;
   top: 50%;
-  right: calc(var(--head-size, 4px) * 0.5);
-  width: calc(var(--tail-length, 120px) * 0.5);
+  right: 100%;
+  width: calc(var(--tail-length, 120px) * 0.45);
   height: 1px;
-  transform-origin: right center;
-  transform: translateY(-50%) rotate(var(--tail-angle, 0deg));
+  transform: translateY(-50%);
   background: linear-gradient(
-    to left,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.7) 10%,
-    rgba(255, 245, 220, 0.4) 40%,
-    rgba(255, 230, 180, 0) 100%
+    to right,
+    rgba(255, 240, 220, 0) 0%,
+    rgba(255, 250, 240, 0.3) 30%,
+    rgba(255, 255, 255, 0.8) 70%,
+    rgba(255, 255, 255, 0.4) 100%
   );
 }
 
-/* ═══ Type 1: Classic Perseid — fast, bright, long tail ═══ */
+/*
+ * METEOR PHYSICS — atmospheric entry with acceleration
+ *
+ * Architecture: the .shooting-star element is rotated via CSS `rotate`
+ * to match the flight direction. All keyframe movement uses translateX()
+ * only — moving along the flight axis. The tail (::before/::after) is
+ * positioned behind the head via `right: 100%` so it ALWAYS trails.
+ *
+ * Acceleration: keyframes use quadratic position distribution:
+ *   first 30% of time  →  ~5% of distance  (slow atmospheric entry)
+ *   next 30% of time   →  ~35% of distance  (heating, accelerating)
+ *   last 40% of time   →  ~60% of distance  (full speed burnout)
+ *
+ * Color shift: warm white → golden yellow → cooling blue via hue-rotate
+ * All use `animation-timing-function: linear` — speed lives in keyframes.
+ */
+
+
+/* ═══ Type 1: Classic Perseid ═══ */
 
 .shooting-star--classic {
   --head-size: 4px;
@@ -260,40 +284,23 @@
   --glow-md: 20px;
   --glow-lg: 40px;
   --glow-opacity: 0.95;
-  animation: meteor-classic var(--duration) cubic-bezier(0.1, 0.7, 0.3, 1) forwards;
+  animation: meteor-classic var(--duration) linear forwards;
 }
 
 @keyframes meteor-classic {
-  0% {
-    opacity: 0;
-    transform: translate(0, 0) scale(0.3);
-    filter: hue-rotate(0deg) brightness(0.5);
-  }
-  8% {
-    opacity: 1;
-    transform: translate(calc(var(--travel-x) * 0.05), calc(var(--travel-y) * 0.05)) scale(1);
-    filter: hue-rotate(0deg) brightness(2);
-  }
-  25% {
-    opacity: 1;
-    filter: hue-rotate(-10deg) brightness(1.8);
-  }
-  50% {
-    opacity: 0.85;
-    filter: hue-rotate(-20deg) brightness(1.2);
-  }
-  75% {
-    opacity: 0.4;
-    filter: hue-rotate(-35deg) brightness(0.8);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--travel-x), var(--travel-y)) scale(0.5);
-    filter: hue-rotate(-45deg) brightness(0.3);
-  }
+  0%   { opacity: 0;    transform: translateX(0) scale(0.2);                                    filter: brightness(0.3); }
+  5%   { opacity: 0.3;  transform: translateX(calc(var(--travel-dist) * 0.01)) scale(0.5);      filter: brightness(0.8); }
+  12%  { opacity: 0.6;  transform: translateX(calc(var(--travel-dist) * 0.03)) scale(0.8);      filter: brightness(1.2); }
+  22%  { opacity: 1;    transform: translateX(calc(var(--travel-dist) * 0.08)) scale(1);        filter: brightness(2); }
+  35%  { opacity: 1;    transform: translateX(calc(var(--travel-dist) * 0.2)) scale(1.1);       filter: brightness(2.2); }
+  50%  { opacity: 0.9;  transform: translateX(calc(var(--travel-dist) * 0.4)) scale(1);         filter: brightness(1.6) hue-rotate(-12deg); }
+  65%  { opacity: 0.6;  transform: translateX(calc(var(--travel-dist) * 0.6)) scale(0.9);       filter: brightness(1) hue-rotate(-25deg); }
+  80%  { opacity: 0.25; transform: translateX(calc(var(--travel-dist) * 0.8)) scale(0.7);       filter: brightness(0.5) hue-rotate(-35deg); }
+  100% { opacity: 0;    transform: translateX(var(--travel-dist)) scale(0.3);                   filter: brightness(0.1) hue-rotate(-45deg); }
 }
 
-/* ═══ Type 2: Fireball — large, slow, intense glow ═══ */
+
+/* ═══ Type 2: Fireball — big, dramatic, slow entry ═══ */
 
 .shooting-star--fireball {
   --head-size: 6px;
@@ -304,59 +311,36 @@
   --glow-md: 30px;
   --glow-lg: 60px;
   --glow-opacity: 1;
-  animation: meteor-fireball var(--duration) cubic-bezier(0.05, 0.6, 0.4, 1) forwards;
+  animation: meteor-fireball var(--duration) linear forwards;
 }
 
 .shooting-star--fireball::before {
   background: linear-gradient(
-    to left,
-    rgba(255, 251, 232, 0) 0%,
-    rgba(255, 220, 150, 0.15) 5%,
-    rgba(255, 180, 80, 0.5) 15%,
-    rgba(255, 140, 50, 0.6) 25%,
-    rgba(230, 100, 50, 0.4) 40%,
-    rgba(180, 130, 220, 0.2) 60%,
-    rgba(100, 140, 220, 0.1) 80%,
-    rgba(80, 120, 200, 0) 100%
+    to right,
+    rgba(80, 120, 200, 0) 0%,
+    rgba(180, 130, 220, 0.12) 20%,
+    rgba(230, 100, 50, 0.3) 40%,
+    rgba(255, 140, 50, 0.5) 55%,
+    rgba(255, 180, 80, 0.6) 70%,
+    rgba(255, 220, 150, 0.4) 85%,
+    rgba(255, 251, 232, 0.2) 100%
   );
 }
 
 @keyframes meteor-fireball {
-  0% {
-    opacity: 0;
-    transform: translate(0, 0) scale(0.2);
-    filter: brightness(0.3);
-  }
-  5% {
-    opacity: 0.7;
-    transform: translate(calc(var(--travel-x) * 0.02), calc(var(--travel-y) * 0.02)) scale(0.8);
-    filter: brightness(1.5);
-  }
-  12% {
-    opacity: 1;
-    transform: translate(calc(var(--travel-x) * 0.08), calc(var(--travel-y) * 0.08)) scale(1.2);
-    filter: brightness(2.5);
-  }
-  30% {
-    opacity: 1;
-    filter: brightness(2);
-  }
-  60% {
-    opacity: 0.7;
-    filter: brightness(1.2) hue-rotate(-15deg);
-  }
-  85% {
-    opacity: 0.25;
-    filter: brightness(0.6) hue-rotate(-30deg);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--travel-x), var(--travel-y)) scale(0.3);
-    filter: brightness(0.1) hue-rotate(-40deg);
-  }
+  0%   { opacity: 0;    transform: translateX(0) scale(0.15);                                    filter: brightness(0.2); }
+  8%   { opacity: 0.2;  transform: translateX(calc(var(--travel-dist) * 0.01)) scale(0.4);       filter: brightness(0.6); }
+  16%  { opacity: 0.5;  transform: translateX(calc(var(--travel-dist) * 0.03)) scale(0.7);       filter: brightness(1.2); }
+  25%  { opacity: 0.9;  transform: translateX(calc(var(--travel-dist) * 0.07)) scale(1);         filter: brightness(2); }
+  38%  { opacity: 1;    transform: translateX(calc(var(--travel-dist) * 0.18)) scale(1.3);       filter: brightness(3); }
+  50%  { opacity: 1;    transform: translateX(calc(var(--travel-dist) * 0.35)) scale(1.15);      filter: brightness(2.2) hue-rotate(-8deg); }
+  65%  { opacity: 0.7;  transform: translateX(calc(var(--travel-dist) * 0.58)) scale(0.9);       filter: brightness(1.2) hue-rotate(-20deg); }
+  80%  { opacity: 0.3;  transform: translateX(calc(var(--travel-dist) * 0.8)) scale(0.5);        filter: brightness(0.5) hue-rotate(-35deg); }
+  100% { opacity: 0;    transform: translateX(var(--travel-dist)) scale(0.2);                    filter: brightness(0.05) hue-rotate(-45deg); }
 }
 
-/* ═══ Type 3: Swift — tiny, fast, faint trail ═══ */
+
+/* ═══ Type 3: Swift — blink and miss ═══ */
 
 .shooting-star--swift {
   --head-size: 2.5px;
@@ -366,34 +350,20 @@
   --glow-md: 8px;
   --glow-lg: 16px;
   --glow-opacity: 0.8;
-  animation: meteor-swift var(--duration) cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+  animation: meteor-swift var(--duration) linear forwards;
 }
 
 @keyframes meteor-swift {
-  0% {
-    opacity: 0;
-    transform: translate(0, 0);
-  }
-  5% {
-    opacity: 0.9;
-    filter: brightness(1.8);
-  }
-  30% {
-    opacity: 0.7;
-    filter: brightness(1.2);
-  }
-  60% {
-    opacity: 0.3;
-    filter: brightness(0.8) hue-rotate(-20deg);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--travel-x), var(--travel-y));
-    filter: brightness(0.2) hue-rotate(-35deg);
-  }
+  0%   { opacity: 0;    transform: translateX(0);                                    filter: brightness(0.4); }
+  8%   { opacity: 0.4;  transform: translateX(calc(var(--travel-dist) * 0.02));      filter: brightness(1); }
+  18%  { opacity: 0.9;  transform: translateX(calc(var(--travel-dist) * 0.06));      filter: brightness(1.8); }
+  35%  { opacity: 0.7;  transform: translateX(calc(var(--travel-dist) * 0.2));       filter: brightness(1.2) hue-rotate(-10deg); }
+  55%  { opacity: 0.35; transform: translateX(calc(var(--travel-dist) * 0.5));       filter: brightness(0.7) hue-rotate(-25deg); }
+  100% { opacity: 0;    transform: translateX(var(--travel-dist));                   filter: brightness(0.1) hue-rotate(-35deg); }
 }
 
-/* ═══ Type 4: Fragmenting — breaks apart mid-flight ═══ */
+
+/* ═══ Type 4: Fragment — breaks apart mid-flight ═══ */
 
 .shooting-star--fragment {
   --head-size: 4px;
@@ -403,47 +373,24 @@
   --glow-md: 18px;
   --glow-lg: 35px;
   --glow-opacity: 0.9;
-  animation: meteor-fragment var(--duration) cubic-bezier(0.15, 0.7, 0.35, 1) forwards;
+  animation: meteor-fragment var(--duration) linear forwards;
 }
 
 @keyframes meteor-fragment {
-  0% {
-    opacity: 0;
-    transform: translate(0, 0) scale(0.4);
-    filter: brightness(0.5);
-  }
-  8% {
-    opacity: 1;
-    transform: translate(calc(var(--travel-x) * 0.06), calc(var(--travel-y) * 0.06)) scale(1);
-    filter: brightness(2.2);
-  }
-  35% {
-    opacity: 1;
-    filter: brightness(1.6);
-  }
-  /* "Break" moment — sudden brightness pulse */
-  45% {
-    opacity: 1;
-    transform: translate(calc(var(--travel-x) * 0.45), calc(var(--travel-y) * 0.45)) scale(1.4);
-    filter: brightness(3) hue-rotate(10deg);
-  }
-  55% {
-    opacity: 0.7;
-    transform: translate(calc(var(--travel-x) * 0.55), calc(var(--travel-y) * 0.55)) scale(0.8);
-    filter: brightness(1) hue-rotate(-15deg);
-  }
-  80% {
-    opacity: 0.2;
-    filter: brightness(0.5) hue-rotate(-30deg);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--travel-x), var(--travel-y)) scale(0.2);
-    filter: brightness(0.1) hue-rotate(-40deg);
-  }
+  0%   { opacity: 0;    transform: translateX(0) scale(0.3);                                    filter: brightness(0.3); }
+  6%   { opacity: 0.3;  transform: translateX(calc(var(--travel-dist) * 0.01)) scale(0.6);      filter: brightness(0.8); }
+  15%  { opacity: 0.8;  transform: translateX(calc(var(--travel-dist) * 0.04)) scale(1);        filter: brightness(1.8); }
+  28%  { opacity: 1;    transform: translateX(calc(var(--travel-dist) * 0.12)) scale(1);        filter: brightness(1.5); }
+  /* FLARE — meteoroid splits */
+  40%  { opacity: 1;    transform: translateX(calc(var(--travel-dist) * 0.28)) scale(1.6);      filter: brightness(3.5) hue-rotate(15deg); }
+  46%  { opacity: 0.9;  transform: translateX(calc(var(--travel-dist) * 0.36)) scale(0.8);      filter: brightness(1.5) hue-rotate(-5deg); }
+  60%  { opacity: 0.5;  transform: translateX(calc(var(--travel-dist) * 0.55)) scale(0.7);      filter: brightness(0.8) hue-rotate(-20deg); }
+  80%  { opacity: 0.15; transform: translateX(calc(var(--travel-dist) * 0.78)) scale(0.4);      filter: brightness(0.3) hue-rotate(-35deg); }
+  100% { opacity: 0;    transform: translateX(var(--travel-dist)) scale(0.15);                  filter: brightness(0.05) hue-rotate(-45deg); }
 }
 
-/* ═══ Type 5: Glider — long, graceful, slow fade ═══ */
+
+/* ═══ Type 5: Glider — long, graceful, cool-toned ═══ */
 
 .shooting-star--glider {
   --head-size: 3px;
@@ -454,63 +401,42 @@
   --glow-md: 14px;
   --glow-lg: 28px;
   --glow-opacity: 0.85;
-  animation: meteor-glider var(--duration) cubic-bezier(0.1, 0.4, 0.5, 1) forwards;
+  animation: meteor-glider var(--duration) linear forwards;
 }
 
 .shooting-star--glider::before {
   background: linear-gradient(
-    to left,
-    rgba(224, 232, 255, 0) 0%,
-    rgba(200, 215, 255, 0.1) 8%,
-    rgba(180, 200, 250, 0.3) 20%,
-    rgba(160, 185, 240, 0.35) 35%,
-    rgba(140, 170, 230, 0.2) 55%,
-    rgba(120, 155, 220, 0.08) 80%,
-    rgba(100, 140, 210, 0) 100%
+    to right,
+    rgba(100, 140, 210, 0) 0%,
+    rgba(120, 155, 220, 0.05) 15%,
+    rgba(160, 185, 240, 0.2) 35%,
+    rgba(180, 200, 250, 0.35) 55%,
+    rgba(200, 215, 255, 0.3) 75%,
+    rgba(224, 232, 255, 0.15) 100%
   );
 }
 
 .shooting-star--glider::after {
   background: linear-gradient(
-    to left,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(230, 240, 255, 0.6) 15%,
-    rgba(200, 220, 255, 0.3) 50%,
-    rgba(180, 200, 240, 0) 100%
+    to right,
+    rgba(180, 200, 240, 0) 0%,
+    rgba(200, 220, 255, 0.3) 40%,
+    rgba(230, 240, 255, 0.6) 80%,
+    rgba(255, 255, 255, 0.3) 100%
   );
 }
 
 @keyframes meteor-glider {
-  0% {
-    opacity: 0;
-    transform: translate(0, 0);
-    filter: brightness(0.5);
-  }
-  10% {
-    opacity: 0.8;
-    filter: brightness(1.5);
-  }
-  30% {
-    opacity: 0.9;
-    filter: brightness(1.3);
-  }
-  50% {
-    opacity: 0.75;
-    filter: brightness(1.1) hue-rotate(-5deg);
-  }
-  70% {
-    opacity: 0.5;
-    filter: brightness(0.8) hue-rotate(-15deg);
-  }
-  90% {
-    opacity: 0.15;
-    filter: brightness(0.4) hue-rotate(-25deg);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--travel-x), var(--travel-y));
-    filter: brightness(0.1) hue-rotate(-30deg);
-  }
+  0%   { opacity: 0;    transform: translateX(0) scale(0.3);                                    filter: brightness(0.3); }
+  5%   { opacity: 0.15; transform: translateX(calc(var(--travel-dist) * 0.005)) scale(0.5);     filter: brightness(0.5); }
+  12%  { opacity: 0.4;  transform: translateX(calc(var(--travel-dist) * 0.02)) scale(0.7);      filter: brightness(0.9); }
+  22%  { opacity: 0.7;  transform: translateX(calc(var(--travel-dist) * 0.05)) scale(0.9);      filter: brightness(1.3); }
+  35%  { opacity: 0.9;  transform: translateX(calc(var(--travel-dist) * 0.12)) scale(1);        filter: brightness(1.5); }
+  50%  { opacity: 0.85; transform: translateX(calc(var(--travel-dist) * 0.3)) scale(1);         filter: brightness(1.3) hue-rotate(-5deg); }
+  65%  { opacity: 0.6;  transform: translateX(calc(var(--travel-dist) * 0.52)) scale(0.9);      filter: brightness(0.9) hue-rotate(-12deg); }
+  80%  { opacity: 0.3;  transform: translateX(calc(var(--travel-dist) * 0.75)) scale(0.7);      filter: brightness(0.5) hue-rotate(-20deg); }
+  92%  { opacity: 0.1;  transform: translateX(calc(var(--travel-dist) * 0.92)) scale(0.5);      filter: brightness(0.2) hue-rotate(-28deg); }
+  100% { opacity: 0;    transform: translateX(var(--travel-dist)) scale(0.3);                   filter: brightness(0.05) hue-rotate(-32deg); }
 }
 
 /* ── Scroll hint ── */
