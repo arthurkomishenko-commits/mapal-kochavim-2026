@@ -15,6 +15,19 @@
   background: var(--color-sky-deepest, #070B1F);
 }
 
+/* Gradient fade at bottom of hero into next section */
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 160px;
+  background: linear-gradient(to bottom, transparent, var(--color-sky-deepest, #070B1F));
+  pointer-events: none;
+  z-index: 1;
+}
+
 /* Mobile: photo background instead of canvas galaxy */
 @media (max-width: 767px) {
   .hero {
@@ -612,19 +625,27 @@
 
 .home-section {
   padding: var(--space-9) var(--space-5);
-  background: var(--color-sky-deepest);
+  background: linear-gradient(
+    to bottom,
+    var(--color-sky-deepest, #070B1F) 0%,
+    var(--color-sky-deep, #0A0E27) 100%
+  );
 }
 
 .home-section--dark {
-  background: var(--color-sky-deep);
+  background: linear-gradient(
+    to bottom,
+    var(--color-sky-deep, #0A0E27) 0%,
+    var(--color-sky-deepest, #070B1F) 100%
+  );
 }
 
 .home-section--cta {
   padding: var(--space-10) var(--space-5);
   background: linear-gradient(
     to bottom,
-    var(--color-sky-deep) 0%,
-    var(--color-sky-deepest) 100%
+    var(--color-sky-deepest, #070B1F) 0%,
+    #050815 100%
   );
 }
 
