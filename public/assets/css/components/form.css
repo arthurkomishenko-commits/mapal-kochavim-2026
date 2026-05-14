@@ -1,12 +1,12 @@
 /* ═══════════════════════════════════════════════════
-   Form components — inputs, toggles, chips, toasts
-   Shared across RSVP, Me, and other form pages
+   Form components — mobile-first
+   All touch targets ≥ 44px, inputs 16px+ (no iOS zoom)
    ═══════════════════════════════════════════════════ */
 
 /* ── Text inputs ── */
 
 .form-group {
-  margin-block-end: 20px;
+  margin-block-end: 16px;
 }
 
 .form-label {
@@ -20,8 +20,9 @@
 
 .form-input {
   width: 100%;
-  padding: 12px 16px;
-  font-size: 1rem;
+  /* 16px prevents iOS auto-zoom on focus */
+  padding: 14px 16px;
+  font-size: 16px;
   font-family: inherit;
   color: var(--color-starlight, #F5EFE0);
   background: rgba(245, 239, 224, 0.04);
@@ -32,6 +33,7 @@
   box-sizing: border-box;
   -webkit-appearance: none;
   appearance: none;
+  min-height: 48px;
 }
 
 .form-input::placeholder {
@@ -59,7 +61,7 @@
   margin-block-start: 5px;
 }
 
-/* ── Phone input with country styling ── */
+/* ── Phone input ── */
 
 .form-input[type="tel"] {
   direction: ltr;
@@ -67,23 +69,24 @@
   letter-spacing: 0.05em;
 }
 
-/* ── Toggle switch (Yes/No) ── */
+/* ── Toggle switch ── */
 
 .form-toggle {
   display: flex;
   align-items: center;
   gap: 12px;
   cursor: pointer;
-  padding: 12px 0;
+  padding: 14px 0;
+  min-height: 48px;
   -webkit-tap-highlight-color: transparent;
 }
 
 .form-toggle__track {
   position: relative;
-  width: 48px;
-  height: 28px;
+  width: 52px;
+  height: 32px;
   background: rgba(245, 239, 224, 0.08);
-  border-radius: 14px;
+  border-radius: 16px;
   border: 1px solid rgba(245, 239, 224, 0.1);
   transition: background 0.25s ease, border-color 0.25s ease;
   flex-shrink: 0;
@@ -91,10 +94,10 @@
 
 .form-toggle__thumb {
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 20px;
-  height: 20px;
+  top: 4px;
+  left: 4px;
+  width: 22px;
+  height: 22px;
   background: var(--color-text-secondary, #A5A09A);
   border-radius: 50%;
   transition: transform 0.25s ease, background 0.25s ease;
@@ -102,7 +105,7 @@
 
 [dir="rtl"] .form-toggle__thumb {
   left: auto;
-  right: 3px;
+  right: 4px;
 }
 
 .form-toggle--active .form-toggle__track {
@@ -112,15 +115,15 @@
 
 .form-toggle--active .form-toggle__thumb {
   background: var(--color-ember-bright, #E89B4B);
-  transform: translateX(20px);
+  transform: translateX(22px);
 }
 
 [dir="rtl"] .form-toggle--active .form-toggle__thumb {
-  transform: translateX(-20px);
+  transform: translateX(-22px);
 }
 
 .form-toggle__label {
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: var(--color-text-secondary, #A5A09A);
   font-weight: 500;
 }
@@ -129,7 +132,7 @@
   color: var(--color-starlight, #F5EFE0);
 }
 
-/* ── Expandable section (slide down) ── */
+/* ── Expandable section ── */
 
 .form-expand {
   max-height: 0;
@@ -147,42 +150,50 @@
 
 .companion-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: flex-end;
-  margin-block-end: 10px;
+  margin-block-end: 12px;
+  padding: 12px;
+  background: rgba(245, 239, 224, 0.02);
+  border: 1px solid rgba(245, 239, 224, 0.04);
+  border-radius: 10px;
 }
 
 .companion-row .form-group {
-  flex: 1;
+  flex: 1 1 calc(50% - 28px);
+  min-width: 120px;
   margin-block-end: 0;
 }
 
 .companion-row .form-input {
-  padding: 10px 12px;
-  font-size: 0.9rem;
+  padding: 12px;
+  font-size: 16px;
+  min-height: 44px;
 }
 
 .companion-remove {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   background: transparent;
   border: 1px solid rgba(220, 80, 80, 0.2);
   border-radius: 8px;
   color: rgba(220, 80, 80, 0.6);
   cursor: pointer;
   flex-shrink: 0;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   transition: all 0.2s ease;
   -webkit-appearance: none;
   appearance: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.companion-remove:hover {
-  background: rgba(220, 80, 80, 0.1);
-  border-color: rgba(220, 80, 80, 0.4);
+.companion-remove:active {
+  background: rgba(220, 80, 80, 0.15);
+  border-color: rgba(220, 80, 80, 0.5);
   color: #DC5050;
 }
 
@@ -192,39 +203,42 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
-  font-size: 0.85rem;
+  padding: 12px 20px;
+  font-size: 0.9rem;
   font-weight: 500;
   color: var(--color-ember-bright, #E89B4B);
   background: transparent;
   border: 1px dashed rgba(232, 155, 75, 0.3);
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
   -webkit-appearance: none;
   appearance: none;
   font-family: inherit;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.form-add-btn:hover {
-  background: rgba(232, 155, 75, 0.06);
+.form-add-btn:active {
+  background: rgba(232, 155, 75, 0.08);
   border-color: rgba(232, 155, 75, 0.5);
 }
 
-/* ── Bringing chips (optional, subtle) ── */
+/* ── Bringing chips ── */
 
 .chips-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-block-end: 6px;
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 14px;
-  font-size: 0.8rem;
+  padding: 10px 16px;
+  font-size: 0.85rem;
   font-weight: 500;
   color: rgba(165, 160, 154, 0.6);
   background: rgba(245, 239, 224, 0.03);
@@ -237,11 +251,7 @@
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   font-family: inherit;
-}
-
-.chip:hover {
-  background: rgba(245, 239, 224, 0.06);
-  border-color: rgba(245, 239, 224, 0.1);
+  min-height: 40px;
 }
 
 .chip--active {
@@ -258,7 +268,7 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgba(165, 160, 154, 0.4);
-  margin-block-start: 14px;
+  margin-block-start: 16px;
   margin-block-end: 8px;
 }
 
@@ -272,14 +282,15 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 6px 4px 14px;
-  font-size: 0.8rem;
+  padding: 6px 8px 6px 16px;
+  font-size: 0.85rem;
   color: rgba(165, 160, 154, 0.6);
   background: rgba(245, 239, 224, 0.03);
   border: 1px solid rgba(245, 239, 224, 0.06);
   border-radius: 20px;
   transition: all 0.2s ease;
   user-select: none;
+  min-height: 40px;
 }
 
 .chip-qty--active {
@@ -302,23 +313,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: 1px solid rgba(245, 239, 224, 0.08);
   background: rgba(245, 239, 224, 0.04);
   color: rgba(165, 160, 154, 0.6);
-  font-size: 0.85rem;
+  font-size: 1rem;
   cursor: pointer;
   -webkit-appearance: none;
   appearance: none;
   padding: 0;
   transition: all 0.15s ease;
   font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.chip-qty__btn:hover {
-  background: rgba(245, 239, 224, 0.08);
+.chip-qty__btn:active {
+  background: rgba(245, 239, 224, 0.12);
   color: var(--color-starlight, #F5EFE0);
 }
 
@@ -327,9 +339,9 @@
 }
 
 .chip-qty__count {
-  min-width: 18px;
+  min-width: 20px;
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -346,11 +358,11 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
+  padding: 8px 14px;
   background: rgba(107, 203, 119, 0.06);
   border: 1px solid rgba(107, 203, 119, 0.12);
   border-radius: 16px;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 
 .bring-stat__count {
@@ -366,13 +378,13 @@
 /* ── Section divider ── */
 
 .form-section {
-  margin-block-start: 28px;
-  padding-block-start: 24px;
+  margin-block-start: 24px;
+  padding-block-start: 20px;
   border-block-start: 1px solid rgba(245, 239, 224, 0.05);
 }
 
 .form-section__title {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--color-starlight, #F5EFE0);
   margin-block-end: 4px;
@@ -381,14 +393,14 @@
 .form-section__hint {
   font-size: 0.75rem;
   color: rgba(165, 160, 154, 0.5);
-  margin-block-end: 16px;
+  margin-block-end: 14px;
 }
 
 /* ── Submit button ── */
 
 .form-submit {
   width: 100%;
-  padding: 14px;
+  padding: 16px;
   font-size: 1rem;
   font-weight: 600;
   font-family: inherit;
@@ -397,15 +409,12 @@
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  min-height: 48px;
+  min-height: 52px;
   transition: opacity 0.2s ease, transform 0.15s ease;
   -webkit-appearance: none;
   appearance: none;
   margin-block-start: 28px;
-}
-
-.form-submit:hover {
-  opacity: 0.9;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .form-submit:active {
@@ -417,31 +426,31 @@
   cursor: not-allowed;
 }
 
-/* ── Toast notification ── */
+/* ── Toast ── */
 
 .toast {
   position: fixed;
   bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  padding: 12px 24px;
+  left: 16px;
+  right: 16px;
+  padding: 14px 20px;
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--color-starlight, #F5EFE0);
   background: rgba(20, 25, 50, 0.95);
   border: 1px solid rgba(232, 155, 75, 0.2);
-  border-radius: 10px;
+  border-radius: 12px;
   z-index: 10000;
   opacity: 0;
+  transform: translateY(20px);
   transition: opacity 0.3s ease, transform 0.3s ease;
   pointer-events: none;
   text-align: center;
-  max-width: 320px;
 }
 
 .toast--visible {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateY(0);
 }
 
 .toast--error {
@@ -451,8 +460,8 @@
 /* ── Added-by banner ── */
 
 .added-by-banner {
-  padding: 12px 16px;
-  font-size: 0.85rem;
+  padding: 14px 16px;
+  font-size: 0.9rem;
   color: var(--color-ember-bright, #E89B4B);
   background: rgba(232, 155, 75, 0.06);
   border: 1px solid rgba(232, 155, 75, 0.15);
@@ -461,14 +470,14 @@
   text-align: center;
 }
 
-/* ── Status badge (Me page) ── */
+/* ── Status badge ── */
 
 .status-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
-  font-size: 0.8rem;
+  padding: 8px 16px;
+  font-size: 0.85rem;
   font-weight: 600;
   border-radius: 20px;
   letter-spacing: 0.04em;
@@ -492,8 +501,8 @@
   display: block;
   text-align: center;
   margin-block-start: 24px;
-  padding: 12px;
-  font-size: 0.8rem;
+  padding: 14px;
+  font-size: 0.85rem;
   color: rgba(165, 160, 154, 0.4);
   cursor: pointer;
   transition: color 0.2s ease;
@@ -501,13 +510,14 @@
   border: none;
   font-family: inherit;
   -webkit-appearance: none;
+  min-height: 44px;
 }
 
-.form-cancel-link:hover {
+.form-cancel-link:active {
   color: #DC5050;
 }
 
-/* ── Phone entry screen ── */
+/* ── Phone entry ── */
 
 .phone-entry {
   max-width: 360px;
@@ -524,28 +534,104 @@
 }
 
 .phone-entry__hint {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: rgba(165, 160, 154, 0.5);
   margin-block-end: 24px;
 }
 
 .phone-entry .form-input {
   text-align: center;
-  font-size: 1.15rem;
+  font-size: 18px;
   letter-spacing: 0.08em;
+  padding: 16px;
 }
 
 .phone-entry .form-submit {
   margin-block-start: 16px;
 }
 
-/* ── Responsive ── */
+/* ── Me page fields ── */
+
+.me-status {
+  margin-block-end: 20px;
+}
+
+.me-card {
+  background: rgba(245, 239, 224, 0.03);
+  border: 1px solid rgba(245, 239, 224, 0.06);
+  border-radius: 12px;
+  padding: 16px;
+  margin-block-end: 20px;
+}
+
+.me-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.me-field + .me-field {
+  border-block-start: 1px solid rgba(245, 239, 224, 0.04);
+}
+
+.me-field__label {
+  font-size: 0.85rem;
+  color: rgba(165, 160, 154, 0.6);
+}
+
+.me-field__value {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-starlight, #F5EFE0);
+}
+
+.me-section {
+  margin-block-start: 20px;
+}
+
+.me-companions {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+
+.me-companions li {
+  padding: 10px 0;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary, #A5A09A);
+  border-block-end: 1px solid rgba(245, 239, 224, 0.04);
+}
+
+/* ── Desktop enhancements ── */
 
 @media (min-width: 768px) {
-  .companion-row {
-    gap: 12px;
+  .form-input {
+    padding: 12px 16px;
   }
-  .companion-row .form-input {
-    font-size: 0.95rem;
+
+  .companion-row {
+    flex-wrap: nowrap;
+  }
+
+  .companion-row .form-group {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .chip-qty__btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .toast {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%) translateY(20px);
+    max-width: 360px;
+  }
+
+  .toast--visible {
+    transform: translateX(-50%) translateY(0);
   }
 }
