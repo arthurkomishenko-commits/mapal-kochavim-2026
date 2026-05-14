@@ -550,6 +550,19 @@
    Home content sections (below hero)
    ═══════════════════════════════════════════════════ */
 
+/* Gradient overlay at bottom of hero — smooth transition to sections */
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  background: linear-gradient(to bottom, transparent, var(--color-sky-deepest));
+  z-index: 2;
+  pointer-events: none;
+}
+
 .home-section {
   padding: var(--space-9) var(--space-5);
   background: var(--color-sky-deepest);
