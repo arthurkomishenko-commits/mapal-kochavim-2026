@@ -1,19 +1,23 @@
 /**
  * Star Field — realistic Negev night sky
  *
- * Data: Gemini (real star positions for 2026-08-13 00:00 IDT, Borot Lotz)
- * Architecture: GPT consultation
+ * Architecture:
+ * - Named stars: individual DOM elements (72 stars + Saturn)
+ * - Background stars: THREE divs with massive box-shadow lists
+ *   (800 small + 400 medium + 100 large = 1300 stars, 3 DOM elements)
+ * - Milky Way: gradient overlays (monochrome grey, NOT colored)
+ *   + dense box-shadow star layer along the band
+ * - Total DOM: ~90 elements (not thousands)
  *
- * Projection: cylindrical az→x, sine-compressed alt→y
- * Animation: opacity-only (GPU-safe for iPhone SE)
- * Layers: milky way → faint stars → named stars
+ * Projection: cylindrical azimuth→x, sine-compressed altitude→y
+ * Animation: opacity-only (GPU-safe)
  */
 
 // ═══════════════════════════════════════════════════════
-// STAR CATALOG — real positions for Borot Lotz, Aug 13 2026 00:00
+// STAR CATALOG
 // ═══════════════════════════════════════════════════════
 
-const BRIGHT_STARS = [
+const CATALOG = [
   {n:"Vega",mag:0.03,cl:"A",az:282.4,alt:73.1},
   {n:"Arcturus",mag:-0.05,cl:"K",az:281.5,alt:18.2},
   {n:"Altair",mag:0.77,cl:"A",az:226.8,alt:66.5},
@@ -86,18 +90,9 @@ const BRIGHT_STARS = [
   {n:"Sualocin",mag:3.77,cl:"B",az:198.2,alt:76.4},
   {n:"Sheratan",mag:2.64,cl:"A",az:55.2,alt:10.4},
   {n:"Alnair",mag:1.73,cl:"B",az:162.5,alt:12.4},
+  {n:"Saturn",mag:0.6,cl:"G",az:115.2,alt:42.1,planet:true},
 ];
 
-const SATURN = {n:"Saturn",mag:0.6,cl:"G",az:115.2,alt:42.1,planet:true};
-
-const DEEP_SKY = [
-  {n:"M31",az:62.4,alt:48.1,size:3.0,mag:3.4,type:"galaxy"},
-  {n:"Double Cluster",az:38.5,alt:35.2,size:1.0,mag:3.7,type:"cluster"},
-  {n:"Pleiades",az:68.2,alt:4.5,size:1.8,mag:1.6,type:"cluster"},
-  {n:"M7",az:210.2,alt:10.5,size:1.3,mag:3.3,type:"cluster"},
-];
-
-// Milky Way center line (7 points with width and brightness)
 const MILKY_WAY = [
   {az:200,alt:10,w:30,b:0.85},
   {az:218,alt:25,w:38,b:1.0},
@@ -108,228 +103,220 @@ const MILKY_WAY = [
   {az:65,alt:5,w:10,b:0.3},
 ];
 
+const COLORS = {
+  O:'#9BB0FF', B:'#AABFFF', A:'#F0F0FF',
+  F:'#FFFAE4', G:'#FFE8A0', K:'#FFD2A0', M:'#FFB56B',
+};
+
 // ═══════════════════════════════════════════════════════
 // PROJECTION
 // ═══════════════════════════════════════════════════════
 
-const SPECTRAL_COLORS = {
-  O: '#9BB0FF', B: '#AABFFF', A: '#F0F0FF',
-  F: '#FFFAE4', G: '#FFE8A0', K: '#FFD2A0', M: '#FFB56B',
-};
-
-/**
- * Azimuth/Altitude → screen x%/y%.
- * South (180°) = center. East = left. West = right.
- * Y uses sine compression (natural dome feel).
- */
 function azAltToXY(az, alt) {
-  // South (180°) = center (50%). East (90°) = left (25%). West (270°) = right (75%).
   const x = ((az - 180 + 540) % 360) / 360 * 100;
-  // Sine compression: zenith tight, horizon spread
   const y = 95 - Math.sin((alt * Math.PI) / 180) * 90;
   return { x, y };
 }
 
-function rand(min, max) {
-  return min + Math.random() * (max - min);
+function rand(a, b) { return a + Math.random() * (b - a); }
+
+// ═══════════════════════════════════════════════════════
+// BACKGROUND STARS via box-shadow (1300 stars = 3 DOM elements)
+// ═══════════════════════════════════════════════════════
+
+function generateBoxShadowStars(count, maxW, maxH) {
+  const shadows = [];
+  for (let i = 0; i < count; i++) {
+    const x = Math.round(rand(0, maxW));
+    const y = Math.round(rand(0, maxH));
+    const alpha = rand(0.15, 0.7);
+    shadows.push(`${x}px ${y}px 0 rgba(255,255,255,${alpha.toFixed(2)})`);
+  }
+  return shadows.join(',');
+}
+
+function generateMWStars(count, maxW, maxH) {
+  // Stars concentrated along the Milky Way band
+  const shadows = [];
+  for (let i = 0; i < count; i++) {
+    const segIdx = Math.floor(rand(0, MILKY_WAY.length - 0.01));
+    const seg = MILKY_WAY[segIdx];
+    const next = MILKY_WAY[Math.min(segIdx + 1, MILKY_WAY.length - 1)];
+
+    const t = Math.random();
+    const az = seg.az + (next.az - seg.az) * t;
+    const alt = seg.alt + (next.alt - seg.alt) * t;
+    const w = seg.w + (next.w - seg.w) * t;
+    const b = seg.b + (next.b - seg.b) * t;
+
+    // Scatter perpendicular
+    const scatter = (Math.random() - 0.5) * w * 0.5;
+    const pos = azAltToXY(az + scatter * 0.3, Math.max(0, alt + scatter * 0.1));
+
+    const x = Math.round(pos.x / 100 * maxW);
+    const y = Math.round(pos.y / 100 * maxH);
+    const alpha = rand(0.1, 0.5) * b;
+
+    shadows.push(`${x}px ${y}px 0 rgba(230,235,245,${alpha.toFixed(2)})`);
+  }
+  return shadows.join(',');
+}
+
+function createBackgroundLayers(container) {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const isMobile = w < 768;
+
+  // Layer 1: small faint stars (1px)
+  const layer1 = document.createElement('div');
+  layer1.className = 'bg-stars bg-stars--sm';
+  layer1.setAttribute('aria-hidden', 'true');
+  layer1.style.boxShadow = generateBoxShadowStars(isMobile ? 400 : 900, w, h);
+  container.appendChild(layer1);
+
+  // Layer 2: medium stars (1.5px) — fewer
+  const layer2 = document.createElement('div');
+  layer2.className = 'bg-stars bg-stars--md';
+  layer2.setAttribute('aria-hidden', 'true');
+  layer2.style.boxShadow = generateBoxShadowStars(isMobile ? 120 : 300, w, h);
+  container.appendChild(layer2);
+
+  // Layer 3: Milky Way concentrated stars — dense band
+  const layer3 = document.createElement('div');
+  layer3.className = 'bg-stars bg-stars--mw';
+  layer3.setAttribute('aria-hidden', 'true');
+  layer3.style.boxShadow = generateMWStars(isMobile ? 500 : 1200, w, h);
+  container.appendChild(layer3);
+
+  // Layer 4: Extra-dense MW core (near Galactic center)
+  const layer4 = document.createElement('div');
+  layer4.className = 'bg-stars bg-stars--mw';
+  layer4.setAttribute('aria-hidden', 'true');
+  // Generate stars only near the brightest MW segments (indices 0-2)
+  const coreShadows = [];
+  for (let i = 0; i < (isMobile ? 200 : 500); i++) {
+    const segIdx = Math.floor(rand(0, 2.99));
+    const seg = MILKY_WAY[segIdx];
+    const next = MILKY_WAY[segIdx + 1];
+    const t = Math.random();
+    const az = seg.az + (next.az - seg.az) * t;
+    const alt = seg.alt + (next.alt - seg.alt) * t;
+    const scatter = (Math.random() - 0.5) * seg.w * 0.35;
+    const pos = azAltToXY(az + scatter * 0.2, Math.max(0, alt + scatter * 0.1));
+    const px = Math.round(pos.x / 100 * w);
+    const py = Math.round(pos.y / 100 * h);
+    const alpha = rand(0.15, 0.55);
+    coreShadows.push(`${px}px ${py}px 0 rgba(235,230,220,${alpha.toFixed(2)})`);
+  }
+  layer4.style.boxShadow = coreShadows.join(',');
+  container.appendChild(layer4);
 }
 
 // ═══════════════════════════════════════════════════════
-// STAR CREATION
+// MILKY WAY GLOW — monochrome grey (real naked-eye appearance)
 // ═══════════════════════════════════════════════════════
 
-// Core pixel size — the actual bright point. TINY.
-// Glow comes from box-shadow, not element size.
+function createMilkyWayGlow(container) {
+  const el = document.createElement('div');
+  el.className = 'milky-way-glow';
+  el.setAttribute('aria-hidden', 'true');
+
+  // Multiple radial gradients — GREY, not blue/colored
+  // Real MW is monochrome to dark-adapted eyes
+  const gradients = MILKY_WAY.map(pt => {
+    const pos = azAltToXY(pt.az, pt.alt);
+    const spreadX = pt.w * 3.5;
+    const spreadY = pt.w * 4;
+    const opacity = pt.b * 0.13;
+    const c = pt.b >= 0.95
+      ? `rgba(200,195,185,${opacity})` // galactic center: slightly warm grey
+      : `rgba(210,215,220,${opacity})`; // rest: cool grey
+    return `radial-gradient(ellipse ${spreadX}% ${spreadY}% at ${pos.x}% ${pos.y}%, ${c}, transparent 70%)`;
+  });
+
+  // Dark dust lanes
+  const lanes = [
+    { x: 48, y: 40, sx: 6, sy: 18 },
+    { x: 52, y: 52, sx: 4, sy: 12 },
+    { x: 45, y: 28, sx: 5, sy: 10 },
+  ];
+  lanes.forEach(l => {
+    gradients.push(
+      `radial-gradient(ellipse ${l.sx}% ${l.sy}% at ${l.x}% ${l.y}%, rgba(7,11,31,0.4), transparent 65%)`
+    );
+  });
+
+  el.style.background = gradients.join(',');
+  container.appendChild(el);
+}
+
+// ═══════════════════════════════════════════════════════
+// NAMED STARS (individual DOM elements)
+// ═══════════════════════════════════════════════════════
+
 function magToSize(mag) {
   if (mag < 0) return 2.2;
   if (mag < 1) return 1.8;
-  if (mag < 2) return 1.5;
-  if (mag < 3) return 1.2;
-  if (mag < 4) return 0.9;
-  return rand(0.5, 0.8);
+  if (mag < 2) return 1.4;
+  if (mag < 3) return 1.1;
+  return 0.8;
 }
 
-function twinkleClass(mag, alt) {
+function twinkClass(mag, alt) {
   if (alt < 15) return 'star--horizon';
   if (mag < 0.5) return 'star--brilliant';
   if (mag < 1.5) return 'star--bright';
   if (mag < 2.5) return 'star--medium';
-  if (mag < 3.5) return 'star--dim';
-  return 'star--faint';
+  return 'star--dim';
 }
 
-function createStarElement(x, y, size, color, twinkCls, baseOpacity) {
-  const el = document.createElement('div');
-  el.className = `star ${twinkCls}`;
-  el.setAttribute('aria-hidden', 'true');
-
-  const delay = -rand(0, 12);
-
-  // Glow radius scales with brightness — light emanates from point
-  const glowR1 = (size * 2).toFixed(1);
-  const glowR2 = (size * 5).toFixed(1);
-  const glowR3 = (size * 10).toFixed(1);
-
-  // Brighter stars get more glow layers
-  let shadow;
-  if (size >= 1.8) {
-    // Bright: 3-layer glow — tight white + medium color + wide faint
-    shadow = `0 0 ${glowR1}px rgba(255,255,255,0.6), 0 0 ${glowR2}px ${color}44, 0 0 ${glowR3}px ${color}15`;
-  } else if (size >= 1.2) {
-    // Medium: 2-layer
-    shadow = `0 0 ${glowR1}px rgba(255,255,255,0.4), 0 0 ${glowR2}px ${color}22`;
-  } else {
-    // Dim: just a tiny halo
-    shadow = `0 0 ${glowR1}px rgba(255,255,255,0.25)`;
-  }
-
-  el.style.cssText = `
-    left:${x.toFixed(2)}%;
-    top:${y.toFixed(2)}%;
-    width:${size.toFixed(1)}px;
-    height:${size.toFixed(1)}px;
-    background:${color};
-    box-shadow:${shadow};
-    opacity:${baseOpacity.toFixed(2)};
-    animation-delay:${delay.toFixed(1)}s;
-  `;
-
-  return el;
-}
-
-function createHorizonStar(x, y, size, color, baseOpacity) {
-  const el = document.createElement('div');
-  el.className = 'star star--horizon';
-  el.setAttribute('aria-hidden', 'true');
-
-  const delay = -rand(0, 6);
-
-  const glowR = (size * 4).toFixed(1);
-
-  el.style.cssText = `
-    left:${x.toFixed(2)}%;
-    top:${y.toFixed(2)}%;
-    width:${size.toFixed(1)}px;
-    height:${size.toFixed(1)}px;
-    background:${color};
-    opacity:${baseOpacity.toFixed(2)};
-    animation-delay:${delay.toFixed(1)}s;
-    box-shadow:
-      0 0 ${glowR}px rgba(255,255,255,0.3),
-      -1px 0 2px rgba(255,120,120,0.18),
-       1px 0 2px rgba(120,170,255,0.18);
-  `;
-
-  return el;
-}
-
-// ═══════════════════════════════════════════════════════
-// MILKY WAY
-// ═══════════════════════════════════════════════════════
-
-/**
- * Milky Way — as seen with naked eye from dark desert:
- * A broad, milky, CLOUDY band of unresolved starlight.
- * NOT individual dots. It's a luminous haze with darker patches
- * (dust lanes) breaking up the glow. Brightest near Sagittarius.
- *
- * Implementation: multiple overlapping gradient divs along the path,
- * plus "dark lane" gradients that cut through.
- */
-function createMilkyWay(container) {
-  // Main glow — each path point gets its own gradient div
-  MILKY_WAY.forEach((pt, i) => {
-    const pos = azAltToXY(pt.az, pt.alt);
-    const el = document.createElement('div');
-    el.className = 'milky-way';
-    el.setAttribute('aria-hidden', 'true');
-
-    const w = pt.w * 3;
-    const h = pt.w * 4;
-    const opacity = pt.b * 0.14;
-    const isCenter = pt.b >= 0.95;
-
-    // Galactic center: warmer and brighter
-    const c = isCenter
-      ? `rgba(220,210,190,${opacity})`
-      : `rgba(200,210,230,${opacity})`;
-
-    // Each patch slightly different angle for organic look
-    const rotation = rand(-15, 15);
-
-    el.style.cssText = `
-      position:absolute;
-      left:${(pos.x - w / 2).toFixed(1)}%;
-      top:${(pos.y - h / 2).toFixed(1)}%;
-      width:${w}%;
-      height:${h}%;
-      background:radial-gradient(ellipse 50% 50% at 50% 50%, ${c}, transparent 70%);
-      transform:rotate(${rotation}deg);
-      pointer-events:none;
-    `;
-    container.appendChild(el);
-  });
-
-  // Dark lanes — negative patches that break up the uniformity
-  const darkLanes = [
-    { x: 47, y: 42, w: 8, h: 14, rot: -20 },
-    { x: 52, y: 55, w: 5, h: 10, rot: 10 },
-    { x: 44, y: 30, w: 6, h: 8, rot: -5 },
-    { x: 55, y: 48, w: 4, h: 12, rot: 15 },
-  ];
-
-  darkLanes.forEach(lane => {
-    const el = document.createElement('div');
-    el.className = 'mw-dust-lane';
-    el.setAttribute('aria-hidden', 'true');
-    el.style.cssText = `
-      position:absolute;
-      left:${lane.x}%;top:${lane.y}%;
-      width:${lane.w}%;height:${lane.h}%;
-      background:radial-gradient(ellipse at center, rgba(7,11,31,0.5) 0%, transparent 70%);
-      transform:rotate(${lane.rot}deg);
-      pointer-events:none;
-    `;
-    container.appendChild(el);
-  });
-
-  // Star dust — small bright dots concentrated in the band
-  // These are the resolved stars ON TOP of the glow
-  const dustCount = window.innerWidth < 768 ? 400 : 900;
+function createNamedStars(container, maxMag) {
   const fragment = document.createDocumentFragment();
 
-  for (let i = 0; i < dustCount; i++) {
-    const segIdx = Math.floor(rand(0, MILKY_WAY.length - 1));
-    const seg = MILKY_WAY[segIdx];
-    const nextSeg = MILKY_WAY[segIdx + 1] || seg;
+  for (const s of CATALOG) {
+    if (s.alt < 0 || s.mag > maxMag) continue;
 
-    const t = Math.random();
-    const az = seg.az + (nextSeg.az - seg.az) * t;
-    const alt = seg.alt + (nextSeg.alt - seg.alt) * t;
-    const width = seg.w + (nextSeg.w - seg.w) * t;
-    const brightness = seg.b + (nextSeg.b - seg.b) * t;
+    const pos = azAltToXY(s.az, s.alt);
+    const size = magToSize(s.mag);
+    const color = COLORS[s.cl] || '#F0F0FF';
+    const cls = twinkClass(s.mag, s.alt);
+    const delay = -rand(0, 12);
+    const opacity = rand(0.75, 1.0);
 
-    // Scatter within band width
-    const scatter = (Math.random() - 0.5) * width * 0.6;
-    const perpAngle = Math.atan2(nextSeg.alt - seg.alt, nextSeg.az - seg.az) + Math.PI / 2;
-    const finalAz = az + scatter * Math.cos(perpAngle) * 0.3;
-    const finalAlt = alt + scatter * Math.sin(perpAngle) * 0.15;
+    const el = document.createElement('div');
+    el.className = `star ${cls}`;
+    el.setAttribute('aria-hidden', 'true');
 
-    if (finalAlt < 0 || finalAlt > 90) continue;
+    // Glow layers: tiny core + light emanation via box-shadow
+    const g1 = (size * 2).toFixed(1);
+    const g2 = (size * 5).toFixed(1);
 
-    const pos = azAltToXY(finalAz, finalAlt);
-    const size = rand(0.3, 0.9);
-    const opacity = rand(0.2, 0.6) * brightness;
+    let shadow;
+    if (s.planet) {
+      shadow = `0 0 ${g1}px ${color}88, 0 0 ${g2}px ${color}33, 0 0 ${(size*8).toFixed(1)}px ${color}11`;
+    } else if (size >= 1.8) {
+      shadow = `0 0 ${g1}px #ffffff88, 0 0 ${g2}px ${color}33`;
+    } else if (size >= 1.2) {
+      shadow = `0 0 ${g1}px #ffffff55, 0 0 ${g2}px ${color}1A`;
+    } else {
+      shadow = `0 0 ${g1}px #ffffff33`;
+    }
 
-    const dot = document.createElement('div');
-    dot.className = 'mw-dust';
-    dot.setAttribute('aria-hidden', 'true');
-    dot.style.cssText = `
-      left:${pos.x.toFixed(1)}%;top:${pos.y.toFixed(1)}%;
-      width:${size.toFixed(1)}px;height:${size.toFixed(1)}px;
+    // Horizon stars: chromatic dispersion
+    if (s.alt < 15) {
+      shadow += `, -1px 0 2px rgba(255,110,110,0.15), 1px 0 2px rgba(110,160,255,0.15)`;
+    }
+
+    el.style.cssText = `
+      left:${pos.x.toFixed(2)}%;top:${pos.y.toFixed(2)}%;
+      width:${size}px;height:${size}px;
+      background:${color};
+      box-shadow:${shadow};
       opacity:${opacity.toFixed(2)};
+      animation-delay:${delay.toFixed(1)}s;
     `;
-    fragment.appendChild(dot);
+
+    fragment.appendChild(el);
   }
 
   container.appendChild(fragment);
@@ -339,165 +326,37 @@ function createMilkyWay(container) {
 // DEEP SKY OBJECTS
 // ═══════════════════════════════════════════════════════
 
-function createDeepSkyObjects(container) {
-  DEEP_SKY.forEach(obj => {
-    if (obj.alt < 2) return; // Too low
-
-    const pos = azAltToXY(obj.az, obj.alt);
-
-    if (obj.type === 'galaxy') {
-      // M31: subtle elliptical smudge
-      const el = document.createElement('div');
-      el.className = 'dso dso--galaxy';
-      el.setAttribute('aria-hidden', 'true');
-      el.style.cssText = `left:${pos.x}%;top:${pos.y}%;`;
-      container.appendChild(el);
-    } else if (obj.type === 'cluster') {
-      // Cluster: 4-6 tiny dots grouped together
-      const count = obj.n === 'Pleiades' ? 6 : 4;
-      for (let i = 0; i < count; i++) {
-        const el = document.createElement('div');
-        el.className = 'star star--faint';
-        el.setAttribute('aria-hidden', 'true');
-        const ox = pos.x + rand(-0.4, 0.4);
-        const oy = pos.y + rand(-0.4, 0.4);
-        const s = rand(0.6, 1.1);
-        el.style.cssText = `
-          left:${ox.toFixed(2)}%;top:${oy.toFixed(2)}%;
-          width:${s}px;height:${s}px;
-          background:#F0F0FF;opacity:${rand(0.3, 0.6).toFixed(2)};
-          animation-delay:${-rand(0, 8).toFixed(1)}s;
-        `;
-        container.appendChild(el);
-      }
-    }
-  });
+function createDSOs(container) {
+  // M31 Andromeda — faint smudge
+  const m31pos = azAltToXY(62.4, 48.1);
+  const m31 = document.createElement('div');
+  m31.className = 'dso dso--galaxy';
+  m31.setAttribute('aria-hidden', 'true');
+  m31.style.cssText = `left:${m31pos.x}%;top:${m31pos.y}%;`;
+  container.appendChild(m31);
 }
 
 // ═══════════════════════════════════════════════════════
-// BACKGROUND STARS
-// ═══════════════════════════════════════════════════════
-
-/**
- * Check if a point is near the Milky Way center line.
- * Returns 0-1 (0 = far, 1 = on the line).
- */
-function milkyWayProximity(x, y) {
-  let minDist = Infinity;
-  for (const pt of MILKY_WAY) {
-    const pos = azAltToXY(pt.az, pt.alt);
-    const dx = x - pos.x;
-    const dy = y - pos.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const threshold = pt.w * 1.5;
-    if (dist < threshold) return 1 - (dist / threshold);
-    if (dist < minDist) minDist = dist;
-  }
-  return 0;
-}
-
-const BG_COLORS = ['#F0F0FF','#F0F0FF','#F0F0FF','#FFFAE4','#FFE8A0','#AABFFF','#AABFFF','#FFD2A0','#FFB56B'];
-
-function createBackgroundStars(container, count) {
-  const fragment = document.createDocumentFragment();
-
-  for (let i = 0; i < count; i++) {
-    let x, y, attempts = 0;
-
-    // 60% of stars biased toward Milky Way band
-    const wantMilkyWay = Math.random() < 0.6;
-
-    do {
-      x = rand(0, 100);
-      // Bias toward zenith (upper part): use squared random
-      const yRand = Math.random();
-      y = 5 + yRand * yRand * 85; // quadratic bias toward top
-      attempts++;
-    } while (
-      wantMilkyWay &&
-      milkyWayProximity(x, y) < 0.1 &&
-      attempts < 8
-    );
-
-    // Skip if too close to horizon
-    if (y > 92) continue;
-
-    // Stars along Milky Way are slightly brighter and denser
-    const mwProx = milkyWayProximity(x, y);
-    const size = mwProx > 0.3 ? rand(0.5, 1.4) : rand(0.4, 1.0);
-    const color = BG_COLORS[Math.floor(Math.random() * BG_COLORS.length)];
-    const opacity = mwProx > 0.3 ? rand(0.3, 0.65) : rand(0.15, 0.45);
-
-    const el = document.createElement('div');
-    el.className = 'star star--faint';
-    el.setAttribute('aria-hidden', 'true');
-    el.style.cssText = `
-      left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;
-      width:${size.toFixed(1)}px;height:${size.toFixed(1)}px;
-      background:${color};
-      box-shadow:0 0 ${(size * 2).toFixed(1)}px rgba(255,255,255,0.2);
-      opacity:${opacity.toFixed(2)};
-      animation-delay:${-rand(0, 10).toFixed(1)}s;
-    `;
-    fragment.appendChild(el);
-  }
-
-  container.appendChild(fragment);
-}
-
-// ═══════════════════════════════════════════════════════
-// MAIN INIT
+// INIT
 // ═══════════════════════════════════════════════════════
 
 export function initStarField(container) {
   if (!container) return;
 
-  // Clear previous
-  container.querySelectorAll('.star, .milky-way, .mw-dust, .mw-dust-lane, .dso').forEach(el => el.remove());
+  // Cleanup
+  container.querySelectorAll('.star,.bg-stars,.milky-way-glow,.dso').forEach(e => e.remove());
 
   const isMobile = window.innerWidth < 768;
-  const maxMag = isMobile ? 3.2 : 4.5;
-  const bgCount = isMobile ? 80 : 250;
 
-  // Layer 1: Milky Way (haze + dust lanes + star dust)
-  createMilkyWay(container);
+  // 1. Background star layers (3 DOM elements = 1300-1900 stars)
+  createBackgroundLayers(container);
 
-  // Layer 2: Background faint stars
-  createBackgroundStars(container, bgCount);
+  // 2. Milky Way glow
+  createMilkyWayGlow(container);
 
-  // Layer 3: Deep sky objects
-  if (!isMobile) {
-    createDeepSkyObjects(container);
-  }
+  // 3. Deep sky objects
+  if (!isMobile) createDSOs(container);
 
-  // Layer 4: Named stars + Saturn
-  const allStars = [...BRIGHT_STARS, SATURN];
-  const fragment = document.createDocumentFragment();
-
-  for (const star of allStars) {
-    if (star.alt < 0) continue; // Below horizon
-    if (star.mag > maxMag) continue;
-
-    const pos = azAltToXY(star.az, star.alt);
-    const size = magToSize(star.mag);
-    const color = SPECTRAL_COLORS[star.cl] || '#F0F0FF';
-    const baseOpacity = rand(0.7, 1.0); // Perceptual variation
-
-    let el;
-    if (star.alt < 15) {
-      el = createHorizonStar(pos.x, pos.y, size, color, baseOpacity);
-    } else {
-      const cls = twinkleClass(star.mag, star.alt);
-      el = createStarElement(pos.x, pos.y, size, color, cls, baseOpacity);
-    }
-
-    // Saturn: slightly larger glow
-    if (star.planet) {
-      el.style.boxShadow = `0 0 6px ${color}66, 0 0 12px ${color}22`;
-    }
-
-    fragment.appendChild(el);
-  }
-
-  container.appendChild(fragment);
+  // 4. Named catalog stars
+  createNamedStars(container, isMobile ? 3.0 : 4.0);
 }

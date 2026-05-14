@@ -138,4 +138,19 @@ export function renderHome(container) {
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
   }
+
+  // Tap sky to dim/show content (immersive star viewing mode)
+  const heroContent = container.querySelector('.hero__content');
+  const heroSection = container.querySelector('.hero');
+  if (heroSection && heroContent) {
+    let dimmed = false;
+    heroSection.addEventListener('click', (e) => {
+      // Don't trigger on buttons/links
+      if (e.target.closest('a, button')) return;
+      dimmed = !dimmed;
+      heroContent.style.transition = 'opacity 0.6s ease';
+      heroContent.style.opacity = dimmed ? '0.15' : '1';
+      if (scrollHint) scrollHint.style.opacity = dimmed ? '0' : '';
+    });
+  }
 }
