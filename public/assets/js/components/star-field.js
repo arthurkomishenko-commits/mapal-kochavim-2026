@@ -138,13 +138,15 @@ function rand(min, max) {
 // STAR CREATION
 // ═══════════════════════════════════════════════════════
 
+// Core pixel size — the actual bright point. TINY.
+// Glow comes from box-shadow, not element size.
 function magToSize(mag) {
-  if (mag < 0) return 5.5;
-  if (mag < 1) return 4.5;
-  if (mag < 2) return 3.5;
-  if (mag < 3) return 2.5;
-  if (mag < 4) return 1.6;
-  return rand(0.7, 1.2);
+  if (mag < 0) return 2.2;
+  if (mag < 1) return 1.8;
+  if (mag < 2) return 1.5;
+  if (mag < 3) return 1.2;
+  if (mag < 4) return 0.9;
+  return rand(0.5, 0.8);
 }
 
 function twinkleClass(mag, alt) {
@@ -163,36 +165,33 @@ function createStarElement(x, y, size, color, twinkCls, baseOpacity) {
 
   const delay = -rand(0, 12);
 
-  // Render size: actual DOM element is larger than "visual" core
-  // so the radial-gradient fades softly to transparent
-  const renderSize = size * 3;
+  // Glow radius scales with brightness — light emanates from point
+  const glowR1 = (size * 2).toFixed(1);
+  const glowR2 = (size * 5).toFixed(1);
+  const glowR3 = (size * 10).toFixed(1);
 
-  let shadow = '';
-  if (size >= 4) {
-    shadow = `box-shadow: 0 0 ${size}px ${color}33, 0 0 ${size * 2}px ${color}11;`;
-  } else if (size >= 3) {
-    shadow = `box-shadow: 0 0 ${size}px ${color}22;`;
+  // Brighter stars get more glow layers
+  let shadow;
+  if (size >= 1.8) {
+    // Bright: 3-layer glow — tight white + medium color + wide faint
+    shadow = `0 0 ${glowR1}px rgba(255,255,255,0.6), 0 0 ${glowR2}px ${color}44, 0 0 ${glowR3}px ${color}15`;
+  } else if (size >= 1.2) {
+    // Medium: 2-layer
+    shadow = `0 0 ${glowR1}px rgba(255,255,255,0.4), 0 0 ${glowR2}px ${color}22`;
+  } else {
+    // Dim: just a tiny halo
+    shadow = `0 0 ${glowR1}px rgba(255,255,255,0.25)`;
   }
-
-  // Soft radial glow — bright core fading to transparent
-  // Each star slightly different spread for organic look
-  const coreSize = Math.round(20 + rand(0, 15));
-  const midSize = Math.round(45 + rand(0, 15));
 
   el.style.cssText = `
     left:${x.toFixed(2)}%;
     top:${y.toFixed(2)}%;
-    width:${renderSize.toFixed(1)}px;
-    height:${renderSize.toFixed(1)}px;
-    background: radial-gradient(circle,
-      ${color} 0%,
-      ${color}BB ${coreSize}%,
-      ${color}44 ${midSize}%,
-      transparent 72%
-    );
+    width:${size.toFixed(1)}px;
+    height:${size.toFixed(1)}px;
+    background:${color};
+    box-shadow:${shadow};
     opacity:${baseOpacity.toFixed(2)};
     animation-delay:${delay.toFixed(1)}s;
-    ${shadow}
   `;
 
   return el;
@@ -205,22 +204,20 @@ function createHorizonStar(x, y, size, color, baseOpacity) {
 
   const delay = -rand(0, 6);
 
-  const renderSize = size * 3;
+  const glowR = (size * 4).toFixed(1);
 
   el.style.cssText = `
     left:${x.toFixed(2)}%;
     top:${y.toFixed(2)}%;
-    width:${renderSize.toFixed(1)}px;
-    height:${renderSize.toFixed(1)}px;
-    background: radial-gradient(circle,
-      ${color} 0%, ${color}88 25%, transparent 65%
-    );
+    width:${size.toFixed(1)}px;
+    height:${size.toFixed(1)}px;
+    background:${color};
     opacity:${baseOpacity.toFixed(2)};
     animation-delay:${delay.toFixed(1)}s;
     box-shadow:
-      -2px 0 3px rgba(255,100,100,0.2),
-       2px 0 3px rgba(100,160,255,0.2),
-       0 0 ${size * 2}px ${color}22;
+      0 0 ${glowR}px rgba(255,255,255,0.3),
+      -1px 0 2px rgba(255,120,120,0.18),
+       1px 0 2px rgba(120,170,255,0.18);
   `;
 
   return el;
@@ -231,75 +228,105 @@ function createHorizonStar(x, y, size, color, baseOpacity) {
 // ═══════════════════════════════════════════════════════
 
 /**
- * Milky Way — two layers:
- * 1. Subtle gradient haze (very low opacity)
- * 2. Hundreds of micro-dots (0.2-0.7px) packed along the band
- *    THIS is what makes it look real — not gradients, but dust.
+ * Milky Way — as seen with naked eye from dark desert:
+ * A broad, milky, CLOUDY band of unresolved starlight.
+ * NOT individual dots. It's a luminous haze with darker patches
+ * (dust lanes) breaking up the glow. Brightest near Sagittarius.
+ *
+ * Implementation: multiple overlapping gradient divs along the path,
+ * plus "dark lane" gradients that cut through.
  */
-function createMilkyWay(container, isMobile) {
-  // Layer 1: faint haze
-  const haze = document.createElement('div');
-  haze.className = 'milky-way';
-  haze.setAttribute('aria-hidden', 'true');
-
-  const gradients = MILKY_WAY.map(pt => {
+function createMilkyWay(container) {
+  // Main glow — each path point gets its own gradient div
+  MILKY_WAY.forEach((pt, i) => {
     const pos = azAltToXY(pt.az, pt.alt);
-    const spreadX = pt.w * 1.8;
-    const spreadY = pt.w * 2.2;
-    const opacity = pt.b * 0.06; // very subtle
+    const el = document.createElement('div');
+    el.className = 'milky-way';
+    el.setAttribute('aria-hidden', 'true');
+
+    const w = pt.w * 3;
+    const h = pt.w * 4;
+    const opacity = pt.b * 0.14;
     const isCenter = pt.b >= 0.95;
-    const color = isCenter
-      ? `rgba(210,200,185,${opacity})`
-      : `rgba(190,205,235,${opacity})`;
-    return `radial-gradient(ellipse ${spreadX}% ${spreadY}% at ${pos.x}% ${pos.y}%, ${color}, transparent)`;
+
+    // Galactic center: warmer and brighter
+    const c = isCenter
+      ? `rgba(220,210,190,${opacity})`
+      : `rgba(200,210,230,${opacity})`;
+
+    // Each patch slightly different angle for organic look
+    const rotation = rand(-15, 15);
+
+    el.style.cssText = `
+      position:absolute;
+      left:${(pos.x - w / 2).toFixed(1)}%;
+      top:${(pos.y - h / 2).toFixed(1)}%;
+      width:${w}%;
+      height:${h}%;
+      background:radial-gradient(ellipse 50% 50% at 50% 50%, ${c}, transparent 70%);
+      transform:rotate(${rotation}deg);
+      pointer-events:none;
+    `;
+    container.appendChild(el);
   });
 
-  haze.style.background = gradients.join(', ');
-  container.appendChild(haze);
+  // Dark lanes — negative patches that break up the uniformity
+  const darkLanes = [
+    { x: 47, y: 42, w: 8, h: 14, rot: -20 },
+    { x: 52, y: 55, w: 5, h: 10, rot: 10 },
+    { x: 44, y: 30, w: 6, h: 8, rot: -5 },
+    { x: 55, y: 48, w: 4, h: 12, rot: 15 },
+  ];
 
-  // Layer 2: star dust — hundreds of micro-dots along the band
-  const dustCount = isMobile ? 300 : 700;
+  darkLanes.forEach(lane => {
+    const el = document.createElement('div');
+    el.className = 'mw-dust-lane';
+    el.setAttribute('aria-hidden', 'true');
+    el.style.cssText = `
+      position:absolute;
+      left:${lane.x}%;top:${lane.y}%;
+      width:${lane.w}%;height:${lane.h}%;
+      background:radial-gradient(ellipse at center, rgba(7,11,31,0.5) 0%, transparent 70%);
+      transform:rotate(${lane.rot}deg);
+      pointer-events:none;
+    `;
+    container.appendChild(el);
+  });
+
+  // Star dust — small bright dots concentrated in the band
+  // These are the resolved stars ON TOP of the glow
+  const dustCount = window.innerWidth < 768 ? 400 : 900;
   const fragment = document.createDocumentFragment();
 
   for (let i = 0; i < dustCount; i++) {
-    // Pick a random point along the MW path
     const segIdx = Math.floor(rand(0, MILKY_WAY.length - 1));
     const seg = MILKY_WAY[segIdx];
     const nextSeg = MILKY_WAY[segIdx + 1] || seg;
 
-    // Interpolate between two path points
     const t = Math.random();
     const az = seg.az + (nextSeg.az - seg.az) * t;
     const alt = seg.alt + (nextSeg.alt - seg.alt) * t;
     const width = seg.w + (nextSeg.w - seg.w) * t;
     const brightness = seg.b + (nextSeg.b - seg.b) * t;
 
-    // Scatter perpendicular to path
-    const scatter = (Math.random() - 0.5) * width * 0.8;
-    const scatterAngle = Math.atan2(
-      nextSeg.alt - seg.alt,
-      nextSeg.az - seg.az
-    ) + Math.PI / 2;
-
-    const finalAz = az + scatter * Math.cos(scatterAngle) * 0.3;
-    const finalAlt = alt + scatter * Math.sin(scatterAngle) * 0.15;
+    // Scatter within band width
+    const scatter = (Math.random() - 0.5) * width * 0.6;
+    const perpAngle = Math.atan2(nextSeg.alt - seg.alt, nextSeg.az - seg.az) + Math.PI / 2;
+    const finalAz = az + scatter * Math.cos(perpAngle) * 0.3;
+    const finalAlt = alt + scatter * Math.sin(perpAngle) * 0.15;
 
     if (finalAlt < 0 || finalAlt > 90) continue;
 
     const pos = azAltToXY(finalAz, finalAlt);
-
-    // Micro-dot
-    const size = rand(0.2, 0.7);
-    const opacity = rand(0.08, 0.3) * brightness;
+    const size = rand(0.3, 0.9);
+    const opacity = rand(0.2, 0.6) * brightness;
 
     const dot = document.createElement('div');
     dot.className = 'mw-dust';
     dot.setAttribute('aria-hidden', 'true');
     dot.style.cssText = `
-      left:${pos.x.toFixed(1)}%;
-      top:${pos.y.toFixed(1)}%;
-      width:${size.toFixed(1)}px;
-      height:${size.toFixed(1)}px;
+      left:${pos.x.toFixed(1)}%;top:${pos.y.toFixed(1)}%;
+      width:${size.toFixed(1)}px;height:${size.toFixed(1)}px;
       opacity:${opacity.toFixed(2)};
     `;
     fragment.appendChild(dot);
@@ -404,11 +431,11 @@ function createBackgroundStars(container, count) {
     const el = document.createElement('div');
     el.className = 'star star--faint';
     el.setAttribute('aria-hidden', 'true');
-    const rs = size * 2.5;
     el.style.cssText = `
       left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;
-      width:${rs.toFixed(1)}px;height:${rs.toFixed(1)}px;
-      background:radial-gradient(circle,${color} 0%,${color}66 30%,transparent 70%);
+      width:${size.toFixed(1)}px;height:${size.toFixed(1)}px;
+      background:${color};
+      box-shadow:0 0 ${(size * 2).toFixed(1)}px rgba(255,255,255,0.2);
       opacity:${opacity.toFixed(2)};
       animation-delay:${-rand(0, 10).toFixed(1)}s;
     `;
@@ -426,14 +453,14 @@ export function initStarField(container) {
   if (!container) return;
 
   // Clear previous
-  container.querySelectorAll('.star, .milky-way, .mw-dust, .dso').forEach(el => el.remove());
+  container.querySelectorAll('.star, .milky-way, .mw-dust, .mw-dust-lane, .dso').forEach(el => el.remove());
 
   const isMobile = window.innerWidth < 768;
   const maxMag = isMobile ? 3.2 : 4.5;
   const bgCount = isMobile ? 80 : 250;
 
-  // Layer 1: Milky Way haze + star dust
-  createMilkyWay(container, isMobile);
+  // Layer 1: Milky Way (haze + dust lanes + star dust)
+  createMilkyWay(container);
 
   // Layer 2: Background faint stars
   createBackgroundStars(container, bgCount);
