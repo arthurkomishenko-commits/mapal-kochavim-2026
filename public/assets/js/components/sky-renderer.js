@@ -240,8 +240,8 @@ function generateStars(count, W, H) {
 
     // Base probability ensures EVERY part of sky has stars.
     // MW multiplier adds density on top, doesn't create empty zones.
-    const baseDensity = 0.35; // 35% chance even with no MW
-    const mwBoost = mw * 4;  // up to +4x in MW band
+    const baseDensity = 0.25; // base sky
+    const mwBoost = mw * 8;  // up to 9x denser in MW center
     let prob = (baseDensity + mwBoost) * sb * cloud * (1 - dark * 0.6);
 
     // Normalize
@@ -262,14 +262,16 @@ function generateStars(count, W, H) {
       cb = max(0, cb - 15);
     }
 
-    // Alpha — VISIBLE on dark background. MW stars brighter.
+    // Alpha — MW center MUCH brighter than surroundings
     let a;
     if (mw > 0.5) {
-      a = rand(0.25, 0.85);  // MW band — clearly visible
-    } else if (mw > 0.1) {
-      a = rand(0.15, 0.60);  // MW fringe
+      a = rand(0.40, 1.0);   // MW core — bright and dense
+    } else if (mw > 0.2) {
+      a = rand(0.20, 0.70);  // MW band
+    } else if (mw > 0.05) {
+      a = rand(0.10, 0.45);  // MW fringe
     } else {
-      a = rand(0.08, 0.40);  // general sky
+      a = rand(0.05, 0.30);  // general sky — noticeably dimmer
     }
     // Sky brightness (horizon dimmer)
     a *= (0.4 + sb * 0.6); // floor at 40% so horizon isn't empty
@@ -460,7 +462,7 @@ export default class SkyRenderer {
       const [px, py] = azAltToXY(pt.az, pt.alt, gW, gH);
       // Many smaller circles along the path for smooth blending
       const radius = max(pt.w * max(gW, gH) / 180 * 0.55, 8);
-      const alpha = pt.b * 0.06;
+      const alpha = pt.b * 0.18;
       const isCenter = pt.b >= 0.95;
       const color = isCenter ? '215,210,200' : '205,210,220';
 
@@ -483,7 +485,7 @@ export default class SkyRenderer {
       const ry = max(c.h * max(gW,gH) / 180 * 0.5, 3);
       gCtx.beginPath();
       gCtx.ellipse(px, py, rx, ry, 0, 0, PI * 2);
-      gCtx.fillStyle = `rgba(220,215,205,${(c.b * 0.05).toFixed(3)})`;
+      gCtx.fillStyle = `rgba(220,215,205,${(c.b * 0.15).toFixed(3)})`;
       gCtx.fill();
     }
 
@@ -501,7 +503,7 @@ export default class SkyRenderer {
 
     // Composite — gentle glow, not bright patches
     ctx.save();
-    ctx.globalAlpha = 0.45;
+    ctx.globalAlpha = 0.75;
     ctx.drawImage(blurSrc, 0, 0, W, H);
     ctx.restore();
   }
