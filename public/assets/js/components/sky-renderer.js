@@ -403,51 +403,51 @@ export default class SkyRenderer {
     // Draw soft circles along MW path
     for (const pt of MW_PATH) {
       const [px, py] = azAltToXY(pt.az, pt.alt, gW, gH);
-      // Much larger radius, much more visible
-      const radius = max(pt.w * gW / 360 * 4, 10);
-      const alpha = pt.b * 0.15;
+      // Many smaller circles along the path for smooth blending
+      const radius = max(pt.w * gW / 360 * 2.5, 8);
+      const alpha = pt.b * 0.06;
+      const isCenter = pt.b >= 0.95;
+      const color = isCenter ? '215,210,200' : '205,210,220';
 
-      // Draw multiple overlapping circles for density
-      for (let pass = 0; pass < 3; pass++) {
-        const r = radius * (1 - pass * 0.25);
-        const a = alpha * (1 - pass * 0.2);
+      // 5 scattered circles per point for smooth coverage
+      for (let j = 0; j < 5; j++) {
+        const ox = px + (Math.random() - 0.5) * radius * 0.8;
+        const oy = py + (Math.random() - 0.5) * radius * 0.6;
+        const r = radius * (0.6 + Math.random() * 0.5);
         gCtx.beginPath();
-        gCtx.arc(px, py, r, 0, PI * 2);
-        const isCenter = pt.b >= 0.95;
-        gCtx.fillStyle = isCenter
-          ? `rgba(220,215,200,${a.toFixed(3)})`
-          : `rgba(210,215,225,${a.toFixed(3)})`;
+        gCtx.arc(ox, oy, r, 0, PI * 2);
+        gCtx.fillStyle = `rgba(${color},${(alpha * (0.7 + Math.random() * 0.3)).toFixed(3)})`;
         gCtx.fill();
       }
     }
 
-    // Star clouds — brighter patches
+    // Star clouds — subtle brighter patches
     for (const c of STAR_CLOUDS) {
       const [px, py] = azAltToXY(c.az, c.alt, gW, gH);
-      const rx = max(c.w * gW / 360 * 3, 5);
-      const ry = max(c.h * gH / 90 * 3, 4);
+      const rx = max(c.w * gW / 360 * 2, 4);
+      const ry = max(c.h * gH / 90 * 2, 3);
       gCtx.beginPath();
       gCtx.ellipse(px, py, rx, ry, 0, 0, PI * 2);
-      gCtx.fillStyle = `rgba(225,220,210,${(c.b * 0.12).toFixed(3)})`;
+      gCtx.fillStyle = `rgba(220,215,205,${(c.b * 0.05).toFixed(3)})`;
       gCtx.fill();
     }
 
-    // Blur: downscale → upscale (cheap box blur)
-    const blurCanvas = document.createElement('canvas');
-    blurCanvas.width = floor(gW / 2);
-    blurCanvas.height = floor(gH / 2);
-    const blurCtx = blurCanvas.getContext('2d');
-    // Double-pass: down to 1/2, then that to 1/3
-    blurCtx.drawImage(gCanvas, 0, 0, blurCanvas.width, blurCanvas.height);
-    const blur2 = document.createElement('canvas');
-    blur2.width = floor(gW / 4);
-    blur2.height = floor(gH / 4);
-    blur2.getContext('2d').drawImage(blurCanvas, 0, 0, blur2.width, blur2.height);
+    // Multi-pass blur: 4 downscale steps for maximum smoothness
+    let blurSrc = gCanvas;
+    for (let pass = 0; pass < 4; pass++) {
+      const nextW = max(floor(blurSrc.width / 2), 4);
+      const nextH = max(floor(blurSrc.height / 2), 4);
+      const step = document.createElement('canvas');
+      step.width = nextW;
+      step.height = nextH;
+      step.getContext('2d').drawImage(blurSrc, 0, 0, nextW, nextH);
+      blurSrc = step;
+    }
 
-    // Composite — visible but not overwhelming
+    // Composite — gentle glow, not bright patches
     ctx.save();
-    ctx.globalAlpha = 0.6;
-    ctx.drawImage(blur2, 0, 0, W, H);
+    ctx.globalAlpha = 0.45;
+    ctx.drawImage(blurSrc, 0, 0, W, H);
     ctx.restore();
   }
 
