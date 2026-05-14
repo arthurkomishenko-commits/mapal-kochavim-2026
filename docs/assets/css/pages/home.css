@@ -19,15 +19,13 @@
 @media (max-width: 767px) {
   .hero {
     background: url('../../../images/hero-mobile.jpg') center center / cover no-repeat;
-    background-color: var(--color-sky-deepest);
-  }
-  .sky-canvas {
-    display: none;
-  }
-  .hero {
+    background-color: var(--color-sky-deepest, #070B1F);
     overflow: visible;
     min-height: auto;
     height: 100dvh;
+  }
+  .sky-canvas {
+    display: none;
   }
   .hero__content {
     padding: var(--space-3);
