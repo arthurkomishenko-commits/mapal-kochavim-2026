@@ -93,14 +93,18 @@ const CATALOG = [
   {n:"Saturn",mag:0.6,cl:"G",az:115.2,alt:42.1,planet:true},
 ];
 
+// MW is ~30° wide in real sky. Width values are in DEGREES.
+// In August from Israel it goes nearly vertical through zenith.
 const MILKY_WAY = [
-  {az:200,alt:10,w:30,b:0.85},
-  {az:218,alt:25,w:38,b:1.0},
-  {az:235,alt:50,w:22,b:0.7},
-  {az:310,alt:85,w:16,b:0.8},
-  {az:35,alt:60,w:14,b:0.5},
-  {az:50,alt:35,w:12,b:0.4},
-  {az:65,alt:5,w:10,b:0.3},
+  {az:200,alt:10,w:35,b:0.8},   // Scorpius tail — wide, bright
+  {az:215,alt:22,w:45,b:1.0},   // Galactic center (Sagittarius) — WIDEST, BRIGHTEST
+  {az:230,alt:42,w:35,b:0.85},  // Scutum star cloud
+  {az:260,alt:60,w:28,b:0.65},  // Aquila / Scutum
+  {az:310,alt:82,w:22,b:0.7},   // Cygnus — near zenith, Great Rift
+  {az:350,alt:68,w:18,b:0.5},   // Cepheus
+  {az:25,alt:55,w:18,b:0.45},   // Cassiopeia
+  {az:45,alt:35,w:15,b:0.35},   // Perseus
+  {az:60,alt:10,w:12,b:0.2},    // Auriga — horizon, faint
 ];
 
 const COLORS = {
@@ -149,9 +153,11 @@ function generateMWStars(count, maxW, maxH) {
     const w = seg.w + (next.w - seg.w) * t;
     const b = seg.b + (next.b - seg.b) * t;
 
-    // Scatter perpendicular
-    const scatter = (Math.random() - 0.5) * w * 0.5;
-    const pos = azAltToXY(az + scatter * 0.3, Math.max(0, alt + scatter * 0.1));
+    // Scatter perpendicular to band — use FULL width in degrees
+    // Gaussian-like distribution: most stars near center, fewer at edges
+    const gaussian = (Math.random() + Math.random() + Math.random()) / 3; // 0-1, center-biased
+    const scatter = (gaussian - 0.5) * w; // degrees, full width
+    const pos = azAltToXY(az + scatter, Math.max(0, Math.min(90, alt + scatter * 0.3)));
 
     const x = Math.round(pos.x / 100 * maxW);
     const y = Math.round(pos.y / 100 * maxH);
@@ -185,28 +191,29 @@ function createBackgroundLayers(container) {
   const layer3 = document.createElement('div');
   layer3.className = 'bg-stars bg-stars--mw';
   layer3.setAttribute('aria-hidden', 'true');
-  layer3.style.boxShadow = generateMWStars(isMobile ? 500 : 1200, w, h);
+  layer3.style.boxShadow = generateMWStars(isMobile ? 600 : 1500, w, h);
   container.appendChild(layer3);
 
-  // Layer 4: Extra-dense MW core (near Galactic center)
+  // Layer 4: Extra-dense MW core (Sagittarius/Scutum — segments 1-3)
   const layer4 = document.createElement('div');
   layer4.className = 'bg-stars bg-stars--mw';
   layer4.setAttribute('aria-hidden', 'true');
-  // Generate stars only near the brightest MW segments (indices 0-2)
   const coreShadows = [];
-  for (let i = 0; i < (isMobile ? 200 : 500); i++) {
-    const segIdx = Math.floor(rand(0, 2.99));
+  for (let i = 0; i < (isMobile ? 400 : 900); i++) {
+    const segIdx = Math.floor(rand(0.5, 3.5)); // segments 1-3 (brightest)
     const seg = MILKY_WAY[segIdx];
-    const next = MILKY_WAY[segIdx + 1];
+    const next = MILKY_WAY[Math.min(segIdx + 1, MILKY_WAY.length - 1)];
     const t = Math.random();
     const az = seg.az + (next.az - seg.az) * t;
     const alt = seg.alt + (next.alt - seg.alt) * t;
-    const scatter = (Math.random() - 0.5) * seg.w * 0.35;
-    const pos = azAltToXY(az + scatter * 0.2, Math.max(0, alt + scatter * 0.1));
+    // Tighter scatter for dense core
+    const gaussian = (Math.random() + Math.random()) / 2;
+    const scatter = (gaussian - 0.5) * seg.w * 0.7;
+    const pos = azAltToXY(az + scatter, Math.max(0, Math.min(90, alt + scatter * 0.2)));
     const px = Math.round(pos.x / 100 * w);
     const py = Math.round(pos.y / 100 * h);
-    const alpha = rand(0.15, 0.55);
-    coreShadows.push(`${px}px ${py}px 0 rgba(235,230,220,${alpha.toFixed(2)})`);
+    const alpha = rand(0.2, 0.65);
+    coreShadows.push(`${px}px ${py}px 0 rgba(240,235,225,${alpha.toFixed(2)})`);
   }
   layer4.style.boxShadow = coreShadows.join(',');
   container.appendChild(layer4);
@@ -225,9 +232,9 @@ function createMilkyWayGlow(container) {
   // Real MW is monochrome to dark-adapted eyes
   const gradients = MILKY_WAY.map(pt => {
     const pos = azAltToXY(pt.az, pt.alt);
-    const spreadX = pt.w * 3.5;
-    const spreadY = pt.w * 4;
-    const opacity = pt.b * 0.13;
+    const spreadX = pt.w * 4;
+    const spreadY = pt.w * 5;
+    const opacity = pt.b * 0.14;
     const c = pt.b >= 0.95
       ? `rgba(200,195,185,${opacity})` // galactic center: slightly warm grey
       : `rgba(210,215,220,${opacity})`; // rest: cool grey
