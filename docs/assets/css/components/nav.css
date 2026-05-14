@@ -1,0 +1,215 @@
+/* ═══════════════════════════════════════════════════
+   Navigation — top bar + mobile drawer
+
+   Layout: [Hamburger] [Logo centered] [Lang]
+   Hamburger always on the left regardless of RTL/LTR.
+   Uses direction:ltr on nav to pin physical positions,
+   then restores text direction on children.
+   ═══════════════════════════════════════════════════ */
+
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-nav);
+  padding: var(--space-3) var(--space-5);
+  background: linear-gradient(
+    to bottom,
+    rgba(7, 11, 31, 0.95) 0%,
+    rgba(7, 11, 31, 0.7) 100%
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.nav__inner {
+  /* Force LTR so hamburger is always physically left */
+  direction: ltr;
+  display: flex;
+  align-items: center;
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+}
+
+/* ── Hamburger — left side ── */
+
+.nav__menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.nav__menu-icon {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--color-starlight);
+  border-radius: 1px;
+  position: relative;
+  transition: background var(--duration-normal) var(--ease-natural);
+}
+
+.nav__menu-icon::before,
+.nav__menu-icon::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-starlight);
+  border-radius: 1px;
+  transition: transform var(--duration-normal) var(--ease-natural);
+}
+
+.nav__menu-icon::before { top: -6px; }
+.nav__menu-icon::after  { top: 6px; }
+
+/* Hamburger → X */
+.nav__menu-btn[aria-expanded="true"] .nav__menu-icon {
+  background: transparent;
+}
+.nav__menu-btn[aria-expanded="true"] .nav__menu-icon::before {
+  transform: translateY(6px) rotate(45deg);
+}
+.nav__menu-btn[aria-expanded="true"] .nav__menu-icon::after {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* ── Logo — centered ── */
+
+.nav__logo {
+  /* Restore natural text direction for Hebrew/Russian */
+  direction: inherit;
+  unicode-bidi: plaintext;
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-starlight);
+  letter-spacing: 0.02em;
+  flex: 1;
+  text-align: center;
+}
+
+/* ── Lang button — right side ── */
+
+.nav__lang-btn {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-normal) var(--ease-natural);
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.nav__lang-btn:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-accent);
+}
+
+.nav__lang-btn:active {
+  transform: scale(0.96);
+}
+
+/* ── Mobile drawer ── */
+
+.nav__drawer {
+  position: fixed;
+  top: var(--nav-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: calc(var(--z-nav) - 1);
+  background: rgba(7, 11, 31, 0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: var(--space-6) var(--space-5);
+  transform: translateY(-10px);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--duration-normal) var(--ease-natural),
+    transform var(--duration-normal) var(--ease-natural);
+  overflow-y: auto;
+}
+
+.nav__drawer--open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.nav__links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.nav__link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-lg);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast) var(--ease-natural);
+  min-height: 48px;
+}
+
+.nav__link:hover,
+.nav__link:active {
+  color: var(--color-text-primary);
+  background: rgba(245, 239, 224, 0.05);
+}
+
+.nav__link--active {
+  color: var(--color-ember-bright);
+}
+
+.nav__link-icon {
+  width: 20px;
+  text-align: center;
+  font-size: var(--text-base);
+  opacity: 0.6;
+}
+
+/* ── Desktop ── */
+
+@media (min-width: 768px) {
+  .nav {
+    padding: var(--space-3) var(--space-6);
+  }
+}
+
+/* ── Page transitions ── */
+
+.page--leaving {
+  opacity: 0;
+  transition: opacity 200ms var(--ease-natural);
+}
+
+.page--entering {
+  opacity: 0;
+}
+
+#page-container {
+  opacity: 1;
+  transition: opacity 200ms var(--ease-natural);
+}

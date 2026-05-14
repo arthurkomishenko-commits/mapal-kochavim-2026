@@ -1,0 +1,35 @@
+/* ═══════════════════════════════════════════════════
+   Footer
+   ═══════════════════════════════════════════════════ */
+
+.footer {
+  padding: var(--space-8) var(--space-5) var(--space-6);
+  text-align: center;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(7, 11, 31, 0.5) 100%
+  );
+}
+
+.footer__divider {
+  width: 60px;
+  height: 1px;
+  background: var(--color-border-subtle);
+  margin-inline: auto;
+  margin-block-end: var(--space-6);
+}
+
+.footer__text {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  line-height: var(--leading-relaxed);
+}
+
+.footer__text + .footer__text {
+  margin-block-start: var(--space-2);
+}
+
+.footer__heart {
+  color: var(--color-ember);
+}

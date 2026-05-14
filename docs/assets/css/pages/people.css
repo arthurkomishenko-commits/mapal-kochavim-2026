@@ -1,0 +1,89 @@
+/* ═══════════════════════════════════════════════════
+   People + Rides + Auth gate + Empty states
+   ═══════════════════════════════════════════════════ */
+
+/* ── People stats ── */
+
+.people-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-block-end: var(--space-8);
+}
+
+.people-stat {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.people-stat__number {
+  display: block;
+  font-size: var(--text-5xl);
+  font-weight: 800;
+  color: var(--color-ember-bright);
+  line-height: 1;
+  margin-block-end: var(--space-2);
+}
+
+.people-stat__label {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+}
+
+@media (max-width: 480px) {
+  .people-stat__number {
+    font-size: var(--text-3xl);
+  }
+}
+
+/* ── Auth gate (login required) ── */
+
+.auth-gate {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-9) var(--space-6);
+  text-align: center;
+  max-width: 480px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.auth-gate__icon {
+  color: var(--color-text-tertiary);
+}
+
+.auth-gate__text {
+  color: var(--color-text-secondary);
+  line-height: var(--leading-relaxed);
+  max-width: 320px;
+}
+
+.auth-gate__btn {
+  min-width: 220px;
+}
+
+/* ── Empty state ── */
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-9) var(--space-5);
+  color: var(--color-text-tertiary);
+}
+
+.empty-state__icon {
+  color: var(--color-text-tertiary);
+  margin-block-end: var(--space-5);
+  display: flex;
+  justify-content: center;
+}
+
+.empty-state p {
+  font-size: var(--text-lg);
+}

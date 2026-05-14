@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-base-path=".">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#070B1F">
+  <meta name="description" content="מפל כוכבים 2026 — קמפינג בנגב, פרסאידים. אירוע סגור.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="robots" content="noindex, nofollow">
+  <meta property="og:title" content="מפל כוכבים 2026">
+  <meta property="og:description" content="13–15 באוגוסט, בורות לוץ, הנגב. אירוע סגור לחברים.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="images/person-milkyway.jpg">
+  <title>מפל כוכבים 2026</title>
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+
+  <!-- Fonts: Rubik (he+ru headings) + Inter (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rubik:wght@400;600;700;800&display=swap">
+
+  <!-- CSS: tokens → reset → typography → components → pages -->
+  <link rel="stylesheet" href="assets/css/tokens.css?v=4">
+  <link rel="stylesheet" href="assets/css/reset.css?v=4">
+  <link rel="stylesheet" href="assets/css/typography.css?v=4">
+  <link rel="stylesheet" href="assets/css/components/nav.css?v=4">
+  <link rel="stylesheet" href="assets/css/components/welcome.css?v=4">
+  <link rel="stylesheet" href="assets/css/components/page-section.css?v=4">
+  <link rel="stylesheet" href="assets/css/components/footer.css?v=4">
+  <link rel="stylesheet" href="assets/css/components/placeholder-img.css?v=4">
+  <link rel="stylesheet" href="assets/css/pages/home.css?v=4">
+  <link rel="stylesheet" href="assets/css/pages/place.css?v=4">
+  <link rel="stylesheet" href="assets/css/pages/program.css?v=4">
+  <link rel="stylesheet" href="assets/css/pages/pack.css?v=4">
+  <link rel="stylesheet" href="assets/css/pages/sky.css?v=4">
+  <link rel="stylesheet" href="assets/css/pages/safety.css?v=4">
+  <link rel="stylesheet" href="assets/css/pages/contacts.css?v=4">
+  <link rel="stylesheet" href="assets/css/pages/gallery.css?v=4">
+  <link rel="stylesheet" href="assets/css/pages/people.css?v=4">
+
+  <!-- Prevent FOUC -->
+  <style>html { background-color: #070B1F; }</style>
+</head>
+<body>
+
+  <!-- ═══ Navigation ═══ -->
+  <header class="nav" role="banner">
+    <nav class="nav__inner" aria-label="Main navigation">
+      <a href="#home" class="nav__logo">מפל כוכבים 2026</a>
+    </nav>
+  </header>
+
+  <!-- ═══ Page container (router renders here) ═══ -->
+  <main id="page-container"></main>
+
+  <!-- ═══ Footer ═══ -->
+  <footer class="footer" role="contentinfo">
+    <div class="footer__divider" aria-hidden="true"></div>
+    <p class="footer__text">
+      <span data-i18n="home.heroTitle">מפל כוכבים</span> 2026
+    </p>
+    <p class="footer__text text-tertiary">
+      Borot Lotz, Negev
+    </p>
+  </footer>
+
+  <!-- ═══ Scripts ═══ -->
+  <!-- Kill service worker + caches before loading app -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        regs.forEach(function(r) { r.unregister(); });
+      });
+      caches.keys().then(function(names) {
+        names.forEach(function(name) { caches.delete(name); });
+      });
+    }
+  </script>
+  <script type="module" src="assets/js/main.js?v=4"></script>
+</body>
+</html>

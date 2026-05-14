@@ -1,0 +1,247 @@
+/* ═══════════════════════════════════════════════════
+   Welcome Overlay — premium entrance experience
+
+   Structure: .welcome (fixed, scrolls) > .welcome__content
+   (min-height 100%, flex) > .welcome__wrap (margin auto,
+   safe centering — never clips on overflow).
+
+   Staggered entrance: each child fades in sequentially
+   via transition-delay when .welcome--visible is added.
+   ═══════════════════════════════════════════════════ */
+
+/* ── Container ── */
+
+.welcome {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 40%, rgba(20, 25, 60, 0.5), transparent),
+    linear-gradient(to bottom, #050815 0%, #070B1F 40%, #0C1028 100%);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.welcome--visible {
+  opacity: 1;
+}
+
+.welcome--leaving {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+/* ── Layout (safe vertical centering) ── */
+
+.welcome__content {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.welcome__wrap {
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  padding: 32px 24px;
+  margin-top: auto;
+  margin-bottom: auto;
+  box-sizing: border-box;
+}
+
+/* ── Staggered entrance ── */
+
+.welcome__star,
+.welcome__title,
+.welcome__divider,
+.welcome__text,
+.welcome__private,
+.welcome__dates,
+.welcome__enter {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.welcome--visible .welcome__star     { opacity: 1; transform: translateY(0); transition-delay: 0.2s; }
+.welcome--visible .welcome__title    { opacity: 1; transform: translateY(0); transition-delay: 0.4s; }
+.welcome--visible .welcome__divider  { opacity: 1; transform: translateY(0); transition-delay: 0.55s; }
+.welcome--visible .welcome__text:nth-of-type(1) { opacity: 1; transform: translateY(0); transition-delay: 0.7s; }
+.welcome--visible .welcome__text:nth-of-type(2) { opacity: 1; transform: translateY(0); transition-delay: 0.85s; }
+.welcome--visible .welcome__private  { opacity: 1; transform: translateY(0); transition-delay: 1.0s; }
+.welcome--visible .welcome__dates    { opacity: 1; transform: translateY(0); transition-delay: 1.15s; }
+.welcome--visible .welcome__enter    { opacity: 1; transform: translateY(0); transition-delay: 1.35s; }
+
+/* ── Decorative star ── */
+
+.welcome__star {
+  color: rgba(232, 175, 100, 0.35);
+  margin-bottom: 24px;
+}
+
+.welcome--visible .welcome__star {
+  animation: star-rotate 20s linear infinite;
+}
+
+@keyframes star-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Title ── */
+
+.welcome__title {
+  font-family: 'Rubik', sans-serif;
+  font-size: clamp(1.75rem, 7vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.1;
+  color: #F5EFE0;
+  margin: 0 0 20px;
+  letter-spacing: -0.01em;
+}
+
+/* ── Divider ── */
+
+.welcome__divider {
+  width: 48px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(232, 175, 100, 0.4), transparent);
+  margin: 0 auto 24px;
+}
+
+/* ── Text ── */
+
+.welcome__text {
+  font-size: 0.95rem;
+  color: #A5A09A;
+  line-height: 1.65;
+  margin: 0 0 10px;
+  max-width: 380px;
+  margin-inline: auto;
+}
+
+/* ── Private badge ── */
+
+.welcome__private {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(232, 175, 100, 0.7);
+  border: 1px solid rgba(232, 175, 100, 0.2);
+  border-radius: 20px;
+  padding: 6px 18px;
+  margin: 18px auto 0;
+}
+
+/* ── Dates ── */
+
+.welcome__dates {
+  font-family: 'Rubik', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #E89B4B;
+  margin: 20px 0 28px;
+  letter-spacing: 0.06em;
+}
+
+/* ── Enter button ── */
+
+.welcome__enter {
+  font-family: 'Rubik', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #E89B4B;
+  padding: 14px 36px;
+  border: 1px solid rgba(232, 155, 75, 0.3);
+  border-radius: 10px;
+  min-height: 48px;
+  cursor: pointer;
+  background: rgba(232, 155, 75, 0.06);
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.15s ease;
+}
+
+.welcome__enter:hover {
+  background: rgba(232, 155, 75, 0.12);
+  border-color: rgba(232, 155, 75, 0.5);
+  box-shadow: 0 0 24px rgba(232, 155, 75, 0.12);
+}
+
+.welcome__enter:active {
+  transform: scale(0.97);
+}
+
+.welcome__enter:focus-visible {
+  outline: 2px solid #E89B4B;
+  outline-offset: 4px;
+}
+
+[dir="ltr"] .welcome__enter::after { content: ' \2192'; }
+[dir="rtl"] .welcome__enter::after { content: ' \2190'; }
+
+/* ── Desktop ── */
+@media (min-width: 768px) {
+  .welcome__wrap {
+    padding: 56px 40px;
+    max-width: 540px;
+  }
+  .welcome__star svg {
+    width: 32px;
+    height: 32px;
+  }
+  .welcome__title {
+    margin-bottom: 24px;
+  }
+  .welcome__divider {
+    width: 56px;
+    margin-bottom: 28px;
+  }
+  .welcome__text {
+    font-size: 1.05rem;
+    margin-bottom: 14px;
+    max-width: 420px;
+  }
+  .welcome__dates {
+    font-size: 1.4rem;
+    margin: 24px 0 36px;
+  }
+  .welcome__enter {
+    font-size: 1.05rem;
+    padding: 16px 44px;
+    min-height: 52px;
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .welcome__star,
+  .welcome__title,
+  .welcome__divider,
+  .welcome__text,
+  .welcome__dates,
+  .welcome__enter {
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
+  .welcome--visible .welcome__star {
+    animation: none;
+  }
+}

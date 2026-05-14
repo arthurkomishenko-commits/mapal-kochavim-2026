@@ -1,0 +1,224 @@
+/**
+ * Home page renderer
+ */
+
+import { i18n } from '../core/i18n.js';
+import { initCountdown } from '../components/countdown.js';
+import { initShootingStar } from '../components/shooting-star.js';
+import SkyRenderer from '../components/sky-renderer.js';
+
+export function renderHome(container) {
+  container.innerHTML = `
+    <section class="hero" aria-labelledby="hero-title">
+      <canvas class="sky-canvas" aria-hidden="true"></canvas>
+      <div class="hero__stars" aria-hidden="true"></div>
+      <div class="hero__content">
+        <h1 id="hero-title" class="hero__title" data-i18n="home.heroTitle">
+          ${i18n.t('home.heroTitle')}
+        </h1>
+        <p class="hero__subtitle" data-i18n="home.heroSubtitle">
+          ${i18n.t('home.heroSubtitle')}
+        </p>
+        <span class="hero__private-badge" data-i18n="home.privateBadge">${i18n.t('home.privateBadge')}</span>
+        <div class="hero__countdown" aria-label="Countdown to event">
+          <div class="countdown__unit">
+            <span class="countdown__number tabular-nums" id="countdown-days">--</span>
+            <span class="countdown__label" data-i18n="home.countdown.days">${i18n.t('home.countdown.days')}</span>
+          </div>
+          <div class="countdown__separator" aria-hidden="true">:</div>
+          <div class="countdown__unit">
+            <span class="countdown__number tabular-nums" id="countdown-hours">--</span>
+            <span class="countdown__label" data-i18n="home.countdown.hours">${i18n.t('home.countdown.hours')}</span>
+          </div>
+          <div class="countdown__separator" aria-hidden="true">:</div>
+          <div class="countdown__unit">
+            <span class="countdown__number tabular-nums" id="countdown-minutes">--</span>
+            <span class="countdown__label" data-i18n="home.countdown.minutes">${i18n.t('home.countdown.minutes')}</span>
+          </div>
+          <div class="countdown__separator" aria-hidden="true">:</div>
+          <div class="countdown__unit">
+            <span class="countdown__number tabular-nums" id="countdown-seconds">--</span>
+            <span class="countdown__label" data-i18n="home.countdown.seconds">${i18n.t('home.countdown.seconds')}</span>
+          </div>
+        </div>
+        <a href="#rsvp" class="hero__cta" data-i18n="home.cta">${i18n.t('home.cta')}</a>
+      </div>
+      <div class="hero__scroll-hint" aria-hidden="true">
+        <div class="hero__scroll-arrow"></div>
+      </div>
+    </section>
+
+    <!-- ═══ What awaits ═══ -->
+    <section class="home-section" aria-labelledby="home-highlights">
+      <div class="home-section__inner">
+        <h2 id="home-highlights" class="home-section__title" data-i18n="home.highlightsTitle">
+          ${i18n.t('home.highlightsTitle')}
+        </h2>
+        <div class="highlight-cards">
+          <a href="#sky" class="highlight-card">
+            <div class="highlight-card__icon" aria-hidden="true">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </div>
+            <h3 data-i18n="home.card1Title">${i18n.t('home.card1Title')}</h3>
+            <p data-i18n="home.card1Text">${i18n.t('home.card1Text')}</p>
+          </a>
+          <a href="#place" class="highlight-card">
+            <div class="highlight-card__icon" aria-hidden="true">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <h3 data-i18n="home.card2Title">${i18n.t('home.card2Title')}</h3>
+            <p data-i18n="home.card2Text">${i18n.t('home.card2Text')}</p>
+          </a>
+          <a href="#program" class="highlight-card">
+            <div class="highlight-card__icon" aria-hidden="true">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <h3 data-i18n="home.card3Title">${i18n.t('home.card3Title')}</h3>
+            <p data-i18n="home.card3Text">${i18n.t('home.card3Text')}</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Quick info ═══ -->
+    <section class="home-section home-section--dark" aria-labelledby="home-details">
+      <div class="home-section__inner">
+        <h2 id="home-details" class="home-section__title" data-i18n="home.detailsTitle">
+          ${i18n.t('home.detailsTitle')}
+        </h2>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-item__label" data-i18n="home.detailWhen">${i18n.t('home.detailWhen')}</span>
+            <span class="detail-item__value" data-i18n="home.detailWhenVal">${i18n.t('home.detailWhenVal')}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-item__label" data-i18n="home.detailWhere">${i18n.t('home.detailWhere')}</span>
+            <span class="detail-item__value" data-i18n="home.detailWhereVal">${i18n.t('home.detailWhereVal')}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-item__label" data-i18n="home.detailWho">${i18n.t('home.detailWho')}</span>
+            <span class="detail-item__value" data-i18n="home.detailWhoVal">${i18n.t('home.detailWhoVal')}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-item__label" data-i18n="home.detailHighlight">${i18n.t('home.detailHighlight')}</span>
+            <span class="detail-item__value" data-i18n="home.detailHighlightVal">${i18n.t('home.detailHighlightVal')}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Final CTA ═══ -->
+    <section class="home-section home-section--cta">
+      <div class="home-section__inner home-section__inner--center">
+        <p class="home-cta__text" data-i18n="home.ctaBottomText">${i18n.t('home.ctaBottomText')}</p>
+        <a href="#rsvp" class="hero__cta" data-i18n="home.cta">${i18n.t('home.cta')}</a>
+      </div>
+    </section>
+  `;
+
+  // Sky renderer — Canvas 2D, 35K stars
+  const skyCanvas = container.querySelector('.sky-canvas');
+  const starsContainer = container.querySelector('.hero__stars');
+
+  // Full star catalog
+  const CATALOG = [
+    {n:"Vega",mag:0.03,cl:"A",az:282.4,alt:73.1},
+    {n:"Arcturus",mag:-0.05,cl:"K",az:281.5,alt:18.2},
+    {n:"Altair",mag:0.77,cl:"A",az:226.8,alt:66.5},
+    {n:"Capella",mag:0.08,cl:"G",az:34.5,alt:3.2},
+    {n:"Antares",mag:1.06,cl:"M",az:228.4,alt:15.4},
+    {n:"Deneb",mag:1.25,cl:"A",az:320.1,alt:81.2},
+    {n:"Fomalhaut",mag:1.16,cl:"A",az:142.1,alt:28.5},
+    {n:"Polaris",mag:1.97,cl:"F",az:0,alt:30.6},
+    {n:"Shaula",mag:1.62,cl:"B",az:206.1,alt:12.8},
+    {n:"Sargas",mag:1.86,cl:"F",az:198.4,alt:8.1},
+    {n:"Kaus Australis",mag:1.85,cl:"B",az:188.4,alt:25.2},
+    {n:"Nunki",mag:2.05,cl:"B",az:172.1,alt:33.5},
+    {n:"Hamal",mag:2.01,cl:"K",az:58.3,alt:12.4},
+    {n:"Diphda",mag:2.04,cl:"K",az:112.5,alt:25.1},
+    {n:"Alpheratz",mag:2.06,cl:"B",az:68.4,alt:48.2},
+    {n:"Mirach",mag:2.07,cl:"M",az:56.1,alt:35.5},
+    {n:"Almach",mag:2.1,cl:"K",az:48.2,alt:42.1},
+    {n:"Dubhe",mag:1.81,cl:"K",az:328.5,alt:21},
+    {n:"Merak",mag:2.34,cl:"A",az:333.1,alt:18.2},
+    {n:"Phecda",mag:2.41,cl:"A",az:335.5,alt:25.4},
+    {n:"Alioth",mag:1.76,cl:"A",az:334.2,alt:32.5},
+    {n:"Mizar",mag:2.23,cl:"A",az:328.6,alt:35.8},
+    {n:"Alkaid",mag:1.85,cl:"B",az:320.4,alt:38.1},
+    {n:"Kochab",mag:2.07,cl:"K",az:352.4,alt:45.8},
+    {n:"Eltanin",mag:2.24,cl:"K",az:322.1,alt:55.4},
+    {n:"Schedar",mag:2.24,cl:"K",az:32.4,alt:52.1},
+    {n:"Caph",mag:2.28,cl:"F",az:20.1,alt:55.4},
+    {n:"Gamma Cas",mag:2.15,cl:"B",az:35.2,alt:58.1},
+    {n:"Mirfak",mag:1.79,cl:"F",az:45.2,alt:31.4},
+    {n:"Algol",mag:2.1,cl:"B",az:52.4,alt:25.1},
+    {n:"Enif",mag:2.38,cl:"K",az:148.2,alt:68.3},
+    {n:"Scheat",mag:2.42,cl:"M",az:85.4,alt:68.1},
+    {n:"Markab",mag:2.49,cl:"B",az:105.2,alt:58.4},
+    {n:"Sadr",mag:2.23,cl:"F",az:345.2,alt:78.4},
+    {n:"Gienah Cyg",mag:2.48,cl:"K",az:325.5,alt:65.2},
+    {n:"Albireo",mag:3.05,cl:"K",az:296.8,alt:81.3},
+    {n:"Tarazed",mag:2.72,cl:"K",az:220.4,alt:68.2},
+    {n:"Rasalhague",mag:2.08,cl:"A",az:255.4,alt:48.1},
+    {n:"Sabik",mag:2.43,cl:"A",az:235.2,alt:32.4},
+    {n:"Kornephoros",mag:2.78,cl:"G",az:278.4,alt:55.2},
+    {n:"Gemma",mag:2.22,cl:"A",az:273.1,alt:38.4},
+    {n:"Unukalhai",mag:2.63,cl:"K",az:265.4,alt:35.2},
+    {n:"Kaus Media",mag:2.72,cl:"K",az:182.1,alt:30.2},
+    {n:"Ascella",mag:2.6,cl:"A",az:165.2,alt:28.4},
+    {n:"Alderamin",mag:2.45,cl:"A",az:24.1,alt:68.2},
+    {n:"Izar",mag:2.35,cl:"K",az:288.4,alt:25.2},
+    {n:"Yed Prior",mag:2.73,cl:"M",az:258.4,alt:28.2},
+    {n:"Sadalsuud",mag:2.9,cl:"G",az:125.2,alt:50.4},
+    {n:"Alnair",mag:1.73,cl:"B",az:162.5,alt:12.4},
+    {n:"Saturn",mag:0.6,cl:"G",az:115.2,alt:42.1},
+  ];
+
+  if (skyCanvas && window.innerWidth >= 768) {
+    // Desktop: Canvas 2D galaxy
+    if (window._skyRenderer) window._skyRenderer.destroy();
+    window._skyRenderer = new SkyRenderer(skyCanvas, CATALOG);
+    window._skyRenderer.render();
+  } else if (window._skyRenderer) {
+    window._skyRenderer.destroy();
+    window._skyRenderer = null;
+  }
+
+  initCountdown();
+  initShootingStar(starsContainer);
+
+  // Hide scroll hint after first scroll
+  const scrollHint = container.querySelector('.hero__scroll-hint');
+  if (scrollHint) {
+    const handleScroll = () => {
+      if (window.scrollY > 80) {
+        scrollHint.style.opacity = '0';
+        window.removeEventListener('scroll', handleScroll);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+  }
+
+  // Tap sky to dim/show content (immersive star viewing mode)
+  const heroContent = container.querySelector('.hero__content');
+  const heroSection = container.querySelector('.hero');
+  if (heroSection && heroContent) {
+    let dimmed = false;
+    heroSection.addEventListener('click', (e) => {
+      // Don't trigger on buttons/links
+      if (e.target.closest('a, button')) return;
+      dimmed = !dimmed;
+      heroContent.style.transition = 'opacity 0.6s ease';
+      heroContent.style.opacity = dimmed ? '0.15' : '1';
+      if (scrollHint) scrollHint.style.opacity = dimmed ? '0' : '';
+    });
+  }
+}

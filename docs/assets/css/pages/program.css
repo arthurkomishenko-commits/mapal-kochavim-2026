@@ -1,0 +1,109 @@
+/* ═══════════════════════════════════════════════════
+   Program page — timeline
+   ═══════════════════════════════════════════════════ */
+
+/* ── Program photo ── */
+
+.program-photo {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-block-end: var(--space-7);
+}
+
+.program-photo__img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  max-height: 350px;
+}
+
+@media (min-width: 768px) {
+  .program-photo__img {
+    max-height: 450px;
+  }
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.timeline__day-title {
+  font-size: var(--text-2xl);
+  color: var(--color-ember-bright);
+  margin-block-end: var(--space-5);
+  padding-block-end: var(--space-3);
+  border-block-end: 1px solid var(--color-border-subtle);
+}
+
+.timeline__events {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-inline-start: var(--space-4);
+  border-inline-start: 2px solid var(--color-border-subtle);
+}
+
+.timeline__event {
+  display: flex;
+  gap: var(--space-4);
+  align-items: baseline;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  transition: background var(--duration-fast) var(--ease-natural);
+  position: relative;
+}
+
+/* Dot on timeline */
+.timeline__event::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: calc(-1 * var(--space-4) - 5px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-sky-mid);
+  border: 2px solid var(--color-border-subtle);
+}
+
+.timeline__event--highlight::before {
+  background: var(--color-ember);
+  border-color: var(--color-ember);
+  box-shadow: 0 0 10px rgba(232, 155, 75, 0.3);
+}
+
+.timeline__event--highlight {
+  background: rgba(232, 155, 75, 0.06);
+}
+
+.timeline__time {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  min-width: 100px;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.timeline__detail {
+  color: var(--color-text-secondary);
+}
+
+.timeline__event--highlight .timeline__detail {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+@media (max-width: 480px) {
+  .timeline__event {
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+  .timeline__time {
+    min-width: auto;
+  }
+}
