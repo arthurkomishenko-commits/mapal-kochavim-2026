@@ -129,40 +129,29 @@ function skyBrightness(alt) {
 let _mwScreenW = 0, _mwScreenH = 0;
 
 function mwScreenProximity(screenX, screenY, W, H) {
-  // MW band tilted ~70° from vertical
-  // Rotated center line: top-right to bottom-left
-  const angle = 70 * PI / 180; // 70 degrees tilt
+  // MW center line: from top-center to bottom-center, slight tilt
+  const topX = W * 0.47;
+  const botX = W * 0.53;
+  const t = screenY / H; // 0=top, 1=bottom
 
-  // Center of screen
-  const cx = W / 2;
-  const cy = H / 2;
+  // Center X at this Y
+  const centerX = topX + (botX - topX) * t;
 
-  // Project screen point onto the tilted MW axis
-  const dx = screenX - cx;
-  const dy = screenY - cy;
-
-  // t = position along MW axis (-1 to 1), dist = perpendicular distance
-  const axisX = sin(angle);
-  const axisY = cos(angle);
-  const t = (dx * axisX + dy * axisY) / max(W, H) + 0.5; // 0=one end, 1=other
-  const dist = abs(-dx * axisY + dy * axisX); // perpendicular distance
-
-  // Clamp t for width/brightness calculations
-  const tc = max(0, min(1, t));
-
-  // Width: peaks at Galactic Center (tc≈0.55)
-  const baseWidth = max(W, H) * 0.10;
-  const widthMult = 1 + 1.8 * Math.exp(-((tc - 0.55) ** 2) / (2 * 0.18 ** 2));
+  // Width: wider band, peaks at Galactic Center (t≈0.55)
+  const baseWidth = W * 0.14;
+  const widthMult = 1 + 1.8 * Math.exp(-((t - 0.55) ** 2) / (2 * 0.18 ** 2));
   const bandWidth = baseWidth * widthMult;
 
+  // Distance from center line
+  const dist = abs(screenX - centerX);
   if (dist > bandWidth * 2) return 0;
 
-  // Gaussian falloff from center line
+  // Gaussian falloff
   const sigma = bandWidth * 0.45;
   const spatial = Math.exp(-(dist * dist) / (2 * sigma * sigma));
 
-  // Brightness along the band: peaks at tc=0.55 (Galactic Center)
-  const brightness = 0.3 + 0.7 * Math.exp(-((tc - 0.55) ** 2) / (2 * 0.2 ** 2));
+  // Brightness along the band: peaks at t=0.55 (Galactic Center area)
+  const brightness = 0.3 + 0.7 * Math.exp(-((t - 0.55) ** 2) / (2 * 0.2 ** 2));
 
   return spatial * brightness;
 }
@@ -224,26 +213,26 @@ function cloudMultiplier(az, alt) {
 // STAR GENERATION — Typed Arrays
 // ═══════════════════════════════════════════════════════
 
-// Star color presets (RGB) — subtle tints, not saturated
-const STAR_COLORS_GENERAL = [
-  [255, 252, 248], [255, 252, 248], [255, 250, 245], // white
-  [255, 248, 240], [255, 245, 235],                   // warm white
-  [220, 230, 255], [200, 215, 255],                   // cool blue
-  [255, 235, 180],                                     // yellow
-  [255, 215, 170],                                     // orange
+// Star color presets — general sky (mostly white/warm)
+const STAR_COLORS_SKY = [
+  [255, 252, 248], [255, 252, 248], [255, 252, 248], // white
+  [255, 248, 240], [255, 245, 230],                  // warm white
+  [200, 215, 255],                                    // cool white
+  [255, 235, 180],                                    // yellow
 ];
 
-// MW band gets extra colored stars — subtle nebula tints
+// Star colors inside MW band — more color variety (subtle tints)
 const STAR_COLORS_MW = [
-  [255, 252, 248], [255, 252, 248], [255, 250, 245], // white (still majority)
-  [255, 248, 240], [255, 245, 230],                   // warm white
-  [200, 215, 255], [180, 200, 255],                   // cool blue
-  [210, 200, 255], [195, 190, 245],                   // subtle violet/lavender
-  [255, 210, 210], [255, 200, 195],                   // subtle warm pink/red
-  [255, 230, 200],                                     // peach/amber
-  [170, 200, 255],                                     // deep blue
-  [230, 195, 240],                                     // faint purple
-  [255, 195, 180],                                     // salmon/red tint
+  [255, 252, 248], [255, 252, 248], [255, 250, 245], // white (still dominant)
+  [255, 248, 240], [255, 245, 230],                  // warm white
+  [255, 235, 180], [255, 225, 170],                  // golden
+  [255, 210, 160], [255, 200, 140],                  // amber/orange
+  [255, 180, 160], [250, 170, 160],                  // soft red
+  [230, 160, 160],                                    // deep warm red
+  [200, 215, 255], [185, 205, 255],                  // cool blue
+  [170, 190, 255], [160, 180, 250],                  // deeper blue
+  [200, 180, 240], [190, 170, 235],                  // blue-violet
+  [210, 185, 240],                                    // soft violet
 ];
 
 function generateStars(count, W, H) {
@@ -289,8 +278,8 @@ function generateStars(count, W, H) {
     const [px, py] = azAltToXY(az, alt, W, H);
     if (px < 0 || px >= W || py < 0 || py >= H) continue;
 
-    // Color — MW stars get more colorful tints, general sky stays white-ish
-    const palette = mw > 0.15 ? STAR_COLORS_MW : STAR_COLORS_GENERAL;
+    // Color — MW stars get more color variety, sky stars mostly white
+    const palette = mw > 0.15 ? STAR_COLORS_MW : STAR_COLORS_SKY;
     const colorIdx = floor(rand(0, palette.length));
     let [cr, cg, cb] = palette[colorIdx];
     if (alt < 12) {
@@ -477,17 +466,12 @@ export default class SkyRenderer {
     gCanvas.height = gH;
     const gCtx = gCanvas.getContext('2d');
 
-    // MW glow: tilted band (same 70° angle as star density)
-    const glowAngle = 70 * PI / 180;
-    const gcx = gW / 2;
-    const gcy = gH / 2;
-    const glowLen = max(gW, gH) * 0.6;
-
+    // MW glow: screen-space vertical band, centered
+    // Draw 20 circles along the center line from top to bottom
     for (let i = 0; i < 20; i++) {
-      const t = i / 19;
-      const along = (t - 0.5) * glowLen * 2;
-      const cx = gcx + sin(glowAngle) * along;
-      const cy = gcy + cos(glowAngle) * along;
+      const t = i / 19; // 0=top, 1=bottom
+      const cx = gW * (0.47 + 0.06 * t); // slight tilt
+      const cy = gH * (0.02 + 0.96 * t);
 
       // Width + brightness peak at t≈0.55 (Galactic Center)
       const bPeak = Math.exp(-((t - 0.55) ** 2) / (2 * 0.18 ** 2));
