@@ -288,10 +288,6 @@ export function renderHome(container) {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a4 4 0 0 0-8 0v2"/></svg>
             <span data-i18n="nav.pack">${i18n.t('nav.pack')}</span>
           </a>
-          <a href="#gallery" class="home-nav-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-            <span data-i18n="nav.gallery">${i18n.t('nav.gallery')}</span>
-          </a>
         </div>
       </div>
     </section>
@@ -306,6 +302,16 @@ export function renderHome(container) {
           <a href="#pack" class="home-who-btn" data-i18n="nav.pack">${i18n.t('nav.pack')}</a>
         </div>
         <div id="home-who-table" class="home-who-table" style="display:none;"></div>
+      </div>
+    </section>
+
+    <!-- ═══ Gallery button ═══ -->
+    <section class="home-section">
+      <div class="home-section__inner home-section__inner--center">
+        <a href="#gallery" class="home-gallery-btn">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span data-i18n="nav.gallery">${i18n.t('nav.gallery')}</span>
+        </a>
       </div>
     </section>
 

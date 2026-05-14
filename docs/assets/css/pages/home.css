@@ -976,6 +976,44 @@
   }
 }
 
+/* ── Gallery button ── */
+
+.home-gallery-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #A5A09A);
+  background: var(--color-bg-card, rgba(245,239,224,0.03));
+  border: 1px solid var(--color-border-subtle, rgba(245,239,224,0.06));
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  min-height: 48px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-gallery-btn svg {
+  opacity: 0.5;
+}
+
+.home-gallery-btn:active {
+  background: rgba(232, 155, 75, 0.06);
+  border-color: rgba(232, 155, 75, 0.2);
+  color: var(--color-starlight, #F5EFE0);
+}
+
+@media (min-width: 768px) {
+  .home-gallery-btn:hover {
+    background: rgba(232, 155, 75, 0.06);
+    border-color: rgba(232, 155, 75, 0.2);
+    color: var(--color-starlight, #F5EFE0);
+  }
+  .home-gallery-btn:hover svg { opacity: 1; }
+}
+
 /* ── WhatsApp group link ── */
 
 .home-group-chat {
