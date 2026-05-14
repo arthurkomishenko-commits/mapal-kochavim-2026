@@ -127,6 +127,24 @@
   transform: scale(0.96);
 }
 
+/* ── My cabinet button ── */
+
+.nav__me-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav__me-btn:active {
+  color: var(--color-ember-bright);
+}
+
 /* ── Mobile drawer ── */
 
 .nav__drawer {

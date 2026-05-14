@@ -170,6 +170,18 @@ function renderProfile(data) {
           ${i18n.t('me.edit')}
         </a>
 
+        ${auth.isAdmin() ? `
+        <div class="admin-panel">
+          <div class="admin-panel__title">${i18n.t('me.adminTitle')}</div>
+          <div class="admin-panel__stats" id="admin-stats"></div>
+          <div class="admin-panel__actions">
+            <button type="button" class="home-who-btn" id="admin-export">${i18n.t('me.adminExport')}</button>
+            <button type="button" class="home-who-btn" id="admin-clear-all" style="border-color:rgba(220,80,80,0.2);color:rgba(220,80,80,0.6);">${i18n.t('me.adminClearAll')}</button>
+          </div>
+          <div id="admin-list" class="admin-list"></div>
+        </div>
+        ` : ''}
+
         ${!isCancelled ? `
         <button type="button" class="form-cancel-link" id="me-cancel">
           ${i18n.t('me.cancelRegistration')}
@@ -201,6 +213,93 @@ function renderProfile(data) {
     logoutBtn.addEventListener('click', () => {
       auth.logout();
       renderPhoneEntry();
+    });
+  }
+
+  // Admin panel
+  if (auth.isAdmin()) {
+    renderAdminPanel();
+  }
+}
+
+function renderAdminPanel() {
+  const statsEl = document.getElementById('admin-stats');
+  const listEl = document.getElementById('admin-list');
+  const exportBtn = document.getElementById('admin-export');
+  const clearBtn = document.getElementById('admin-clear-all');
+
+  // Gather all participants
+  const all = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key.startsWith('mapal-rsvp-')) continue;
+    try { all.push(JSON.parse(localStorage.getItem(key))); } catch {}
+  }
+
+  const active = all.filter(p => !p.cancelled);
+  const cancelled = all.filter(p => p.cancelled);
+  let totalPeople = 0;
+  let totalCars = 0;
+  active.forEach(p => {
+    totalPeople++;
+    if (p.companions) totalPeople += p.companions.length;
+    if (p.kids) totalPeople += p.kids;
+    if (p.isDriving) totalCars++;
+  });
+
+  if (statsEl) {
+    statsEl.innerHTML = `
+      <span class="admin-stat">${active.length} ${i18n.t('me.adminRegistered')}</span>
+      <span class="admin-stat">${totalPeople} ${i18n.t('people.participants')}</span>
+      <span class="admin-stat">${totalCars} ${i18n.t('people.cars')}</span>
+      ${cancelled.length ? `<span class="admin-stat admin-stat--warn">${cancelled.length} ${i18n.t('me.adminCancelled')}</span>` : ''}
+    `;
+  }
+
+  // List all with phone numbers (admin only)
+  if (listEl) {
+    listEl.innerHTML = active.map(p => `
+      <div class="admin-row">
+        <span class="admin-row__name">${esc(p.name)}</span>
+        <span class="admin-row__phone" dir="ltr">${p.phone}</span>
+        ${p.companions ? p.companions.map(c => `<span class="admin-row__comp">${esc(c.name)} ${c.phone}</span>`).join('') : ''}
+      </div>
+    `).join('');
+  }
+
+  // Export to clipboard
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      const lines = active.map(p => {
+        let line = `${p.name} | ${p.phone}`;
+        if (p.city) line += ` | ${p.city}`;
+        if (p.isDriving) line += ' | car';
+        if (p.companions && p.companions.length) {
+          line += ' | +' + p.companions.map(c => `${c.name}(${c.phone})`).join(', ');
+        }
+        return line;
+      });
+      const text = lines.join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(i18n.t('safety.copied'));
+      }).catch(() => {
+        prompt('Copy:', text);
+      });
+    });
+  }
+
+  // Clear all (dangerous)
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (!confirm(i18n.t('me.adminClearConfirm'))) return;
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k.startsWith('mapal-rsvp-')) keys.push(k);
+      }
+      keys.forEach(k => localStorage.removeItem(k));
+      showToast('Cleared ' + keys.length + ' entries');
+      renderAdminPanel();
     });
   }
 }

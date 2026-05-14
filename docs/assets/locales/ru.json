@@ -53,6 +53,7 @@
     "detailHighlight": "Главное",
     "detailHighlightVal": "Ночь Персеид",
     "privateBadge": "Только для своих",
+    "groupChat": "Общий чат WhatsApp",
     "btnPlaceProgram": "Место и программа",
     "bringingTitle": "Все вместе берём",
     "whoBtn": "Кто едет",
@@ -253,6 +254,12 @@
     "statusActive": "Ты в деле!",
     "statusCancelled": "Отменено",
     "edit": "Редактировать",
+    "adminTitle": "Панель админа",
+    "adminRegistered": "записей",
+    "adminCancelled": "отменено",
+    "adminExport": "Копировать список",
+    "adminClearAll": "Очистить все",
+    "adminClearConfirm": "Точно удалить все записи? Это нельзя отменить.",
     "lastUpdated": "Обновлено"
   },
   "gallery": {

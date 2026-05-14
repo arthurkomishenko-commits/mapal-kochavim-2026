@@ -53,6 +53,7 @@
     "privateBadge": "רק לחברים",
     "detailHighlight": "הדגש",
     "detailHighlightVal": "ליל הפרסאידים",
+    "groupChat": "קבוצת WhatsApp",
     "btnPlaceProgram": "המקום והתוכנייה",
     "bringingTitle": "כולם לוקחים ביחד",
     "whoBtn": "מי מגיע",
@@ -253,6 +254,12 @@
     "statusActive": "אתם בפנים!",
     "statusCancelled": "בוטל",
     "edit": "עריכה",
+    "adminTitle": "פאנל מנהלים",
+    "adminRegistered": "רשומים",
+    "adminCancelled": "מבוטלים",
+    "adminExport": "העתק רשימה",
+    "adminClearAll": "מחק הכל",
+    "adminClearConfirm": "בטוח למחוק את כל הרישומים? אי אפשר לבטל.",
     "lastUpdated": "עודכן לאחרונה"
   },
   "gallery": {

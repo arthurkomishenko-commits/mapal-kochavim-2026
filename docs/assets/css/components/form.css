@@ -603,6 +603,84 @@
   border-block-end: 1px solid rgba(245, 239, 224, 0.04);
 }
 
+/* ── Admin panel ── */
+
+.admin-panel {
+  margin-block-start: 32px;
+  padding: 20px;
+  background: rgba(232, 155, 75, 0.04);
+  border: 1px solid rgba(232, 155, 75, 0.12);
+  border-radius: 12px;
+}
+
+.admin-panel__title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-ember-bright, #E89B4B);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-block-end: 14px;
+}
+
+.admin-panel__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-end: 14px;
+}
+
+.admin-stat {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, #A5A09A);
+  background: rgba(245, 239, 224, 0.04);
+  padding: 4px 12px;
+  border-radius: 10px;
+}
+
+.admin-stat--warn {
+  color: #DC5050;
+  background: rgba(220, 80, 80, 0.08);
+}
+
+.admin-panel__actions {
+  display: flex;
+  gap: 8px;
+  margin-block-end: 14px;
+}
+
+.admin-list {
+  margin-block-start: 12px;
+}
+
+.admin-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-block-end: 1px solid rgba(245, 239, 224, 0.04);
+  font-size: 0.85rem;
+}
+
+.admin-row__name {
+  font-weight: 500;
+  color: var(--color-starlight, #F5EFE0);
+}
+
+.admin-row__phone {
+  color: rgba(165, 160, 154, 0.5);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-row__comp {
+  font-size: 0.75rem;
+  color: rgba(165, 160, 154, 0.4);
+  background: rgba(245, 239, 224, 0.03);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
 /* ── Desktop enhancements ── */
 
 @media (min-width: 768px) {

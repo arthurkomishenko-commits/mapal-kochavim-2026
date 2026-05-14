@@ -976,6 +976,36 @@
   }
 }
 
+/* ── WhatsApp group link ── */
+
+.home-group-chat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-block-start: 20px;
+  padding: 14px 24px;
+  background: rgba(37, 211, 102, 0.08);
+  border: 1px solid rgba(37, 211, 102, 0.15);
+  border-radius: 12px;
+  color: #25D366;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
+}
+
+.home-group-chat:active {
+  background: rgba(37, 211, 102, 0.15);
+}
+
+@media (min-width: 768px) {
+  .home-group-chat:hover {
+    background: rgba(37, 211, 102, 0.12);
+  }
+}
+
 /* ── What we're bringing ── */
 
 .home-bringing-grid {

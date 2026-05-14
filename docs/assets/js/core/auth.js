@@ -6,6 +6,14 @@
 
 const STORAGE_KEY = 'mapal-user';
 
+const ADMIN_PHONES = [
+  '0548107581', // Arthur
+  '0547564800', // Andrey
+  '0549731889', // Vladimir
+  '0528601612', // Robert
+  '0542273518', // Evgeny
+];
+
 function normalizePhone(input) {
   // Strip everything except digits and leading +
   let phone = input.replace(/[^\d+]/g, '');
@@ -50,6 +58,11 @@ function isLoggedIn() {
   return getUser() !== null;
 }
 
+function isAdmin() {
+  const user = getUser();
+  return user ? ADMIN_PHONES.includes(user.phone) : false;
+}
+
 // Emit initial auth state on load
 function initAuth() {
   const user = getUser();
@@ -63,5 +76,6 @@ export const auth = {
   getUser,
   updateUser,
   isLoggedIn,
+  isAdmin,
   initAuth,
 };
