@@ -5,6 +5,7 @@
 import { i18n } from '../core/i18n.js';
 import { initCountdown } from '../components/countdown.js';
 import { initShootingStar } from '../components/shooting-star.js';
+import { initStarField } from '../components/star-field.js';
 
 export function renderHome(container) {
   container.innerHTML = `
@@ -40,9 +41,14 @@ export function renderHome(container) {
         </div>
         <a href="#rsvp" class="hero__cta" data-i18n="home.cta">${i18n.t('home.cta')}</a>
       </div>
+      <div class="hero__scroll-hint" aria-hidden="true">
+        <div class="hero__scroll-arrow"></div>
+      </div>
     </section>
   `;
 
+  const starsContainer = container.querySelector('.hero__stars');
+  initStarField(starsContainer);
   initCountdown();
-  initShootingStar(container.querySelector('.hero__stars'));
+  initShootingStar(starsContainer);
 }

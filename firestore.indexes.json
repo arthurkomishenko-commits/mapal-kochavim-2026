@@ -1,0 +1,22 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "carpoolRequests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "toDriverId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "participants",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "cancelled", "order": "ASCENDING" },
+        { "fieldPath": "arrival.day", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
