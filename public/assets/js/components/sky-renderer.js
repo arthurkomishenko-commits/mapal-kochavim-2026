@@ -112,44 +112,73 @@ function skyBrightness(alt) {
   return 1.0;
 }
 
-// MW path unwrapped with same offset as projection
-const MW_U = MW_PATH.map(pt => {
-  let uaz = pt.az;
-  if (uaz < AZ_OFFSET) uaz += 360;
-  return { ...pt, uaz };
-});
+/**
+ * MW density in SCREEN SPACE — no az/alt.
+ * MW defined as a near-vertical band:
+ *   bottom: (0.47, 0.95) — core, widest, brightest
+ *   center: (0.50, 0.45) — mid-band
+ *   top:    (0.55, 0.02) — faint, narrow
+ * Returns 0-1 (0=far from MW, 1=center of MW core)
+ */
+const MW_SCREEN = [
+  { x: 0.45, y: 1.0,  w: 0.18, b: 0.6 },  // below screen, wide
+  { x: 0.46, y: 0.88, w: 0.20, b: 0.9 },  // bottom — bright core
+  { x: 0.47, y: 0.72, w: 0.22, b: 1.0 },  // core peak — widest, brightest
+  { x: 0.48, y: 0.55, w: 0.18, b: 0.8 },  // mid
+  { x: 0.50, y: 0.40, w: 0.14, b: 0.65 }, // mid-upper
+  { x: 0.52, y: 0.25, w: 0.12, b: 0.5 },  // upper
+  { x: 0.54, y: 0.12, w: 0.10, b: 0.35 }, // near top
+  { x: 0.56, y: 0.0,  w: 0.08, b: 0.2 },  // above screen, faint
+];
 
-function mwProximity(az, alt) {
-  let uaz = az;
-  if (uaz < AZ_OFFSET) uaz += 360;
+// Screen-space dark lane patches (percent of screen)
+const DARK_LANES_SCREEN = [
+  { x: 0.49, y: 0.50, w: 0.04, h: 0.15, d: 0.7 }, // Great Rift center
+  { x: 0.47, y: 0.35, w: 0.03, h: 0.10, d: 0.6 }, // Rift upper
+  { x: 0.46, y: 0.80, w: 0.05, h: 0.06, d: 0.8 }, // Pipe near core
+];
 
+function mwScreenProximity(sx, sy) {
+  // sx, sy are 0-1 normalized screen coordinates
   let best = 0;
-  for (let i = 0; i < MW_U.length - 1; i++) {
-    const a = MW_U[i], b = MW_U[i + 1];
+  for (let i = 0; i < MW_SCREEN.length - 1; i++) {
+    const a = MW_SCREEN[i], b = MW_SCREEN[i + 1];
+    // Project point onto segment
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const len2 = dx * dx + dy * dy + 0.0001;
+    const t = max(0, min(1, ((sx - a.x) * dx + (sy - a.y) * dy) / len2));
+    const px = a.x + t * dx;
+    const py = a.y + t * dy;
+    const pw = a.w + t * (b.w - a.w);
+    const pb = a.b + t * (b.b - a.b);
 
-    const dAz = b.uaz - a.uaz;
-    const dAlt = b.alt - a.alt;
-    const len2 = dAz * dAz + dAlt * dAlt + 0.001;
-    const t = max(0, min(1, ((uaz - a.uaz) * dAz + (alt - a.alt) * dAlt) / len2));
-
-    const pAz = a.uaz + t * dAz;
-    const pAlt = a.alt + t * dAlt;
-    const pW = a.w + t * (b.w - a.w);
-    const pB = a.b + t * (b.b - a.b);
-
-    const dist = sqrt((uaz - pAz) ** 2 + (alt - pAlt) ** 2);
-
-    const sigma = pW * 0.4;
-    if (dist < pW * 1.5) {
+    const dist = sqrt((sx - px) ** 2 + (sy - py) ** 2);
+    const sigma = pw * 0.4;
+    if (dist < pw) {
       const factor = Math.exp(-(dist * dist) / (2 * sigma * sigma));
-      const val = factor * pB;
+      const val = factor * pb;
       if (val > best) best = val;
     }
   }
-  return best;
+
+  // Dark lanes reduce density
+  let dark = 0;
+  for (const dl of DARK_LANES_SCREEN) {
+    const dx = abs(sx - dl.x) / (dl.w / 2);
+    const dy = abs(sy - dl.y) / (dl.h / 2);
+    if (dx < 1.5 && dy < 1.5) {
+      const distNorm = sqrt(dx * dx + dy * dy);
+      if (distNorm < 1.5) {
+        const f = Math.exp(-distNorm * distNorm * 1.5) * dl.d;
+        if (f > dark) dark = f;
+      }
+    }
+  }
+
+  return best * (1 - dark * 0.6);
 }
 
-// Check if point is inside a dark nebula (returns darkening factor 0-1)
+// Keep darkNebulaFactor for named stars (uses az/alt)
 function darkNebulaFactor(az, alt) {
   let darkest = 0;
   for (const n of DARK_NEBULAE) {
@@ -229,51 +258,50 @@ function generateStars(count, W, H) {
     const alt = rand(0, 90);
     if (alt < 0) continue;
 
-    // Probability density
-    const sb = skyBrightness(alt);
-    const mw = mwProximity(az, alt);
-    const cloud = cloudMultiplier(az, alt);
-    const dark = darkNebulaFactor(az, alt);
+    // Generate directly in screen space for background stars
+    // (named stars still use az/alt projection)
+    const sx = rand(0, 1); // normalized screen x
+    const sy = rand(0, 1); // normalized screen y
+    const px = sx * W;
+    const py = sy * H;
+    if (px < 0 || px >= W || py < 0 || py >= H) continue;
 
-    // Base probability ensures EVERY part of sky has stars.
-    // MW multiplier adds density on top, doesn't create empty zones.
-    const baseDensity = 0.25; // base sky
-    const mwBoost = mw * 8;  // up to 9x denser in MW center
-    let prob = (baseDensity + mwBoost) * sb * cloud * (1 - dark * 0.6);
+    // MW proximity in screen space
+    const mw = mwScreenProximity(sx, sy);
 
-    // Normalize
+    // Probability: base + MW boost
+    const baseDensity = 0.25;
+    const mwBoost = mw * 8;
+    // Less density near bottom of screen (horizon glow)
+    const horizonFade = 0.4 + 0.6 * (1 - sy); // top=1, bottom=0.4
+    let prob = (baseDensity + mwBoost) * horizonFade;
     prob = min(prob / 3, 0.95);
 
     if (Math.random() > prob) continue;
 
-    // Project to canvas
-    const [px, py] = azAltToXY(az, alt, W, H);
-    if (px < 0 || px >= W || py < 0 || py >= H) continue;
-
-    // Color — near horizon: shift warm (atmospheric extinction)
+    // Color
     const colorIdx = floor(rand(0, STAR_COLORS.length));
     let [cr, cg, cb] = STAR_COLORS[colorIdx];
-    if (alt < 12) {
+    // Near bottom = horizon: shift warm
+    if (sy > 0.85) {
       cr = min(255, cr + 10);
       cg = max(0, cg - 5);
       cb = max(0, cb - 15);
     }
 
-    // Alpha — MW brighter than surroundings, but not white blobs
+    // Alpha — MW center much brighter
     let a;
     if (mw > 0.5) {
-      a = rand(0.25, 0.75);  // MW core
+      a = rand(0.30, 0.80);
     } else if (mw > 0.2) {
-      a = rand(0.15, 0.55);  // MW band
+      a = rand(0.15, 0.55);
     } else if (mw > 0.05) {
-      a = rand(0.08, 0.35);  // MW fringe
+      a = rand(0.08, 0.35);
     } else {
-      a = rand(0.04, 0.22);  // general sky
+      a = rand(0.04, 0.20);
     }
-    // Sky brightness (horizon dimmer)
-    a *= (0.4 + sb * 0.6); // floor at 40% so horizon isn't empty
-    // Dark nebula dims
-    a *= (1 - dark * 0.6);
+    // Horizon fade
+    a *= horizonFade;
 
     // Size — mostly 1px
     const sizeRoll = Math.random();
@@ -454,36 +482,23 @@ export default class SkyRenderer {
     gCanvas.height = gH;
     const gCtx = gCanvas.getContext('2d');
 
-    // Draw soft circles along MW path
-    for (const pt of MW_PATH) {
-      const [px, py] = azAltToXY(pt.az, pt.alt, gW, gH);
-      // Many smaller circles along the path for smooth blending
-      const radius = max(pt.w * max(gW, gH) / 180 * 0.55, 8);
-      const alpha = pt.b * 0.025;
-      const isCenter = pt.b >= 0.95;
-      const color = isCenter ? '215,210,200' : '205,210,220';
+    // Draw MW glow in SCREEN SPACE along MW_SCREEN path
+    for (const pt of MW_SCREEN) {
+      const px = pt.x * gW;
+      const py = pt.y * gH;
+      const radius = pt.w * max(gW, gH) * 0.6;
+      const alpha = pt.b * 0.03;
+      const color = pt.b >= 0.9 ? '215,210,200' : '205,210,220';
 
-      // 5 scattered circles per point for smooth coverage
-      for (let j = 0; j < 5; j++) {
-        const ox = px + (Math.random() - 0.5) * radius * 0.8;
-        const oy = py + (Math.random() - 0.5) * radius * 0.6;
-        const r = radius * (0.6 + Math.random() * 0.5);
+      for (let j = 0; j < 4; j++) {
+        const ox = px + (Math.random() - 0.5) * radius * 0.5;
+        const oy = py + (Math.random() - 0.5) * radius * 0.3;
+        const r = radius * (0.5 + Math.random() * 0.5);
         gCtx.beginPath();
         gCtx.arc(ox, oy, r, 0, PI * 2);
         gCtx.fillStyle = `rgba(${color},${(alpha * (0.7 + Math.random() * 0.3)).toFixed(3)})`;
         gCtx.fill();
       }
-    }
-
-    // Star clouds — subtle brighter patches
-    for (const c of STAR_CLOUDS) {
-      const [px, py] = azAltToXY(c.az, c.alt, gW, gH);
-      const rx = max(c.w * max(gW,gH) / 180 * 0.5, 4);
-      const ry = max(c.h * max(gW,gH) / 180 * 0.5, 3);
-      gCtx.beginPath();
-      gCtx.ellipse(px, py, rx, ry, 0, 0, PI * 2);
-      gCtx.fillStyle = `rgba(220,215,205,${(c.b * 0.025).toFixed(3)})`;
-      gCtx.fill();
     }
 
     // Multi-pass blur: 4 downscale steps for maximum smoothness
