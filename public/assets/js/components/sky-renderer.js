@@ -83,24 +83,18 @@ function hexToRGB(hex) {
 /**
  * Zenithal (looking UP) projection.
  * Center of screen = zenith. Edges = horizon.
- * South is at the bottom, North at top.
- * MW appears as a near-vertical band through center.
+ * MW band defined in screen space, not astronomical projection.
  */
-/**
- * Zenithal projection — visually tuned so MW core lands near screen center.
- * Projection center offset left+up so the bright Sagittarius region
- * (az≈218, alt≈18) appears at roughly (45%, 40%) of screen.
- */
+// Projection offset: MW core (az=218) should land at ~40% of screen width
+// 218 → 40%: offset = 218 - 0.40*360 = 218 - 144 = 74
+// So: x = (az - 74) / 360. Wrap boundary at az=74.
+const AZ_OFFSET = 74;
+
 function azAltToXY(az, alt, W, H) {
-  const r = 1 - alt / 90;
-  // Rotate: az=220 (MW core direction) points toward bottom-center
-  const theta = (az - 220) * PI / 180;
-  const scale = min(W, H) * 0.5;
-  // Center offset: push left and up so MW core moves to screen center
-  const cx = W * 0.32;
-  const cy = H * 0.12;
-  const x = cx + sin(theta) * r * scale;
-  const y = cy + cos(theta) * r * scale;
+  let u = az;
+  if (u < AZ_OFFSET) u += 360;
+  const x = ((u - AZ_OFFSET) / 360) * W;
+  const y = (1 - alt / 90) * H * 0.9 + H * 0.05;
   return [x, y];
 }
 
@@ -118,19 +112,16 @@ function skyBrightness(alt) {
   return 1.0;
 }
 
-// MW path with unwrapped azimuths (continuous, no 0/360 jump)
-// Path goes 212→215→...→340→365(=5)→...→435(=75)
+// MW path unwrapped with same offset as projection
 const MW_U = MW_PATH.map(pt => {
   let uaz = pt.az;
-  if (uaz < 180) uaz += 360; // unwrap across 0° boundary
+  if (uaz < AZ_OFFSET) uaz += 360;
   return { ...pt, uaz };
 });
 
-// Distance from a point to MW center line (returns 0-1, 1=on center)
 function mwProximity(az, alt) {
-  // Unwrap query azimuth same way
   let uaz = az;
-  if (uaz < 180) uaz += 360;
+  if (uaz < AZ_OFFSET) uaz += 360;
 
   let best = 0;
   for (let i = 0; i < MW_U.length - 1; i++) {
@@ -232,8 +223,9 @@ function generateStars(count, W, H) {
     attempts++;
 
     // Random sky position in az/alt
-    // Full sky hemisphere
-    const az = rand(0, 360);
+    // Visible sky range (matching projection offset)
+    const uaz = rand(AZ_OFFSET, AZ_OFFSET + 360);
+    const az = uaz >= 360 ? uaz - 360 : uaz;
     const alt = rand(0, 90);
     if (alt < 0) continue;
 
