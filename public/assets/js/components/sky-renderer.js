@@ -113,44 +113,58 @@ function skyBrightness(alt) {
   return 1.0;
 }
 
-// MW path with unwrapped azimuths (continuous, no 0/360 jump)
-// Path goes 212→215→...→340→365(=5)→...→435(=75)
-const MW_U = MW_PATH.map(pt => {
-  let uaz = pt.az;
-  if (uaz < 180) uaz += 360; // unwrap across 0° boundary
-  return { ...pt, uaz };
-});
+/**
+ * MW proximity — SCREEN SPACE.
+ *
+ * The MW is defined as a near-vertical band on screen:
+ *   Top: (0.48 * W, 0.02 * H) — slightly left of center
+ *   Bottom: (0.52 * W, 0.98 * H) — slightly right of center
+ *
+ * Width varies: widest at 60-70% down (Galactic Center), narrower at top/bottom.
+ * Brightness peaks at 55-70% down.
+ *
+ * This approach guarantees the MW looks like the reference photo
+ * regardless of projection math.
+ */
+let _mwScreenW = 0, _mwScreenH = 0;
 
-// Distance from a point to MW center line (returns 0-1, 1=on center)
+function mwScreenProximity(screenX, screenY, W, H) {
+  // MW center line: from top-center to bottom-center, slight tilt
+  const topX = W * 0.47;
+  const botX = W * 0.53;
+  const t = screenY / H; // 0=top, 1=bottom
+
+  // Center X at this Y
+  const centerX = topX + (botX - topX) * t;
+
+  // Width of band at this Y (wider at Galactic Center = 55-70% down)
+  const baseWidth = W * 0.08; // 8% of screen width
+  // Bell curve peaking at t=0.6
+  const widthMult = 1 + 2.5 * Math.exp(-((t - 0.6) ** 2) / (2 * 0.15 ** 2));
+  const bandWidth = baseWidth * widthMult;
+
+  // Distance from center line
+  const dist = abs(screenX - centerX);
+  if (dist > bandWidth * 2) return 0;
+
+  // Gaussian falloff
+  const sigma = bandWidth * 0.45;
+  const spatial = Math.exp(-(dist * dist) / (2 * sigma * sigma));
+
+  // Brightness along the band: peaks at t=0.55 (Galactic Center area)
+  const brightness = 0.3 + 0.7 * Math.exp(-((t - 0.55) ** 2) / (2 * 0.2 ** 2));
+
+  return spatial * brightness;
+}
+
+// Keep old az/alt version for dark nebulae (they still use sky coords)
 function mwProximity(az, alt) {
-  // Unwrap query azimuth same way
-  let uaz = az;
-  if (uaz < 180) uaz += 360;
-
-  let best = 0;
-  for (let i = 0; i < MW_U.length - 1; i++) {
-    const a = MW_U[i], b = MW_U[i + 1];
-
-    const dAz = b.uaz - a.uaz;
-    const dAlt = b.alt - a.alt;
-    const len2 = dAz * dAz + dAlt * dAlt + 0.001;
-    const t = max(0, min(1, ((uaz - a.uaz) * dAz + (alt - a.alt) * dAlt) / len2));
-
-    const pAz = a.uaz + t * dAz;
-    const pAlt = a.alt + t * dAlt;
-    const pW = a.w + t * (b.w - a.w);
-    const pB = a.b + t * (b.b - a.b);
-
-    const dist = sqrt((uaz - pAz) ** 2 + (alt - pAlt) ** 2);
-
-    const sigma = pW * 0.4;
-    if (dist < pW * 1.5) {
-      const factor = Math.exp(-(dist * dist) / (2 * sigma * sigma));
-      const val = factor * pB;
-      if (val > best) best = val;
-    }
-  }
-  return best;
+  // Simple: project to screen, then use screen-space proximity
+  // This is called during star generation where we have W/H
+  // We'll set _mwScreenW/_mwScreenH before generating
+  if (_mwScreenW === 0) return 0;
+  const [sx, sy] = azAltToXY(az, alt, _mwScreenW, _mwScreenH);
+  return mwScreenProximity(sx, sy, _mwScreenW, _mwScreenH);
 }
 
 // Check if point is inside a dark nebula (returns darkening factor 0-1)
@@ -349,13 +363,13 @@ export default class SkyRenderer {
     this.W = W;
     this.H = H;
 
-    // Size main canvas (slightly oversized for parallax headroom)
-    this.canvas.width = W + 50;
-    this.canvas.height = H + 40;
-    this.canvas.style.marginLeft = '-25px';
-    this.canvas.style.marginTop = '-20px';
+    // Canvas size: desktop oversized for parallax, mobile exact
+    const pad = this._isMobile ? 0 : 30;
+    this.canvas.width = W + pad * 2;
+    this.canvas.height = H + pad * 2;
+    this.canvas.style.marginLeft = pad ? `-${pad}px` : '0';
+    this.canvas.style.marginTop = pad ? `-${pad}px` : '0';
 
-    // Static buffer = same as canvas
     const CW = this.canvas.width;
     const CH = this.canvas.height;
     this.staticCanvas = document.createElement('canvas');
@@ -387,6 +401,9 @@ export default class SkyRenderer {
     const isMobile = W < 768;
     const starCount = isMobile ? 8000 : 35000;
 
+    // Set screen dims for MW proximity calculations
+    _mwScreenW = CW;
+    _mwScreenH = CH;
     this.bgStars = generateStars(starCount, CW, CH);
     const s = this.bgStars;
 
@@ -454,36 +471,31 @@ export default class SkyRenderer {
     gCanvas.height = gH;
     const gCtx = gCanvas.getContext('2d');
 
-    // Draw soft circles along MW path
-    for (const pt of MW_PATH) {
-      const [px, py] = azAltToXY(pt.az, pt.alt, gW, gH);
-      // Many smaller circles along the path for smooth blending
-      const radius = max(pt.w * max(gW, gH) / 180 * 0.55, 8);
-      const alpha = pt.b * 0.04;
-      const isCenter = pt.b >= 0.95;
-      const color = isCenter ? '215,210,200' : '205,210,220';
+    // MW glow: screen-space vertical band, centered
+    // Draw 20 circles along the center line from top to bottom
+    for (let i = 0; i < 20; i++) {
+      const t = i / 19; // 0=top, 1=bottom
+      const cx = gW * (0.47 + 0.06 * t); // slight tilt
+      const cy = gH * (0.02 + 0.96 * t);
 
-      // 5 scattered circles per point for smooth coverage
-      for (let j = 0; j < 5; j++) {
-        const ox = px + (Math.random() - 0.5) * radius * 0.8;
-        const oy = py + (Math.random() - 0.5) * radius * 0.6;
-        const r = radius * (0.6 + Math.random() * 0.5);
+      // Width + brightness peak at t≈0.55 (Galactic Center)
+      const bPeak = Math.exp(-((t - 0.55) ** 2) / (2 * 0.18 ** 2));
+      const radius = gW * 0.06 * (1 + 2 * bPeak);
+      const alpha = 0.015 + 0.04 * bPeak;
+
+      // Warmer near center, cooler at edges
+      const warm = bPeak > 0.5;
+      const color = warm ? '215,210,195' : '200,208,220';
+
+      for (let j = 0; j < 4; j++) {
+        const ox = cx + (Math.random() - 0.5) * radius * 0.5;
+        const oy = cy + (Math.random() - 0.5) * gH * 0.04;
+        const r = radius * (0.7 + Math.random() * 0.4);
         gCtx.beginPath();
         gCtx.arc(ox, oy, r, 0, PI * 2);
-        gCtx.fillStyle = `rgba(${color},${(alpha * (0.7 + Math.random() * 0.3)).toFixed(3)})`;
+        gCtx.fillStyle = `rgba(${color},${alpha.toFixed(3)})`;
         gCtx.fill();
       }
-    }
-
-    // Star clouds — subtle brighter patches
-    for (const c of STAR_CLOUDS) {
-      const [px, py] = azAltToXY(c.az, c.alt, gW, gH);
-      const rx = max(c.w * max(gW,gH) / 180 * 0.5, 4);
-      const ry = max(c.h * max(gW,gH) / 180 * 0.5, 3);
-      gCtx.beginPath();
-      gCtx.ellipse(px, py, rx, ry, 0, 0, PI * 2);
-      gCtx.fillStyle = `rgba(220,215,205,${(c.b * 0.04).toFixed(3)})`;
-      gCtx.fill();
     }
 
     // Multi-pass blur: 4 downscale steps for maximum smoothness
