@@ -372,23 +372,22 @@ export default class SkyRenderer {
   render() {
     const W = window.innerWidth;
     const H = window.innerHeight;
-    // Render buffer wider for parallax headroom
-    const PAD = 40;
-    const BW = W + PAD * 2;
-    const BH = H + PAD * 2;
 
     this.W = W;
     this.H = H;
-    this.PAD = PAD;
 
-    // Size main canvas
-    this.canvas.width = W;
-    this.canvas.height = H;
+    // Size main canvas (slightly oversized for parallax headroom)
+    this.canvas.width = W + 50;
+    this.canvas.height = H + 40;
+    this.canvas.style.marginLeft = '-25px';
+    this.canvas.style.marginTop = '-20px';
 
-    // Static buffer (wider than viewport for parallax room)
+    // Static buffer = same as canvas
+    const CW = this.canvas.width;
+    const CH = this.canvas.height;
     this.staticCanvas = document.createElement('canvas');
-    this.staticCanvas.width = BW;
-    this.staticCanvas.height = BH;
+    this.staticCanvas.width = CW;
+    this.staticCanvas.height = CH;
     this.staticCtx = this.staticCanvas.getContext('2d');
 
     // Overlay for twinkling
@@ -404,21 +403,21 @@ export default class SkyRenderer {
     const sCtx = this.staticCtx;
 
     // ── Layer 1: Sky gradient ──
-    const grad = sCtx.createLinearGradient(0, 0, 0, BH);
+    const grad = sCtx.createLinearGradient(0, 0, 0, CH);
     grad.addColorStop(0, '#060A1A');
     grad.addColorStop(0.7, '#080D22');
     grad.addColorStop(1, '#0E1230');
     sCtx.fillStyle = grad;
-    sCtx.fillRect(0, 0, BW, BH);
+    sCtx.fillRect(0, 0, CW, CH);
 
     // ── Layer 2: 35K background stars via ImageData ──
     const isMobile = W < 768;
     const starCount = isMobile ? 8000 : 35000;
 
-    this.bgStars = generateStars(starCount, BW, BH);
+    this.bgStars = generateStars(starCount, CW, CH);
     const s = this.bgStars;
 
-    const imgData = sCtx.getImageData(0, 0, BW, BH);
+    const imgData = sCtx.getImageData(0, 0, CW, CH);
     const data = imgData.data;
 
     for (let i = 0; i < s.count; i++) {
@@ -432,7 +431,7 @@ export default class SkyRenderer {
       const wb = floor(s.b[i] * al);
 
       if (sz === 1) {
-        const idx = (py * BW + px) * 4;
+        const idx = (py * CW + px) * 4;
         if (idx >= 0 && idx < data.length - 3) {
           data[idx]     = max(data[idx], wr);
           data[idx + 1] = max(data[idx + 1], wg);
@@ -444,8 +443,8 @@ export default class SkyRenderer {
           for (let dx = -half; dx <= half; dx++) {
             const nx = px + dx;
             const ny = py + dy;
-            if (nx < 0 || nx >= BW || ny < 0 || ny >= BH) continue;
-            const idx = (ny * BW + nx) * 4;
+            if (nx < 0 || nx >= CW || ny < 0 || ny >= CH) continue;
+            const idx = (ny * CW + nx) * 4;
             const fade = (dx === 0 && dy === 0) ? 1 : 0.55;
             data[idx]     = max(data[idx], floor(wr * fade));
             data[idx + 1] = max(data[idx + 1], floor(wg * fade));
@@ -458,13 +457,13 @@ export default class SkyRenderer {
     sCtx.putImageData(imgData, 0, 0);
 
     // ── Layer 3: MW glow (offscreen blur) ──
-    this._renderMWGlow(sCtx, BW, BH);
+    this._renderMWGlow(sCtx, CW, CH);
 
     // ── Layer 4: Named stars with glow ──
-    this._renderNamedStars(sCtx, BW, BH);
+    this._renderNamedStars(sCtx, CW, CH);
 
     // ── Composite static buffer to main canvas (centered, with parallax room) ──
-    this.ctx.drawImage(this.staticCanvas, -PAD, -PAD);
+    this.ctx.drawImage(this.staticCanvas, 0, 0);
 
     // ── Start twinkling ──
     if (!this.reducedMotion) {
@@ -636,27 +635,23 @@ export default class SkyRenderer {
     if (this.rafId || this.reducedMotion) return;
     const self = this;
 
-    let lastPX = 0, lastPY = 0;
     let frameCount = 0;
 
     function frame(ts) {
-      // ── Smooth parallax via lerp ──
+      // ── Parallax via CSS transform (GPU-free, no canvas redraw) ──
       self.parallaxX += (self._targetPX - self.parallaxX) * 0.06;
       self.parallaxY += (self._targetPY - self.parallaxY) * 0.06;
-      const px = Math.round(self.parallaxX);
-      const py = Math.round(self.parallaxY);
+      const px = self.parallaxX;
+      const py = self.parallaxY;
 
-      // Redraw static ONLY if parallax moved (saves huge GPU work)
-      if (px !== lastPX || py !== lastPY) {
-        const mainCtx = self.ctx;
-        mainCtx.drawImage(self.staticCanvas, -self.PAD + px, -self.PAD + py);
-        lastPX = px;
-        lastPY = py;
-      }
+      // Move BOTH canvases via CSS — zero GPU cost
+      const tx = `translate3d(${px.toFixed(1)}px,${py.toFixed(1)}px,0)`;
+      self.canvas.style.transform = tx;
+      if (self.overlayCanvas) self.overlayCanvas.style.transform = tx;
 
-      // ── Twinkle: only every 3rd frame (20fps is enough for twinkling) ──
+      // ── Twinkle: every 4th frame (15fps is fine for shimmer) ──
       frameCount++;
-      if (frameCount % 3 === 0) {
+      if (frameCount % 4 === 0) {
         const ctx = self.overlayCtx;
         const W = self.overlayCanvas.width;
         const H = self.overlayCanvas.height;
@@ -671,13 +666,10 @@ export default class SkyRenderer {
             0.08 * sin(t * s.f3 + s.p3);
 
           const alpha = s.minFlicker + flicker * (1 - s.minFlicker);
-          const sx = s.px + px;
-          const sy = s.py + py;
 
-          // Simple filled circle instead of expensive radialGradient
           ctx.beginPath();
-          ctx.arc(sx, sy, s.glowR * 0.5, 0, PI * 2);
-          ctx.fillStyle = `rgba(255,255,255,${(alpha * 0.8).toFixed(2)})`;
+          ctx.arc(s.px, s.py, s.glowR * 0.4, 0, PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${(alpha * 0.7).toFixed(2)})`;
           ctx.fill();
         }
       }
