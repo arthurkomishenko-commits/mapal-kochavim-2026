@@ -232,17 +232,19 @@ function generateStars(count, W, H) {
       cb = max(0, cb - 15);
     }
 
-    // Alpha — brighter in MW, dimmer at horizon
+    // Alpha — VISIBLE on dark background. MW stars brighter.
     let a;
     if (mw > 0.5) {
-      a = rand(0.08, 0.45) * sb;
+      a = rand(0.25, 0.85);  // MW band — clearly visible
     } else if (mw > 0.1) {
-      a = rand(0.05, 0.35) * sb;
+      a = rand(0.15, 0.60);  // MW fringe
     } else {
-      a = rand(0.03, 0.25) * sb;
+      a = rand(0.08, 0.40);  // general sky
     }
-    // Dark nebula dims further
-    a *= (1 - dark * 0.5);
+    // Sky brightness (horizon dimmer)
+    a *= (0.4 + sb * 0.6); // floor at 40% so horizon isn't empty
+    // Dark nebula dims
+    a *= (1 - dark * 0.6);
 
     // Size — mostly 1px
     const sizeRoll = Math.random();
@@ -340,20 +342,21 @@ export default class SkyRenderer {
       const px = floor(s.x[i]);
       const py = floor(s.y[i]);
       const sz = s.size[i];
-      const a = floor(s.alpha[i] * 255);
+      const al = s.alpha[i];
+
+      // Write star pixel(s) — direct color set, brighter = higher alpha
+      const wr = floor(s.r[i] * al);
+      const wg = floor(s.g[i] * al);
+      const wb = floor(s.b[i] * al);
 
       if (sz === 1) {
-        // Single pixel
         const idx = (py * W + px) * 4;
         if (idx >= 0 && idx < data.length - 3) {
-          // Additive blending onto dark background
-          data[idx] = min(255, data[idx] + floor(s.r[i] * s.alpha[i]));
-          data[idx + 1] = min(255, data[idx + 1] + floor(s.g[i] * s.alpha[i]));
-          data[idx + 2] = min(255, data[idx + 2] + floor(s.b[i] * s.alpha[i]));
-          data[idx + 3] = 255;
+          data[idx]     = max(data[idx], wr);
+          data[idx + 1] = max(data[idx + 1], wg);
+          data[idx + 2] = max(data[idx + 2], wb);
         }
       } else {
-        // 2x2 or 3x3
         const half = floor(sz / 2);
         for (let dy = -half; dy <= half; dy++) {
           for (let dx = -half; dx <= half; dx++) {
@@ -361,12 +364,10 @@ export default class SkyRenderer {
             const ny = py + dy;
             if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
             const idx = (ny * W + nx) * 4;
-            // Center pixel brighter, edges dimmer
-            const edgeFade = (dx === 0 && dy === 0) ? 1 : 0.5;
-            data[idx] = min(255, data[idx] + floor(s.r[i] * s.alpha[i] * edgeFade));
-            data[idx + 1] = min(255, data[idx + 1] + floor(s.g[i] * s.alpha[i] * edgeFade));
-            data[idx + 2] = min(255, data[idx + 2] + floor(s.b[i] * s.alpha[i] * edgeFade));
-            data[idx + 3] = 255;
+            const fade = (dx === 0 && dy === 0) ? 1 : 0.55;
+            data[idx]     = max(data[idx], floor(wr * fade));
+            data[idx + 1] = max(data[idx + 1], floor(wg * fade));
+            data[idx + 2] = max(data[idx + 2], floor(wb * fade));
           }
         }
       }
@@ -402,43 +403,51 @@ export default class SkyRenderer {
     // Draw soft circles along MW path
     for (const pt of MW_PATH) {
       const [px, py] = azAltToXY(pt.az, pt.alt, gW, gH);
-      const radius = pt.w * gW / 360 * 2.5;
-      const alpha = pt.b * 0.04; // very subtle
+      // Much larger radius, much more visible
+      const radius = max(pt.w * gW / 360 * 4, 10);
+      const alpha = pt.b * 0.15;
 
-      gCtx.beginPath();
-      gCtx.arc(px, py, max(radius, 5), 0, PI * 2);
-      // Grey — MW is monochrome to naked eye
-      const isCenter = pt.b >= 0.95;
-      gCtx.fillStyle = isCenter
-        ? `rgba(210,205,195,${alpha})`
-        : `rgba(200,205,215,${alpha})`;
-      gCtx.fill();
+      // Draw multiple overlapping circles for density
+      for (let pass = 0; pass < 3; pass++) {
+        const r = radius * (1 - pass * 0.25);
+        const a = alpha * (1 - pass * 0.2);
+        gCtx.beginPath();
+        gCtx.arc(px, py, r, 0, PI * 2);
+        const isCenter = pt.b >= 0.95;
+        gCtx.fillStyle = isCenter
+          ? `rgba(220,215,200,${a.toFixed(3)})`
+          : `rgba(210,215,225,${a.toFixed(3)})`;
+        gCtx.fill();
+      }
     }
 
     // Star clouds — brighter patches
     for (const c of STAR_CLOUDS) {
       const [px, py] = azAltToXY(c.az, c.alt, gW, gH);
-      const rx = c.w * gW / 360 * 1.5;
-      const ry = c.h * gH / 90 * 1.5;
+      const rx = max(c.w * gW / 360 * 3, 5);
+      const ry = max(c.h * gH / 90 * 3, 4);
       gCtx.beginPath();
-      gCtx.ellipse(px, py, max(rx, 3), max(ry, 2), 0, 0, PI * 2);
-      gCtx.fillStyle = `rgba(215,210,200,${c.b * 0.06})`;
+      gCtx.ellipse(px, py, rx, ry, 0, 0, PI * 2);
+      gCtx.fillStyle = `rgba(225,220,210,${(c.b * 0.12).toFixed(3)})`;
       gCtx.fill();
     }
 
-    // Apply blur via CSS on offscreen (draw to temp)
-    // Since we can't CSS-blur a canvas in code, use manual blur via multiple passes
-    // Simple box blur approximation: draw scaled down then up
+    // Blur: downscale → upscale (cheap box blur)
     const blurCanvas = document.createElement('canvas');
-    blurCanvas.width = floor(gW / 3);
-    blurCanvas.height = floor(gH / 3);
+    blurCanvas.width = floor(gW / 2);
+    blurCanvas.height = floor(gH / 2);
     const blurCtx = blurCanvas.getContext('2d');
+    // Double-pass: down to 1/2, then that to 1/3
     blurCtx.drawImage(gCanvas, 0, 0, blurCanvas.width, blurCanvas.height);
+    const blur2 = document.createElement('canvas');
+    blur2.width = floor(gW / 4);
+    blur2.height = floor(gH / 4);
+    blur2.getContext('2d').drawImage(blurCanvas, 0, 0, blur2.width, blur2.height);
 
-    // Composite onto main
+    // Composite — visible but not overwhelming
     ctx.save();
-    ctx.globalAlpha = 0.35;
-    ctx.drawImage(blurCanvas, 0, 0, W, H);
+    ctx.globalAlpha = 0.6;
+    ctx.drawImage(blur2, 0, 0, W, H);
     ctx.restore();
   }
 
@@ -450,48 +459,48 @@ export default class SkyRenderer {
 
       const color = SPECTRAL[star.cl] || '#F0F0FF';
       const [cr, cg, cb] = hexToRGB(color);
-      const glowR = max(2, (3 - star.mag) * 3);
 
-      // Radial gradient glow
-      const gradient = ctx.createRadialGradient(px, py, 0, px, py, glowR);
-      gradient.addColorStop(0, `rgba(${cr},${cg},${cb},0.9)`);
-      gradient.addColorStop(0.3, `rgba(${cr},${cg},${cb},0.4)`);
-      gradient.addColorStop(0.7, `rgba(${cr},${cg},${cb},0.08)`);
-      gradient.addColorStop(1, 'transparent');
+      // Glow radius — much larger for bright stars
+      const glowR = max(4, (3.5 - star.mag) * 5);
 
+      // Outer glow
+      const outerGrad = ctx.createRadialGradient(px, py, 0, px, py, glowR);
+      outerGrad.addColorStop(0, `rgba(${cr},${cg},${cb},0.85)`);
+      outerGrad.addColorStop(0.15, `rgba(${cr},${cg},${cb},0.5)`);
+      outerGrad.addColorStop(0.4, `rgba(${cr},${cg},${cb},0.15)`);
+      outerGrad.addColorStop(0.7, `rgba(${cr},${cg},${cb},0.03)`);
+      outerGrad.addColorStop(1, 'transparent');
       ctx.beginPath();
       ctx.arc(px, py, glowR, 0, PI * 2);
-      ctx.fillStyle = gradient;
+      ctx.fillStyle = outerGrad;
       ctx.fill();
 
-      // Core dot
-      const coreR = max(0.8, (2 - star.mag) * 0.7);
+      // Bright white core
+      const coreR = max(1, (2.5 - star.mag) * 0.9);
       ctx.beginPath();
       ctx.arc(px, py, coreR, 0, PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,0.95)`;
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
       ctx.fill();
 
-      // Diffraction spikes for brightest (mag < 0.5)
-      if (star.mag < 0.5) {
+      // Diffraction spikes for brightest (mag < 0.8)
+      if (star.mag < 0.8) {
         ctx.save();
-        ctx.globalAlpha = 0.15;
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 0.5;
-        const spikeLen = glowR * 2.5;
+        ctx.globalAlpha = 0.2;
+        ctx.strokeStyle = `rgba(${cr},${cg},${cb},0.6)`;
+        ctx.lineWidth = 0.6;
+        const spikeLen = glowR * 2;
         ctx.beginPath();
-        ctx.moveTo(px - spikeLen, py);
-        ctx.lineTo(px + spikeLen, py);
-        ctx.moveTo(px, py - spikeLen);
-        ctx.lineTo(px, py + spikeLen);
+        ctx.moveTo(px - spikeLen, py); ctx.lineTo(px + spikeLen, py);
+        ctx.moveTo(px, py - spikeLen); ctx.lineTo(px, py + spikeLen);
         ctx.stroke();
         ctx.restore();
       }
 
       // Horizon chromatic dispersion
       if (star.alt < 15) {
-        ctx.fillStyle = 'rgba(255,120,120,0.1)';
+        ctx.fillStyle = 'rgba(255,100,100,0.12)';
         ctx.fillRect(px - 2, py, 1, 1);
-        ctx.fillStyle = 'rgba(120,170,255,0.1)';
+        ctx.fillStyle = 'rgba(100,160,255,0.12)';
         ctx.fillRect(px + 2, py, 1, 1);
       }
     }
