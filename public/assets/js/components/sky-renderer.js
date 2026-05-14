@@ -83,18 +83,19 @@ function hexToRGB(hex) {
 /**
  * Zenithal (looking UP) projection.
  * Center of screen = zenith. Edges = horizon.
- * MW band defined in screen space, not astronomical projection.
+ * South is at the bottom, North at top.
+ * MW appears as a near-vertical band through center.
  */
-// Projection offset: MW core (az=218) should land at ~40% of screen width
-// 218 → 40%: offset = 218 - 0.40*360 = 218 - 144 = 74
-// So: x = (az - 74) / 360. Wrap boundary at az=74.
-const AZ_OFFSET = 74;
-
 function azAltToXY(az, alt, W, H) {
-  let u = az;
-  if (u < AZ_OFFSET) u += 360;
-  const x = ((u - AZ_OFFSET) / 360) * W;
-  const y = (1 - alt / 90) * H * 0.9 + H * 0.05;
+  // Distance from center: 0 at zenith, 1 at horizon
+  const r = 1 - alt / 90;
+  // Angle: south (180°) = bottom, north (0°) = top
+  // Rotate so south is at bottom of screen
+  const theta = (az - 180) * PI / 180;
+  // Scale to fit screen — use smaller dimension to keep circle
+  const scale = max(W, H) * 0.55;
+  const x = W / 2 + sin(theta) * r * scale;
+  const y = H / 2 + cos(theta) * r * scale;
   return [x, y];
 }
 
@@ -112,73 +113,47 @@ function skyBrightness(alt) {
   return 1.0;
 }
 
-/**
- * MW density in SCREEN SPACE — no az/alt.
- * MW defined as a near-vertical band:
- *   bottom: (0.47, 0.95) — core, widest, brightest
- *   center: (0.50, 0.45) — mid-band
- *   top:    (0.55, 0.02) — faint, narrow
- * Returns 0-1 (0=far from MW, 1=center of MW core)
- */
-const MW_SCREEN = [
-  { x: 0.45, y: 1.0,  w: 0.18, b: 0.6 },  // below screen, wide
-  { x: 0.46, y: 0.88, w: 0.20, b: 0.9 },  // bottom — bright core
-  { x: 0.47, y: 0.72, w: 0.22, b: 1.0 },  // core peak — widest, brightest
-  { x: 0.48, y: 0.55, w: 0.18, b: 0.8 },  // mid
-  { x: 0.50, y: 0.40, w: 0.14, b: 0.65 }, // mid-upper
-  { x: 0.52, y: 0.25, w: 0.12, b: 0.5 },  // upper
-  { x: 0.54, y: 0.12, w: 0.10, b: 0.35 }, // near top
-  { x: 0.56, y: 0.0,  w: 0.08, b: 0.2 },  // above screen, faint
-];
+// MW path with unwrapped azimuths (continuous, no 0/360 jump)
+// Path goes 212→215→...→340→365(=5)→...→435(=75)
+const MW_U = MW_PATH.map(pt => {
+  let uaz = pt.az;
+  if (uaz < 180) uaz += 360; // unwrap across 0° boundary
+  return { ...pt, uaz };
+});
 
-// Screen-space dark lane patches (percent of screen)
-const DARK_LANES_SCREEN = [
-  { x: 0.49, y: 0.50, w: 0.04, h: 0.15, d: 0.7 }, // Great Rift center
-  { x: 0.47, y: 0.35, w: 0.03, h: 0.10, d: 0.6 }, // Rift upper
-  { x: 0.46, y: 0.80, w: 0.05, h: 0.06, d: 0.8 }, // Pipe near core
-];
+// Distance from a point to MW center line (returns 0-1, 1=on center)
+function mwProximity(az, alt) {
+  // Unwrap query azimuth same way
+  let uaz = az;
+  if (uaz < 180) uaz += 360;
 
-function mwScreenProximity(sx, sy) {
-  // sx, sy are 0-1 normalized screen coordinates
   let best = 0;
-  for (let i = 0; i < MW_SCREEN.length - 1; i++) {
-    const a = MW_SCREEN[i], b = MW_SCREEN[i + 1];
-    // Project point onto segment
-    const dx = b.x - a.x, dy = b.y - a.y;
-    const len2 = dx * dx + dy * dy + 0.0001;
-    const t = max(0, min(1, ((sx - a.x) * dx + (sy - a.y) * dy) / len2));
-    const px = a.x + t * dx;
-    const py = a.y + t * dy;
-    const pw = a.w + t * (b.w - a.w);
-    const pb = a.b + t * (b.b - a.b);
+  for (let i = 0; i < MW_U.length - 1; i++) {
+    const a = MW_U[i], b = MW_U[i + 1];
 
-    const dist = sqrt((sx - px) ** 2 + (sy - py) ** 2);
-    const sigma = pw * 0.4;
-    if (dist < pw) {
+    const dAz = b.uaz - a.uaz;
+    const dAlt = b.alt - a.alt;
+    const len2 = dAz * dAz + dAlt * dAlt + 0.001;
+    const t = max(0, min(1, ((uaz - a.uaz) * dAz + (alt - a.alt) * dAlt) / len2));
+
+    const pAz = a.uaz + t * dAz;
+    const pAlt = a.alt + t * dAlt;
+    const pW = a.w + t * (b.w - a.w);
+    const pB = a.b + t * (b.b - a.b);
+
+    const dist = sqrt((uaz - pAz) ** 2 + (alt - pAlt) ** 2);
+
+    const sigma = pW * 0.4;
+    if (dist < pW * 1.5) {
       const factor = Math.exp(-(dist * dist) / (2 * sigma * sigma));
-      const val = factor * pb;
+      const val = factor * pB;
       if (val > best) best = val;
     }
   }
-
-  // Dark lanes reduce density
-  let dark = 0;
-  for (const dl of DARK_LANES_SCREEN) {
-    const dx = abs(sx - dl.x) / (dl.w / 2);
-    const dy = abs(sy - dl.y) / (dl.h / 2);
-    if (dx < 1.5 && dy < 1.5) {
-      const distNorm = sqrt(dx * dx + dy * dy);
-      if (distNorm < 1.5) {
-        const f = Math.exp(-distNorm * distNorm * 1.5) * dl.d;
-        if (f > dark) dark = f;
-      }
-    }
-  }
-
-  return best * (1 - dark * 0.6);
+  return best;
 }
 
-// Keep darkNebulaFactor for named stars (uses az/alt)
+// Check if point is inside a dark nebula (returns darkening factor 0-1)
 function darkNebulaFactor(az, alt) {
   let darkest = 0;
   for (const n of DARK_NEBULAE) {
@@ -252,56 +227,56 @@ function generateStars(count, W, H) {
     attempts++;
 
     // Random sky position in az/alt
-    // Visible sky range (matching projection offset)
-    const uaz = rand(AZ_OFFSET, AZ_OFFSET + 360);
-    const az = uaz >= 360 ? uaz - 360 : uaz;
+    // Full sky hemisphere
+    const az = rand(0, 360);
     const alt = rand(0, 90);
     if (alt < 0) continue;
 
-    // Generate directly in screen space for background stars
-    // (named stars still use az/alt projection)
-    const sx = rand(0, 1); // normalized screen x
-    const sy = rand(0, 1); // normalized screen y
-    const px = sx * W;
-    const py = sy * H;
-    if (px < 0 || px >= W || py < 0 || py >= H) continue;
+    // Probability density
+    const sb = skyBrightness(alt);
+    const mw = mwProximity(az, alt);
+    const cloud = cloudMultiplier(az, alt);
+    const dark = darkNebulaFactor(az, alt);
 
-    // MW proximity in screen space
-    const mw = mwScreenProximity(sx, sy);
+    // Base probability ensures EVERY part of sky has stars.
+    // MW multiplier adds density on top, doesn't create empty zones.
+    const baseDensity = 0.25; // base sky
+    const mwBoost = mw * 8;  // up to 9x denser in MW center
+    let prob = (baseDensity + mwBoost) * sb * cloud * (1 - dark * 0.6);
 
-    // Probability: base + MW boost
-    const baseDensity = 0.25;
-    const mwBoost = mw * 8;
-    // Less density near bottom of screen (horizon glow)
-    const horizonFade = 0.4 + 0.6 * (1 - sy); // top=1, bottom=0.4
-    let prob = (baseDensity + mwBoost) * horizonFade;
+    // Normalize
     prob = min(prob / 3, 0.95);
 
     if (Math.random() > prob) continue;
 
-    // Color
+    // Project to canvas
+    const [px, py] = azAltToXY(az, alt, W, H);
+    if (px < 0 || px >= W || py < 0 || py >= H) continue;
+
+    // Color — near horizon: shift warm (atmospheric extinction)
     const colorIdx = floor(rand(0, STAR_COLORS.length));
     let [cr, cg, cb] = STAR_COLORS[colorIdx];
-    // Near bottom = horizon: shift warm
-    if (sy > 0.85) {
+    if (alt < 12) {
       cr = min(255, cr + 10);
       cg = max(0, cg - 5);
       cb = max(0, cb - 15);
     }
 
-    // Alpha — MW center much brighter
+    // Alpha — MW brighter than surroundings, but not white blobs
     let a;
     if (mw > 0.5) {
-      a = rand(0.30, 0.80);
+      a = rand(0.25, 0.75);  // MW core
     } else if (mw > 0.2) {
-      a = rand(0.15, 0.55);
+      a = rand(0.15, 0.55);  // MW band
     } else if (mw > 0.05) {
-      a = rand(0.08, 0.35);
+      a = rand(0.08, 0.35);  // MW fringe
     } else {
-      a = rand(0.04, 0.20);
+      a = rand(0.04, 0.22);  // general sky
     }
-    // Horizon fade
-    a *= horizonFade;
+    // Sky brightness (horizon dimmer)
+    a *= (0.4 + sb * 0.6); // floor at 40% so horizon isn't empty
+    // Dark nebula dims
+    a *= (1 - dark * 0.6);
 
     // Size — mostly 1px
     const sizeRoll = Math.random();
@@ -352,17 +327,14 @@ export default class SkyRenderer {
     this._targetPX = 0;
     this._targetPY = 0;
 
+    // Parallax only on desktop (mouse). No gyro — too jittery on mobile.
     this._isMobile = window.innerWidth < 768;
-
-    if (!this._isMobile) {
-      // Desktop only — subtle mouse parallax
-      this._onMouse = (e) => {
-        this._targetPX = (e.clientX / window.innerWidth - 0.5) * 16;
-        this._targetPY = (e.clientY / window.innerHeight - 0.5) * 10;
-      };
-      window.addEventListener('mousemove', this._onMouse, { passive: true });
-    }
-    // No gyro parallax on mobile — saves battery and avoids jank
+    this._onMouse = (e) => {
+      if (this._isMobile) return;
+      this._targetPX = (e.clientX / window.innerWidth - 0.5) * 20;
+      this._targetPY = (e.clientY / window.innerHeight - 0.5) * 12;
+    };
+    window.addEventListener('mousemove', this._onMouse, { passive: true });
 
     // Bind
     this._onResize = this._debounce(() => this.render(), 200);
@@ -482,23 +454,36 @@ export default class SkyRenderer {
     gCanvas.height = gH;
     const gCtx = gCanvas.getContext('2d');
 
-    // Draw MW glow in SCREEN SPACE along MW_SCREEN path
-    for (const pt of MW_SCREEN) {
-      const px = pt.x * gW;
-      const py = pt.y * gH;
-      const radius = pt.w * max(gW, gH) * 0.6;
-      const alpha = pt.b * 0.03;
-      const color = pt.b >= 0.9 ? '215,210,200' : '205,210,220';
+    // Draw soft circles along MW path
+    for (const pt of MW_PATH) {
+      const [px, py] = azAltToXY(pt.az, pt.alt, gW, gH);
+      // Many smaller circles along the path for smooth blending
+      const radius = max(pt.w * max(gW, gH) / 180 * 0.55, 8);
+      const alpha = pt.b * 0.04;
+      const isCenter = pt.b >= 0.95;
+      const color = isCenter ? '215,210,200' : '205,210,220';
 
-      for (let j = 0; j < 4; j++) {
-        const ox = px + (Math.random() - 0.5) * radius * 0.5;
-        const oy = py + (Math.random() - 0.5) * radius * 0.3;
-        const r = radius * (0.5 + Math.random() * 0.5);
+      // 5 scattered circles per point for smooth coverage
+      for (let j = 0; j < 5; j++) {
+        const ox = px + (Math.random() - 0.5) * radius * 0.8;
+        const oy = py + (Math.random() - 0.5) * radius * 0.6;
+        const r = radius * (0.6 + Math.random() * 0.5);
         gCtx.beginPath();
         gCtx.arc(ox, oy, r, 0, PI * 2);
         gCtx.fillStyle = `rgba(${color},${(alpha * (0.7 + Math.random() * 0.3)).toFixed(3)})`;
         gCtx.fill();
       }
+    }
+
+    // Star clouds — subtle brighter patches
+    for (const c of STAR_CLOUDS) {
+      const [px, py] = azAltToXY(c.az, c.alt, gW, gH);
+      const rx = max(c.w * max(gW,gH) / 180 * 0.5, 4);
+      const ry = max(c.h * max(gW,gH) / 180 * 0.5, 3);
+      gCtx.beginPath();
+      gCtx.ellipse(px, py, rx, ry, 0, 0, PI * 2);
+      gCtx.fillStyle = `rgba(220,215,205,${(c.b * 0.04).toFixed(3)})`;
+      gCtx.fill();
     }
 
     // Multi-pass blur: 4 downscale steps for maximum smoothness
@@ -626,10 +611,11 @@ export default class SkyRenderer {
     let frameCount = 0;
 
     function frame(ts) {
-      // ── Desktop parallax only ──
+      // ── Parallax: desktop only, via CSS transform ──
       if (!self._isMobile) {
         self.parallaxX += (self._targetPX - self.parallaxX) * 0.06;
         self.parallaxY += (self._targetPY - self.parallaxY) * 0.06;
+
         const tx = `translate3d(${self.parallaxX.toFixed(1)}px,${self.parallaxY.toFixed(1)}px,0)`;
         self.canvas.style.transform = tx;
         if (self.overlayCanvas) self.overlayCanvas.style.transform = tx;
@@ -637,8 +623,8 @@ export default class SkyRenderer {
 
       // ── Twinkle: throttled (desktop 15fps, mobile 10fps) ──
       frameCount++;
-      const throttle = self._isMobile ? 6 : 4;
-      if (frameCount % throttle === 0) {
+      const twinkleEvery = self._isMobile ? 6 : 4;
+      if (frameCount % twinkleEvery === 0) {
         const ctx = self.overlayCtx;
         const W = self.overlayCanvas.width;
         const H = self.overlayCanvas.height;
