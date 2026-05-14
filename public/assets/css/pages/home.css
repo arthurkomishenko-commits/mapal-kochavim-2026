@@ -824,9 +824,17 @@
 
 /* ── Who's coming button + table ── */
 
+.home-action-btns {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-block-start: 24px;
+}
+
 .home-who-btn {
-  display: block;
-  margin: 24px auto 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 10px 28px;
   font-size: 0.9rem;
   font-weight: 500;
