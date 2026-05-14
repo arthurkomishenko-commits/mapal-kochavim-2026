@@ -137,10 +137,9 @@ function mwScreenProximity(screenX, screenY, W, H) {
   // Center X at this Y
   const centerX = topX + (botX - topX) * t;
 
-  // Width of band at this Y (wider at Galactic Center = 55-70% down)
-  const baseWidth = W * 0.08; // 8% of screen width
-  // Bell curve peaking at t=0.6
-  const widthMult = 1 + 2.5 * Math.exp(-((t - 0.6) ** 2) / (2 * 0.15 ** 2));
+  // Width: wider band, peaks at Galactic Center (t≈0.55)
+  const baseWidth = W * 0.14;
+  const widthMult = 1 + 1.8 * Math.exp(-((t - 0.55) ** 2) / (2 * 0.18 ** 2));
   const bandWidth = baseWidth * widthMult;
 
   // Distance from center line
@@ -254,8 +253,8 @@ function generateStars(count, W, H) {
 
     // Base probability ensures EVERY part of sky has stars.
     // MW multiplier adds density on top, doesn't create empty zones.
-    const baseDensity = 0.25; // base sky
-    const mwBoost = mw * 8;  // up to 9x denser in MW center
+    const baseDensity = 0.40; // visible stars everywhere
+    const mwBoost = mw * 6;  // MW denser but base sky not empty
     let prob = (baseDensity + mwBoost) * sb * cloud * (1 - dark * 0.6);
 
     // Normalize
@@ -335,33 +334,7 @@ export default class SkyRenderer {
     this.rafId = null;
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Parallax — smooth lerp toward target
-    this.parallaxX = 0;
-    this.parallaxY = 0;
-    this._targetPX = 0;
-    this._targetPY = 0;
-
-    // Parallax only on desktop, only when mouse is over the sky area
     this._isMobile = window.innerWidth < 768;
-    this._mouseInSky = false;
-    this._onMouse = (e) => {
-      if (this._isMobile) return;
-      // Check if mouse is within the canvas/hero area
-      const rect = this.canvas.getBoundingClientRect();
-      this._mouseInSky = (
-        e.clientY >= rect.top && e.clientY <= rect.bottom &&
-        e.clientX >= rect.left && e.clientX <= rect.right
-      );
-      if (this._mouseInSky) {
-        this._targetPX = (e.clientX / window.innerWidth - 0.5) * 20;
-        this._targetPY = ((e.clientY - rect.top) / rect.height - 0.5) * 12;
-      } else {
-        // Ease back to center when mouse leaves
-        this._targetPX = 0;
-        this._targetPY = 0;
-      }
-    };
-    window.addEventListener('mousemove', this._onMouse, { passive: true });
 
     // Bind
     this._onResize = this._debounce(() => this.render(), 200);
@@ -376,12 +349,8 @@ export default class SkyRenderer {
     this.W = W;
     this.H = H;
 
-    // Canvas size: desktop oversized for parallax, mobile exact
-    const pad = this._isMobile ? 0 : 30;
-    this.canvas.width = W + pad * 2;
-    this.canvas.height = H + pad * 2;
-    this.canvas.style.marginLeft = pad ? `-${pad}px` : '0';
-    this.canvas.style.marginTop = pad ? `-${pad}px` : '0';
+    this.canvas.width = W;
+    this.canvas.height = H;
 
     const CW = this.canvas.width;
     const CH = this.canvas.height;
@@ -636,16 +605,6 @@ export default class SkyRenderer {
     let frameCount = 0;
 
     function frame(ts) {
-      // ── Parallax: desktop only, via CSS transform ──
-      if (!self._isMobile) {
-        self.parallaxX += (self._targetPX - self.parallaxX) * 0.06;
-        self.parallaxY += (self._targetPY - self.parallaxY) * 0.06;
-
-        const tx = `translate3d(${self.parallaxX.toFixed(1)}px,${self.parallaxY.toFixed(1)}px,0)`;
-        self.canvas.style.transform = tx;
-        if (self.overlayCanvas) self.overlayCanvas.style.transform = tx;
-      }
-
       // ── Twinkle: throttled (desktop 15fps, mobile 10fps) ──
       frameCount++;
       const twinkleEvery = self._isMobile ? 6 : 4;
@@ -688,7 +647,6 @@ export default class SkyRenderer {
   destroy() {
     this.stopTwinkling();
     window.removeEventListener('resize', this._onResize);
-    window.removeEventListener('mousemove', this._onMouse);
     if (this.overlayCanvas && this.overlayCanvas.parentElement) {
       this.overlayCanvas.remove();
     }
