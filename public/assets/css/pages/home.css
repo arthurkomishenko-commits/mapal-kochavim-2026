@@ -12,12 +12,8 @@
   justify-content: center;
   min-height: 100dvh;
   overflow: hidden;
-  /* Deep dark sky — very subtle horizon glow, almost pure black */
-  background: radial-gradient(
-    ellipse 100% 30% at 50% 100%,
-    rgba(25, 18, 14, 0.4) 0%,
-    var(--color-sky-deepest) 50%
-  );
+  /* Sky rendered on canvas — this is just a fallback */
+  background: var(--color-sky-deepest);
 }
 
 .hero__content {
@@ -147,7 +143,17 @@
   transform: translateY(0);
 }
 
-/* ── Star field container ── */
+/* ── Sky canvas (35K stars) ── */
+
+.sky-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* ── Meteor layer (DOM, above canvas) ── */
 
 .hero__stars {
   position: absolute;

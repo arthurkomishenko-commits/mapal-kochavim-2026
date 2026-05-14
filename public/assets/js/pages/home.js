@@ -5,11 +5,12 @@
 import { i18n } from '../core/i18n.js';
 import { initCountdown } from '../components/countdown.js';
 import { initShootingStar } from '../components/shooting-star.js';
-import { initStarField } from '../components/star-field.js';
+import SkyRenderer from '../components/sky-renderer.js';
 
 export function renderHome(container) {
   container.innerHTML = `
     <section class="hero" aria-labelledby="hero-title">
+      <canvas class="sky-canvas" aria-hidden="true"></canvas>
       <div class="hero__stars" aria-hidden="true"></div>
       <div class="hero__content">
         <h1 id="hero-title" class="hero__title" data-i18n="home.heroTitle">
@@ -122,8 +123,71 @@ export function renderHome(container) {
     </section>
   `;
 
+  // Sky renderer — Canvas 2D, 35K stars
+  const skyCanvas = container.querySelector('.sky-canvas');
   const starsContainer = container.querySelector('.hero__stars');
-  initStarField(starsContainer);
+
+  // Full star catalog
+  const CATALOG = [
+    {n:"Vega",mag:0.03,cl:"A",az:282.4,alt:73.1},
+    {n:"Arcturus",mag:-0.05,cl:"K",az:281.5,alt:18.2},
+    {n:"Altair",mag:0.77,cl:"A",az:226.8,alt:66.5},
+    {n:"Capella",mag:0.08,cl:"G",az:34.5,alt:3.2},
+    {n:"Antares",mag:1.06,cl:"M",az:228.4,alt:15.4},
+    {n:"Deneb",mag:1.25,cl:"A",az:320.1,alt:81.2},
+    {n:"Fomalhaut",mag:1.16,cl:"A",az:142.1,alt:28.5},
+    {n:"Polaris",mag:1.97,cl:"F",az:0,alt:30.6},
+    {n:"Shaula",mag:1.62,cl:"B",az:206.1,alt:12.8},
+    {n:"Sargas",mag:1.86,cl:"F",az:198.4,alt:8.1},
+    {n:"Kaus Australis",mag:1.85,cl:"B",az:188.4,alt:25.2},
+    {n:"Nunki",mag:2.05,cl:"B",az:172.1,alt:33.5},
+    {n:"Hamal",mag:2.01,cl:"K",az:58.3,alt:12.4},
+    {n:"Diphda",mag:2.04,cl:"K",az:112.5,alt:25.1},
+    {n:"Alpheratz",mag:2.06,cl:"B",az:68.4,alt:48.2},
+    {n:"Mirach",mag:2.07,cl:"M",az:56.1,alt:35.5},
+    {n:"Almach",mag:2.1,cl:"K",az:48.2,alt:42.1},
+    {n:"Dubhe",mag:1.81,cl:"K",az:328.5,alt:21},
+    {n:"Merak",mag:2.34,cl:"A",az:333.1,alt:18.2},
+    {n:"Phecda",mag:2.41,cl:"A",az:335.5,alt:25.4},
+    {n:"Alioth",mag:1.76,cl:"A",az:334.2,alt:32.5},
+    {n:"Mizar",mag:2.23,cl:"A",az:328.6,alt:35.8},
+    {n:"Alkaid",mag:1.85,cl:"B",az:320.4,alt:38.1},
+    {n:"Kochab",mag:2.07,cl:"K",az:352.4,alt:45.8},
+    {n:"Eltanin",mag:2.24,cl:"K",az:322.1,alt:55.4},
+    {n:"Schedar",mag:2.24,cl:"K",az:32.4,alt:52.1},
+    {n:"Caph",mag:2.28,cl:"F",az:20.1,alt:55.4},
+    {n:"Gamma Cas",mag:2.15,cl:"B",az:35.2,alt:58.1},
+    {n:"Mirfak",mag:1.79,cl:"F",az:45.2,alt:31.4},
+    {n:"Algol",mag:2.1,cl:"B",az:52.4,alt:25.1},
+    {n:"Enif",mag:2.38,cl:"K",az:148.2,alt:68.3},
+    {n:"Scheat",mag:2.42,cl:"M",az:85.4,alt:68.1},
+    {n:"Markab",mag:2.49,cl:"B",az:105.2,alt:58.4},
+    {n:"Sadr",mag:2.23,cl:"F",az:345.2,alt:78.4},
+    {n:"Gienah Cyg",mag:2.48,cl:"K",az:325.5,alt:65.2},
+    {n:"Albireo",mag:3.05,cl:"K",az:296.8,alt:81.3},
+    {n:"Tarazed",mag:2.72,cl:"K",az:220.4,alt:68.2},
+    {n:"Rasalhague",mag:2.08,cl:"A",az:255.4,alt:48.1},
+    {n:"Sabik",mag:2.43,cl:"A",az:235.2,alt:32.4},
+    {n:"Kornephoros",mag:2.78,cl:"G",az:278.4,alt:55.2},
+    {n:"Gemma",mag:2.22,cl:"A",az:273.1,alt:38.4},
+    {n:"Unukalhai",mag:2.63,cl:"K",az:265.4,alt:35.2},
+    {n:"Kaus Media",mag:2.72,cl:"K",az:182.1,alt:30.2},
+    {n:"Ascella",mag:2.6,cl:"A",az:165.2,alt:28.4},
+    {n:"Alderamin",mag:2.45,cl:"A",az:24.1,alt:68.2},
+    {n:"Izar",mag:2.35,cl:"K",az:288.4,alt:25.2},
+    {n:"Yed Prior",mag:2.73,cl:"M",az:258.4,alt:28.2},
+    {n:"Sadalsuud",mag:2.9,cl:"G",az:125.2,alt:50.4},
+    {n:"Alnair",mag:1.73,cl:"B",az:162.5,alt:12.4},
+    {n:"Saturn",mag:0.6,cl:"G",az:115.2,alt:42.1},
+  ];
+
+  if (skyCanvas) {
+    // Destroy previous renderer if exists
+    if (window._skyRenderer) window._skyRenderer.destroy();
+    window._skyRenderer = new SkyRenderer(skyCanvas, CATALOG);
+    window._skyRenderer.render();
+  }
+
   initCountdown();
   initShootingStar(starsContainer);
 
