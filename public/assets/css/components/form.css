@@ -1,0 +1,438 @@
+/* ═══════════════════════════════════════════════════
+   Form components — inputs, toggles, chips, toasts
+   Shared across RSVP, Me, and other form pages
+   ═══════════════════════════════════════════════════ */
+
+/* ── Text inputs ── */
+
+.form-group {
+  margin-block-end: 20px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #A5A09A);
+  margin-block-end: 6px;
+  letter-spacing: 0.02em;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 1rem;
+  font-family: inherit;
+  color: var(--color-starlight, #F5EFE0);
+  background: rgba(245, 239, 224, 0.04);
+  border: 1px solid rgba(245, 239, 224, 0.1);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.form-input::placeholder {
+  color: rgba(165, 160, 154, 0.5);
+}
+
+.form-input:focus {
+  border-color: rgba(232, 155, 75, 0.4);
+  box-shadow: 0 0 0 3px rgba(232, 155, 75, 0.08);
+}
+
+.form-input--error {
+  border-color: rgba(220, 80, 80, 0.6);
+}
+
+.form-hint {
+  font-size: 0.75rem;
+  color: rgba(165, 160, 154, 0.6);
+  margin-block-start: 5px;
+}
+
+.form-error {
+  font-size: 0.75rem;
+  color: #DC5050;
+  margin-block-start: 5px;
+}
+
+/* ── Phone input with country styling ── */
+
+.form-input[type="tel"] {
+  direction: ltr;
+  text-align: start;
+  letter-spacing: 0.05em;
+}
+
+/* ── Toggle switch (Yes/No) ── */
+
+.form-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 12px 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.form-toggle__track {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  background: rgba(245, 239, 224, 0.08);
+  border-radius: 14px;
+  border: 1px solid rgba(245, 239, 224, 0.1);
+  transition: background 0.25s ease, border-color 0.25s ease;
+  flex-shrink: 0;
+}
+
+.form-toggle__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: var(--color-text-secondary, #A5A09A);
+  border-radius: 50%;
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+[dir="rtl"] .form-toggle__thumb {
+  left: auto;
+  right: 3px;
+}
+
+.form-toggle--active .form-toggle__track {
+  background: rgba(232, 155, 75, 0.2);
+  border-color: rgba(232, 155, 75, 0.4);
+}
+
+.form-toggle--active .form-toggle__thumb {
+  background: var(--color-ember-bright, #E89B4B);
+  transform: translateX(20px);
+}
+
+[dir="rtl"] .form-toggle--active .form-toggle__thumb {
+  transform: translateX(-20px);
+}
+
+.form-toggle__label {
+  font-size: 0.95rem;
+  color: var(--color-text-secondary, #A5A09A);
+  font-weight: 500;
+}
+
+.form-toggle--active .form-toggle__label {
+  color: var(--color-starlight, #F5EFE0);
+}
+
+/* ── Expandable section (slide down) ── */
+
+.form-expand {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease, opacity 0.25s ease;
+  opacity: 0;
+}
+
+.form-expand--open {
+  max-height: 600px;
+  opacity: 1;
+}
+
+/* ── Companion row ── */
+
+.companion-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  margin-block-end: 10px;
+}
+
+.companion-row .form-group {
+  flex: 1;
+  margin-block-end: 0;
+}
+
+.companion-row .form-input {
+  padding: 10px 12px;
+  font-size: 0.9rem;
+}
+
+.companion-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 1px solid rgba(220, 80, 80, 0.2);
+  border-radius: 8px;
+  color: rgba(220, 80, 80, 0.6);
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.companion-remove:hover {
+  background: rgba(220, 80, 80, 0.1);
+  border-color: rgba(220, 80, 80, 0.4);
+  color: #DC5050;
+}
+
+/* ── Add companion button ── */
+
+.form-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-ember-bright, #E89B4B);
+  background: transparent;
+  border: 1px dashed rgba(232, 155, 75, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: inherit;
+}
+
+.form-add-btn:hover {
+  background: rgba(232, 155, 75, 0.06);
+  border-color: rgba(232, 155, 75, 0.5);
+}
+
+/* ── Bringing chips (optional, subtle) ── */
+
+.chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(165, 160, 154, 0.6);
+  background: rgba(245, 239, 224, 0.03);
+  border: 1px solid rgba(245, 239, 224, 0.06);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  font-family: inherit;
+}
+
+.chip:hover {
+  background: rgba(245, 239, 224, 0.06);
+  border-color: rgba(245, 239, 224, 0.1);
+}
+
+.chip--active {
+  color: var(--color-ember-bright, #E89B4B);
+  background: rgba(232, 155, 75, 0.08);
+  border-color: rgba(232, 155, 75, 0.25);
+}
+
+/* ── Section divider ── */
+
+.form-section {
+  margin-block-start: 28px;
+  padding-block-start: 24px;
+  border-block-start: 1px solid rgba(245, 239, 224, 0.05);
+}
+
+.form-section__title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-starlight, #F5EFE0);
+  margin-block-end: 4px;
+}
+
+.form-section__hint {
+  font-size: 0.75rem;
+  color: rgba(165, 160, 154, 0.5);
+  margin-block-end: 16px;
+}
+
+/* ── Submit button ── */
+
+.form-submit {
+  width: 100%;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--color-sky-deepest, #070B1F);
+  background: linear-gradient(135deg, #D4853A 0%, #E89B4B 100%);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  min-height: 48px;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+  -webkit-appearance: none;
+  appearance: none;
+  margin-block-start: 28px;
+}
+
+.form-submit:hover {
+  opacity: 0.9;
+}
+
+.form-submit:active {
+  transform: scale(0.98);
+}
+
+.form-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Toast notification ── */
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  padding: 12px 24px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-starlight, #F5EFE0);
+  background: rgba(20, 25, 50, 0.95);
+  border: 1px solid rgba(232, 155, 75, 0.2);
+  border-radius: 10px;
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+  text-align: center;
+  max-width: 320px;
+}
+
+.toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast--error {
+  border-color: rgba(220, 80, 80, 0.3);
+}
+
+/* ── Added-by banner ── */
+
+.added-by-banner {
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  color: var(--color-ember-bright, #E89B4B);
+  background: rgba(232, 155, 75, 0.06);
+  border: 1px solid rgba(232, 155, 75, 0.15);
+  border-radius: 10px;
+  margin-block-end: 20px;
+  text-align: center;
+}
+
+/* ── Status badge (Me page) ── */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+}
+
+.status-badge--active {
+  color: #6BCB77;
+  background: rgba(107, 203, 119, 0.1);
+  border: 1px solid rgba(107, 203, 119, 0.2);
+}
+
+.status-badge--cancelled {
+  color: #DC5050;
+  background: rgba(220, 80, 80, 0.1);
+  border: 1px solid rgba(220, 80, 80, 0.2);
+}
+
+/* ── Cancel link ── */
+
+.form-cancel-link {
+  display: block;
+  text-align: center;
+  margin-block-start: 24px;
+  padding: 12px;
+  font-size: 0.8rem;
+  color: rgba(165, 160, 154, 0.4);
+  cursor: pointer;
+  transition: color 0.2s ease;
+  background: none;
+  border: none;
+  font-family: inherit;
+  -webkit-appearance: none;
+}
+
+.form-cancel-link:hover {
+  color: #DC5050;
+}
+
+/* ── Phone entry screen ── */
+
+.phone-entry {
+  max-width: 360px;
+  margin: 0 auto;
+  text-align: center;
+  padding-block-start: 20px;
+}
+
+.phone-entry__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-starlight, #F5EFE0);
+  margin-block-end: 8px;
+}
+
+.phone-entry__hint {
+  font-size: 0.8rem;
+  color: rgba(165, 160, 154, 0.5);
+  margin-block-end: 24px;
+}
+
+.phone-entry .form-input {
+  text-align: center;
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+}
+
+.phone-entry .form-submit {
+  margin-block-start: 16px;
+}
+
+/* ── Responsive ── */
+
+@media (min-width: 768px) {
+  .companion-row {
+    gap: 12px;
+  }
+  .companion-row .form-input {
+    font-size: 0.95rem;
+  }
+}

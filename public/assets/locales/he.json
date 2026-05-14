@@ -162,8 +162,40 @@
   },
   "rsvp": {
     "title": "הרשמה",
-    "subtitle": "מלאו את הטופס — ונדע שאתם מגיעים",
-    "loginRequired": "כדי להירשם, התחברו עם Google. זה רק כדי שכל אחד יוכל לערוך את הרישום שלו."
+    "subtitle": "מלאו את הטופס ונדע שאתם מגיעים",
+    "phoneLabel": "מספר טלפון",
+    "phonePlaceholder": "050-123-4567",
+    "phoneHelp": "זה הכניסה שלכם. בלי SMS, פשוט זכרו את המספר.",
+    "continue": "המשך",
+    "nameLabel": "השם שלך",
+    "namePlaceholder": "שם",
+    "cityLabel": "עיר",
+    "cityPlaceholder": "למשל, תל אביב",
+    "drivingLabel": "אתה עם רכב?",
+    "drivingYes": "כן",
+    "drivingNo": "לא",
+    "companionsTitle": "מי מגיע איתך?",
+    "companionsHelp": "הוסיפו אנשים שמצטרפים אליכם",
+    "addCompanion": "הוסף אדם",
+    "companionName": "שם",
+    "companionPhone": "טלפון",
+    "removeCompanion": "הסר",
+    "bringingTitle": "מה אתם לוקחים?",
+    "bringingHelp": "לא חובה — עוזר לנו לתכנן",
+    "bringingTent": "אוהל",
+    "bringingFirewood": "עצי הסקה",
+    "bringingCoal": "פחם",
+    "bringingGrill": "מנגל",
+    "bringingCooler": "צידנית",
+    "bringingTelescope": "טלסקופ",
+    "bringingGuitar": "גיטרה",
+    "bringSpeakers": "רמקול",
+    "bringingFirstAid": "ערכת עזרה ראשונה",
+    "save": "שמירה",
+    "saving": "שומר...",
+    "saved": "מוכן! נתראה במדבר.",
+    "addedBy": "הוסיף/ה אותך לקבוצה",
+    "ridingWith": "אתה נוסע עם"
   },
   "people": {
     "title": "מי מגיע",
@@ -173,12 +205,20 @@
   },
   "rides": {
     "title": "שיתוף נסיעות",
-    "subtitle": "מצאו טרמפ או הציעו מקום ברכב",
-    "emptyText": "עוד אין רכבים עם מקומות פנויים. הירשמו — הם יופיעו."
+    "subtitle": "מי עם רכב",
+    "emptyText": "עוד אף אחד לא נרשם עם רכב."
   },
   "me": {
     "title": "האזור שלי",
-    "loginRequired": "התחברו עם Google כדי לראות את הרישום שלכם ולנהל אותו."
+    "phonePrompt": "הזינו מספר טלפון כדי למצוא את הרישום שלכם",
+    "notFound": "לא נמצא רישום. להירשם?",
+    "goToRsvp": "לעבור להרשמה",
+    "cancelRegistration": "ביטול רישום",
+    "cancelled": "הרישום בוטל",
+    "status": "סטטוס",
+    "statusActive": "אתם בפנים!",
+    "statusCancelled": "בוטל",
+    "lastUpdated": "עודכן לאחרונה"
   },
   "gallery": {
     "title": "גלריה",

@@ -162,8 +162,40 @@
   },
   "rsvp": {
     "title": "Запись",
-    "subtitle": "Заполни форму — и мы будем знать что ты едешь",
-    "loginRequired": "Чтобы записаться, войди через Google. Это нужно только для того, чтобы каждый мог редактировать свою запись."
+    "subtitle": "Заполни форму и мы будем знать что ты едешь",
+    "phoneLabel": "Номер телефона",
+    "phonePlaceholder": "050-123-4567",
+    "phoneHelp": "Это твой логин. Без SMS, просто запомни номер.",
+    "continue": "Продолжить",
+    "nameLabel": "Как тебя зовут",
+    "namePlaceholder": "Имя",
+    "cityLabel": "Город",
+    "cityPlaceholder": "Например, Тель-Авив",
+    "drivingLabel": "Ты на машине?",
+    "drivingYes": "Да",
+    "drivingNo": "Нет",
+    "companionsTitle": "Кто едет с тобой?",
+    "companionsHelp": "Добавь людей которые присоединяются к тебе",
+    "addCompanion": "Добавить человека",
+    "companionName": "Имя",
+    "companionPhone": "Телефон",
+    "removeCompanion": "Убрать",
+    "bringingTitle": "Что берёшь с собой?",
+    "bringingHelp": "Необязательно — помогает нам планировать",
+    "bringingTent": "Палатка",
+    "bringingFirewood": "Дрова",
+    "bringingCoal": "Уголь",
+    "bringingGrill": "Мангал",
+    "bringingCooler": "Холодильник",
+    "bringingTelescope": "Телескоп",
+    "bringingGuitar": "Гитара",
+    "bringSpeakers": "Колонка",
+    "bringingFirstAid": "Аптечка",
+    "save": "Сохранить",
+    "saving": "Сохраняем...",
+    "saved": "Готово! Увидимся в пустыне.",
+    "addedBy": "добавил(а) тебя в группу",
+    "ridingWith": "Ты едешь с"
   },
   "people": {
     "title": "Кто едет",
@@ -173,12 +205,20 @@
   },
   "rides": {
     "title": "Карпулинг",
-    "subtitle": "Найди попутку или предложи место в машине",
-    "emptyText": "Пока нет машин с свободными местами. Записывайтесь — они появятся."
+    "subtitle": "Кто на машине",
+    "emptyText": "Пока никто не записался с машиной."
   },
   "me": {
     "title": "Мой кабинет",
-    "loginRequired": "Войди через Google чтобы увидеть свою запись и управлять ей."
+    "phonePrompt": "Введи номер телефона чтобы найти свою запись",
+    "notFound": "Запись не найдена. Записаться?",
+    "goToRsvp": "Перейти к записи",
+    "cancelRegistration": "Отменить запись",
+    "cancelled": "Запись отменена",
+    "status": "Статус",
+    "statusActive": "Ты в деле!",
+    "statusCancelled": "Отменено",
+    "lastUpdated": "Обновлено"
   },
   "gallery": {
     "title": "Галерея",
