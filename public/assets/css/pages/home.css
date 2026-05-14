@@ -770,6 +770,58 @@
   line-height: var(--leading-relaxed);
 }
 
+/* ── Navigation buttons (below details) ── */
+
+.home-nav-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-block-start: var(--space-7);
+}
+
+.home-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: var(--color-bg-card, rgba(245,239,224,0.03));
+  border: 1px solid var(--color-border-subtle, rgba(245,239,224,0.06));
+  border-radius: 12px;
+  color: var(--color-text-secondary, #A5A09A);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  min-height: 48px;
+  text-decoration: none;
+}
+
+.home-nav-btn svg {
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.home-nav-btn:active {
+  background: rgba(232, 155, 75, 0.06);
+  border-color: rgba(232, 155, 75, 0.2);
+  color: var(--color-starlight, #F5EFE0);
+}
+
+@media (min-width: 768px) {
+  .home-nav-buttons {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .home-nav-btn:hover {
+    background: rgba(232, 155, 75, 0.06);
+    border-color: rgba(232, 155, 75, 0.2);
+    color: var(--color-starlight, #F5EFE0);
+  }
+
+  .home-nav-btn:hover svg {
+    opacity: 1;
+  }
+}
+
 /* ── What we're bringing ── */
 
 .home-bringing-grid {
