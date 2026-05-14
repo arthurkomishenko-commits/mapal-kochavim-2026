@@ -450,13 +450,6 @@ function renderForm() {
 
   inner.appendChild(bringSection);
 
-  // ── Live stats (what everyone is bringing) ──
-  const statsWrap = document.createElement('div');
-  statsWrap.className = 'form-section';
-  statsWrap.id = 'bring-stats';
-  inner.appendChild(statsWrap);
-  renderBringStats(statsWrap);
-
   // ── Save ──
   const saveBtn = document.createElement('button');
   saveBtn.type = 'button';

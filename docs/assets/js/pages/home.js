@@ -7,6 +7,57 @@ import { initCountdown } from '../components/countdown.js';
 import { initShootingStar } from '../components/shooting-star.js';
 import SkyRenderer from '../components/sky-renderer.js';
 
+// Item ID → i18n key map (same as rsvp.js categories)
+const ITEM_LABELS = {
+  tarp:'rsvp.bTarp', chairs:'rsvp.bChairs', tables:'rsvp.bTables',
+  grill:'rsvp.bGrill', coal:'rsvp.bCoal', firewood:'rsvp.bFirewood',
+  cooler:'rsvp.bCooler', kettle:'rsvp.bKettle', pot:'rsvp.bPot',
+  stove:'rsvp.bStove', dispDishes:'rsvp.bDispDishes',
+  generator:'rsvp.bGenerator', extension:'rsvp.bExtension',
+  speakers:'rsvp.bSpeakers', projector:'rsvp.bProjector',
+  drone:'rsvp.bDrone', camera:'rsvp.bCamera',
+  telescope:'rsvp.bTelescope', redFlash:'rsvp.bRedFlash',
+  guitar:'rsvp.bGuitar', games:'rsvp.bGames', ball:'rsvp.bBall',
+  firstAid:'rsvp.bFirstAid', tools:'rsvp.bTools',
+};
+
+function renderHomeBringing() {
+  const section = document.getElementById('home-bringing-section');
+  const grid = document.getElementById('home-bringing-grid');
+  if (!section || !grid) return;
+
+  // Aggregate from all registrations
+  const totals = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key.startsWith('mapal-rsvp-')) continue;
+    try {
+      const data = JSON.parse(localStorage.getItem(key));
+      if (!data.bringing || data.cancelled) continue;
+      for (const [id, val] of Object.entries(data.bringing)) {
+        if (!val) continue;
+        const n = (typeof val === 'number') ? val : 1;
+        totals[id] = (totals[id] || 0) + n;
+      }
+    } catch {}
+  }
+
+  const entries = Object.entries(totals).filter(([, v]) => v > 0);
+  if (entries.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = '';
+  grid.innerHTML = entries.map(([id, count]) => {
+    const label = i18n.t(ITEM_LABELS[id] || id);
+    return `<div class="home-bring-item">
+      <span class="home-bring-item__count">${count}</span>
+      <span class="home-bring-item__label">${label}</span>
+    </div>`;
+  }).join('');
+}
+
 export function renderHome(container) {
   container.innerHTML = `
     <section class="hero" aria-labelledby="hero-title">
@@ -115,6 +166,14 @@ export function renderHome(container) {
       </div>
     </section>
 
+    <!-- ═══ What we're bringing (live) ═══ -->
+    <section class="home-section" id="home-bringing-section" style="display:none;">
+      <div class="home-section__inner">
+        <h2 class="home-section__title" data-i18n="home.bringingTitle">${i18n.t('home.bringingTitle')}</h2>
+        <div id="home-bringing-grid" class="home-bringing-grid"></div>
+      </div>
+    </section>
+
     <!-- ═══ Final CTA ═══ -->
     <section class="home-section home-section--cta">
       <div class="home-section__inner home-section__inner--center">
@@ -193,6 +252,7 @@ export function renderHome(container) {
   }
 
   initCountdown();
+  renderHomeBringing();
 
   // Start meteors only after welcome overlay is dismissed
   if (document.getElementById('welcome-overlay')) {
