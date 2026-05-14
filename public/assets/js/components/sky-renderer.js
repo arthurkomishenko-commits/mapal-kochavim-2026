@@ -413,7 +413,7 @@ export default class SkyRenderer {
 
     // ── Layer 2: 35K background stars via ImageData ──
     const isMobile = W < 768;
-    const starCount = isMobile ? 12000 : 35000;
+    const starCount = isMobile ? 8000 : 35000;
 
     this.bgStars = generateStars(starCount, BW, BH);
     const s = this.bgStars;
@@ -601,7 +601,7 @@ export default class SkyRenderer {
     this.twinkleStars = [];
 
     for (const star of this.namedStars) {
-      if (star.alt < 0) continue;
+      if (star.alt < 0 || star.mag > 2.5) continue; // only ~30 brightest
       const [px, py] = azAltToXY(star.az, star.alt, W, H);
       if (px < 0 || px > W || py < 0 || py > H) continue;
 
@@ -636,48 +636,50 @@ export default class SkyRenderer {
     if (this.rafId || this.reducedMotion) return;
     const self = this;
 
+    let lastPX = 0, lastPY = 0;
+    let frameCount = 0;
+
     function frame(ts) {
       // ── Smooth parallax via lerp ──
-      const lerp = 0.06; // lower = smoother/slower
-      self.parallaxX += (self._targetPX - self.parallaxX) * lerp;
-      self.parallaxY += (self._targetPY - self.parallaxY) * lerp;
-      const px = self.parallaxX;
-      const py = self.parallaxY;
+      self.parallaxX += (self._targetPX - self.parallaxX) * 0.06;
+      self.parallaxY += (self._targetPY - self.parallaxY) * 0.06;
+      const px = Math.round(self.parallaxX);
+      const py = Math.round(self.parallaxY);
 
-      const mainCtx = self.ctx;
-      mainCtx.clearRect(0, 0, self.W, self.H);
-      mainCtx.drawImage(self.staticCanvas, -self.PAD + px, -self.PAD + py);
+      // Redraw static ONLY if parallax moved (saves huge GPU work)
+      if (px !== lastPX || py !== lastPY) {
+        const mainCtx = self.ctx;
+        mainCtx.drawImage(self.staticCanvas, -self.PAD + px, -self.PAD + py);
+        lastPX = px;
+        lastPY = py;
+      }
 
-      // ── Twinkle overlay ──
-      const ctx = self.overlayCtx;
-      const W = self.overlayCanvas.width;
-      const H = self.overlayCanvas.height;
-      ctx.clearRect(0, 0, W, H);
+      // ── Twinkle: only every 3rd frame (20fps is enough for twinkling) ──
+      frameCount++;
+      if (frameCount % 3 === 0) {
+        const ctx = self.overlayCtx;
+        const W = self.overlayCanvas.width;
+        const H = self.overlayCanvas.height;
+        ctx.clearRect(0, 0, W, H);
 
-      for (const s of self.twinkleStars) {
         const t = ts / 1000;
-        const flicker =
-          0.55 +
-          0.25 * sin(t * s.f1 + s.p1) +
-          0.15 * sin(t * s.f2 + s.p2) +
-          0.08 * sin(t * s.f3 + s.p3);
+        for (const s of self.twinkleStars) {
+          const flicker =
+            0.55 +
+            0.25 * sin(t * s.f1 + s.p1) +
+            0.15 * sin(t * s.f2 + s.p2) +
+            0.08 * sin(t * s.f3 + s.p3);
 
-        const alpha = s.minFlicker + flicker * (1 - s.minFlicker);
+          const alpha = s.minFlicker + flicker * (1 - s.minFlicker);
+          const sx = s.px + px;
+          const sy = s.py + py;
 
-        // Apply parallax offset to twinkle stars too
-        const sx = s.px + px;
-        const sy = s.py + py;
-
-        const [cr, cg, cb] = hexToRGB(s.color);
-        const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, s.glowR);
-        grad.addColorStop(0, `rgba(255,255,255,${(alpha * 0.9).toFixed(2)})`);
-        grad.addColorStop(0.3, `rgba(${cr},${cg},${cb},${(alpha * 0.35).toFixed(2)})`);
-        grad.addColorStop(1, 'transparent');
-
-        ctx.beginPath();
-        ctx.arc(sx, sy, s.glowR, 0, PI * 2);
-        ctx.fillStyle = grad;
-        ctx.fill();
+          // Simple filled circle instead of expensive radialGradient
+          ctx.beginPath();
+          ctx.arc(sx, sy, s.glowR * 0.5, 0, PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${(alpha * 0.8).toFixed(2)})`;
+          ctx.fill();
+        }
       }
 
       self.rafId = requestAnimationFrame(frame);
