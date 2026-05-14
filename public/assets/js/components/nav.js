@@ -9,10 +9,14 @@ const NAV_ITEMS = [
   { route: 'place',    icon: '\u25CB', i18nKey: 'nav.place' },
   { route: 'program',  icon: '\u25F7', i18nKey: 'nav.program' },
   { route: 'pack',     icon: '\u2610', i18nKey: 'nav.pack' },
+  { route: 'rsvp',     icon: '\u270D', i18nKey: 'nav.rsvp' },
+  { route: 'people',   icon: '\u2603', i18nKey: 'nav.people' },
+  { route: 'rides',    icon: '\u2708', i18nKey: 'nav.rides' },
   { route: 'sky',      icon: '\u2605', i18nKey: 'nav.sky' },
   { route: 'safety',   icon: '\u2691', i18nKey: 'nav.safety' },
   { route: 'gallery',  icon: '\u25A3', i18nKey: 'nav.gallery' },
   { route: 'contacts', icon: '\u260E', i18nKey: 'nav.contacts' },
+  { route: 'me',       icon: '\u2609', i18nKey: 'nav.me' },
 ];
 
 let drawerEl = null;

@@ -15,6 +15,10 @@ import { renderSky } from './pages/sky.js';
 import { renderSafety } from './pages/safety.js';
 import { renderContacts } from './pages/contacts.js';
 import { renderGallery } from './pages/gallery.js';
+import { renderRsvp } from './pages/rsvp.js';
+import { renderPeople } from './pages/people.js';
+import { renderRides } from './pages/rides.js';
+import { renderMe } from './pages/me.js';
 import { renderNotFound } from './pages/not-found.js';
 
 async function boot() {
@@ -27,10 +31,14 @@ async function boot() {
   router.register('place', renderPlace);
   router.register('program', renderProgram);
   router.register('pack', renderPack);
+  router.register('rsvp', renderRsvp);
+  router.register('people', renderPeople);
+  router.register('rides', renderRides);
   router.register('sky', renderSky);
   router.register('safety', renderSafety);
   router.register('contacts', renderContacts);
   router.register('gallery', renderGallery);
+  router.register('me', renderMe);
   router.register('404', renderNotFound);
 
   // Re-render on language switch

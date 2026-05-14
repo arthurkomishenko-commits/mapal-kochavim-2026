@@ -66,9 +66,11 @@
   --leading-normal: 1.5;
   --leading-relaxed: 1.65;
 
-  /* ── Font families (placeholder — finalize after Gemini font pairs) ── */
-  --font-heading: system-ui, sans-serif;
-  --font-body: system-ui, sans-serif;
+  /* ── Font families ── */
+  /* Rubik: geometric, Hebrew+Cyrillic, great for headings */
+  /* Inter: clean, excellent readability, Cyrillic support */
+  --font-heading: 'Rubik', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
   --font-mono: 'SF Mono', 'Fira Code', monospace;
 
   /* ── Border radius ── */
