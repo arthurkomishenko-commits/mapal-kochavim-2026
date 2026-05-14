@@ -129,29 +129,40 @@ function skyBrightness(alt) {
 let _mwScreenW = 0, _mwScreenH = 0;
 
 function mwScreenProximity(screenX, screenY, W, H) {
-  // MW center line: from top-center to bottom-center, slight tilt
-  const topX = W * 0.47;
-  const botX = W * 0.53;
-  const t = screenY / H; // 0=top, 1=bottom
+  // MW band tilted ~70° from vertical
+  // Rotated center line: top-right to bottom-left
+  const angle = 70 * PI / 180; // 70 degrees tilt
 
-  // Center X at this Y
-  const centerX = topX + (botX - topX) * t;
+  // Center of screen
+  const cx = W / 2;
+  const cy = H / 2;
 
-  // Width: wider band, peaks at Galactic Center (t≈0.55)
-  const baseWidth = W * 0.14;
-  const widthMult = 1 + 1.8 * Math.exp(-((t - 0.55) ** 2) / (2 * 0.18 ** 2));
+  // Project screen point onto the tilted MW axis
+  const dx = screenX - cx;
+  const dy = screenY - cy;
+
+  // t = position along MW axis (-1 to 1), dist = perpendicular distance
+  const axisX = sin(angle);
+  const axisY = cos(angle);
+  const t = (dx * axisX + dy * axisY) / max(W, H) + 0.5; // 0=one end, 1=other
+  const dist = abs(-dx * axisY + dy * axisX); // perpendicular distance
+
+  // Clamp t for width/brightness calculations
+  const tc = max(0, min(1, t));
+
+  // Width: peaks at Galactic Center (tc≈0.55)
+  const baseWidth = max(W, H) * 0.10;
+  const widthMult = 1 + 1.8 * Math.exp(-((tc - 0.55) ** 2) / (2 * 0.18 ** 2));
   const bandWidth = baseWidth * widthMult;
 
-  // Distance from center line
-  const dist = abs(screenX - centerX);
   if (dist > bandWidth * 2) return 0;
 
-  // Gaussian falloff
+  // Gaussian falloff from center line
   const sigma = bandWidth * 0.45;
   const spatial = Math.exp(-(dist * dist) / (2 * sigma * sigma));
 
-  // Brightness along the band: peaks at t=0.55 (Galactic Center area)
-  const brightness = 0.3 + 0.7 * Math.exp(-((t - 0.55) ** 2) / (2 * 0.2 ** 2));
+  // Brightness along the band: peaks at tc=0.55 (Galactic Center)
+  const brightness = 0.3 + 0.7 * Math.exp(-((tc - 0.55) ** 2) / (2 * 0.2 ** 2));
 
   return spatial * brightness;
 }
@@ -466,12 +477,17 @@ export default class SkyRenderer {
     gCanvas.height = gH;
     const gCtx = gCanvas.getContext('2d');
 
-    // MW glow: screen-space vertical band, centered
-    // Draw 20 circles along the center line from top to bottom
+    // MW glow: tilted band (same 70° angle as star density)
+    const glowAngle = 70 * PI / 180;
+    const gcx = gW / 2;
+    const gcy = gH / 2;
+    const glowLen = max(gW, gH) * 0.6;
+
     for (let i = 0; i < 20; i++) {
-      const t = i / 19; // 0=top, 1=bottom
-      const cx = gW * (0.47 + 0.06 * t); // slight tilt
-      const cy = gH * (0.02 + 0.96 * t);
+      const t = i / 19;
+      const along = (t - 0.5) * glowLen * 2;
+      const cx = gcx + sin(glowAngle) * along;
+      const cy = gcy + cos(glowAngle) * along;
 
       // Width + brightness peak at t≈0.55 (Galactic Center)
       const bPeak = Math.exp(-((t - 0.55) ** 2) / (2 * 0.18 ** 2));
