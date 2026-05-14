@@ -1,11 +1,17 @@
 /* ═══════════════════════════════════════════════════
    Navigation — top bar + mobile drawer
+
+   Layout: [Hamburger] [Logo centered] [Lang]
+   Hamburger always on the left regardless of RTL/LTR.
+   Uses direction:ltr on nav to pin physical positions,
+   then restores text direction on children.
    ═══════════════════════════════════════════════════ */
 
 .nav {
   position: fixed;
   top: 0;
-  inset-inline: 0;
+  left: 0;
+  right: 0;
   z-index: var(--z-nav);
   padding: var(--space-3) var(--space-5);
   background: linear-gradient(
@@ -18,55 +24,15 @@
 }
 
 .nav__inner {
+  /* Force LTR so hamburger is always physically left */
+  direction: ltr;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   max-width: var(--content-max-width);
   margin-inline: auto;
 }
 
-.nav__logo {
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  font-weight: 700;
-  color: var(--color-starlight);
-  letter-spacing: 0.02em;
-}
-
-/* ── Right side controls ── */
-
-.nav__controls {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.nav__lang-btn {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  transition: all var(--duration-normal) var(--ease-natural);
-  min-height: 44px;
-  min-width: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  cursor: pointer;
-}
-
-.nav__lang-btn:hover {
-  color: var(--color-text-primary);
-  border-color: var(--color-border-accent);
-}
-
-.nav__lang-btn:active {
-  transform: scale(0.96);
-}
-
-/* ── Hamburger button ── */
+/* ── Hamburger — left side ── */
 
 .nav__menu-btn {
   display: flex;
@@ -79,6 +45,7 @@
   cursor: pointer;
   padding: 0;
   position: relative;
+  flex-shrink: 0;
 }
 
 .nav__menu-icon {
@@ -95,7 +62,8 @@
 .nav__menu-icon::after {
   content: '';
   position: absolute;
-  inset-inline: 0;
+  left: 0;
+  right: 0;
   height: 2px;
   background: var(--color-starlight);
   border-radius: 1px;
@@ -105,17 +73,58 @@
 .nav__menu-icon::before { top: -6px; }
 .nav__menu-icon::after  { top: 6px; }
 
-/* Hamburger → X transform */
+/* Hamburger → X */
 .nav__menu-btn[aria-expanded="true"] .nav__menu-icon {
   background: transparent;
 }
-
 .nav__menu-btn[aria-expanded="true"] .nav__menu-icon::before {
   transform: translateY(6px) rotate(45deg);
 }
-
 .nav__menu-btn[aria-expanded="true"] .nav__menu-icon::after {
   transform: translateY(-6px) rotate(-45deg);
+}
+
+/* ── Logo — centered ── */
+
+.nav__logo {
+  /* Restore natural text direction for Hebrew/Russian */
+  direction: inherit;
+  unicode-bidi: plaintext;
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-starlight);
+  letter-spacing: 0.02em;
+  flex: 1;
+  text-align: center;
+}
+
+/* ── Lang button — right side ── */
+
+.nav__lang-btn {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-normal) var(--ease-natural);
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.nav__lang-btn:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-accent);
+}
+
+.nav__lang-btn:active {
+  transform: scale(0.96);
 }
 
 /* ── Mobile drawer ── */
@@ -123,7 +132,8 @@
 .nav__drawer {
   position: fixed;
   top: var(--nav-height);
-  inset-inline: 0;
+  left: 0;
+  right: 0;
   bottom: 0;
   z-index: calc(var(--z-nav) - 1);
   background: rgba(7, 11, 31, 0.97);
@@ -180,7 +190,7 @@
   opacity: 0.6;
 }
 
-/* ── Desktop: show links inline (future) ── */
+/* ── Desktop ── */
 
 @media (min-width: 768px) {
   .nav {

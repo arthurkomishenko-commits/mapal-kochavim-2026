@@ -2,6 +2,28 @@
    Program page — timeline
    ═══════════════════════════════════════════════════ */
 
+/* ── Program photo ── */
+
+.program-photo {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-block-end: var(--space-7);
+}
+
+.program-photo__img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  max-height: 350px;
+}
+
+@media (min-width: 768px) {
+  .program-photo__img {
+    max-height: 450px;
+  }
+}
+
 .timeline {
   display: flex;
   flex-direction: column;

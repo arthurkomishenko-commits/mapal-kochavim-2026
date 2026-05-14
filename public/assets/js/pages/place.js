@@ -19,8 +19,9 @@ export function renderPlace(container) {
           ${i18n.t('place.subtitle')}
         </p>
 
-        <!-- TODO: Replace with real photo (see TODO-PHOTOS.md #2) -->
-        <div class="placeholder-img placeholder-img--desert" role="img" aria-label="Negev desert landscape"></div>
+        <div class="place-photo place-photo--hero">
+          <img src="images/negev-panorama.jpg" alt="Negev desert panorama — Borot Lotz area" loading="eager" class="place-photo__img">
+        </div>
 
         <div class="place-card">
           <h2 class="place-card__name">Borot Lotz (KKL)</h2>
@@ -38,8 +39,20 @@ export function renderPlace(container) {
           </div>
         </div>
 
-        <!-- TODO: Replace with real photo (see TODO-PHOTOS.md #3) -->
-        <div class="placeholder-img placeholder-img--camping" role="img" aria-label="Camping area"></div>
+        <div class="place-photos-grid">
+          <div class="place-photo">
+            <img src="images/campsite-day.jpg" alt="Borot Lotz campsite — daytime view" loading="lazy" class="place-photo__img">
+          </div>
+          <div class="place-photo">
+            <img src="images/campsite-dusk.webp" alt="Borot Lotz campsite at dusk" loading="lazy" class="place-photo__img">
+          </div>
+          <div class="place-photo">
+            <img src="images/negev-tree.jpg" alt="Lone tree in the Negev desert" loading="lazy" class="place-photo__img">
+          </div>
+          <div class="place-photo">
+            <img src="images/negev-hills.webp" alt="Negev hills and valleys" loading="lazy" class="place-photo__img">
+          </div>
+        </div>
 
         <div class="place-info">
           <div class="place-info__item">

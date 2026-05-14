@@ -58,21 +58,10 @@ export function initNav() {
   // Build controls (lang + hamburger)
   const navInner = header.querySelector('.nav__inner');
 
-  // Replace the existing lang button with controls wrapper
   const existingLangBtn = header.querySelector('.nav__lang-btn');
-  const controls = document.createElement('div');
-  controls.className = 'nav__controls';
+  if (existingLangBtn) existingLangBtn.remove();
 
-  // Language button
-  const langBtn = document.createElement('button');
-  langBtn.id = 'lang-toggle';
-  langBtn.className = 'nav__lang-btn';
-  langBtn.type = 'button';
-  langBtn.setAttribute('aria-label', 'Switch language');
-  langBtn.textContent = i18n.t('lang.switchTo');
-  controls.appendChild(langBtn);
-
-  // Hamburger
+  // Hamburger — always first child (left side)
   menuBtn = document.createElement('button');
   menuBtn.className = 'nav__menu-btn';
   menuBtn.type = 'button';
@@ -80,10 +69,16 @@ export function initNav() {
   menuBtn.setAttribute('aria-controls', 'nav-drawer');
   menuBtn.setAttribute('aria-label', 'Menu');
   menuBtn.innerHTML = '<span class="nav__menu-icon"></span>';
-  controls.appendChild(menuBtn);
+  navInner.prepend(menuBtn);
 
-  if (existingLangBtn) existingLangBtn.remove();
-  navInner.appendChild(controls);
+  // Language button — after logo (right side)
+  const langBtn = document.createElement('button');
+  langBtn.id = 'lang-toggle';
+  langBtn.className = 'nav__lang-btn';
+  langBtn.type = 'button';
+  langBtn.setAttribute('aria-label', 'Switch language');
+  langBtn.textContent = i18n.t('lang.switchTo');
+  navInner.appendChild(langBtn);
 
   // Build drawer
   drawerEl = document.createElement('nav');

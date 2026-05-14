@@ -7,7 +7,7 @@
  * - API/Firestore: network-only (Firestore handles its own offline)
  */
 
-const CACHE_NAME = 'mapal-v1';
+const CACHE_NAME = 'mapal-v5';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -116,7 +116,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Everything else — cache first
+  // JS/CSS — network first (always get fresh code), fallback to cache
+  if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // Everything else (images, etc.) — cache first
   event.respondWith(
     caches.match(request).then((cached) => {
       return cached || fetch(request);

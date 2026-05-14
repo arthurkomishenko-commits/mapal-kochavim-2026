@@ -19,6 +19,7 @@ export function renderHome(container) {
         <p class="hero__subtitle" data-i18n="home.heroSubtitle">
           ${i18n.t('home.heroSubtitle')}
         </p>
+        <span class="hero__private-badge" data-i18n="home.privateBadge">${i18n.t('home.privateBadge')}</span>
         <div class="hero__countdown" aria-label="Countdown to event">
           <div class="countdown__unit">
             <span class="countdown__number tabular-nums" id="countdown-days">--</span>
@@ -181,11 +182,14 @@ export function renderHome(container) {
     {n:"Saturn",mag:0.6,cl:"G",az:115.2,alt:42.1},
   ];
 
-  if (skyCanvas) {
-    // Destroy previous renderer if exists
+  if (skyCanvas && window.innerWidth >= 768) {
+    // Desktop: Canvas 2D galaxy
     if (window._skyRenderer) window._skyRenderer.destroy();
     window._skyRenderer = new SkyRenderer(skyCanvas, CATALOG);
     window._skyRenderer.render();
+  } else if (window._skyRenderer) {
+    window._skyRenderer.destroy();
+    window._skyRenderer = null;
   }
 
   initCountdown();

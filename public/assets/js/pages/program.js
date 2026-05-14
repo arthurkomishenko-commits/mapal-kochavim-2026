@@ -12,6 +12,10 @@ export function renderProgram(container) {
           ${i18n.t('program.title')}
         </h1>
 
+        <div class="program-photo">
+          <img src="images/sunset-negev.webp" alt="Sunset over the Negev desert" loading="eager" class="program-photo__img">
+        </div>
+
         <div class="timeline">
           <div class="timeline__day">
             <h2 class="timeline__day-title" data-i18n="program.day13title">${i18n.t('program.day13title')}</h2>

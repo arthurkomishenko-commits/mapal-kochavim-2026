@@ -2,9 +2,58 @@
    Place page
    ═══════════════════════════════════════════════════ */
 
-/* Placeholder photos */
-.page-section .placeholder-img {
+/* ── Place photos ── */
+
+.place-photo {
+  border-radius: var(--radius-md);
+  overflow: hidden;
   margin-block-end: var(--space-6);
+}
+
+.place-photo--hero {
+  margin-block-end: var(--space-7);
+}
+
+.place-photo__img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.place-photo--hero .place-photo__img {
+  max-height: 400px;
+}
+
+.place-photos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-block-end: var(--space-7);
+}
+
+.place-photos-grid .place-photo {
+  margin-block-end: 0;
+}
+
+.place-photos-grid .place-photo__img {
+  height: 180px;
+  object-fit: cover;
+}
+
+@media (max-width: 480px) {
+  .place-photos-grid .place-photo__img {
+    height: 140px;
+  }
+}
+
+@media (min-width: 768px) {
+  .place-photo--hero .place-photo__img {
+    max-height: 500px;
+  }
+  .place-photos-grid .place-photo__img {
+    height: 240px;
+  }
 }
 
 .place-card {

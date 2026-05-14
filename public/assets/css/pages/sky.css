@@ -2,9 +2,36 @@
    Sky page — astronomy
    ═══════════════════════════════════════════════════ */
 
-/* Placeholder photos */
-.page-section .placeholder-img + .sky-card {
-  margin-block-start: var(--space-5);
+/* ── Sky photos ── */
+
+.sky-photo {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-block-end: var(--space-6);
+}
+
+.sky-photo--hero {
+  margin-block-end: var(--space-7);
+}
+
+.sky-photo__img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  max-height: 500px;
+}
+
+@media (max-width: 480px) {
+  .sky-photo__img {
+    max-height: 300px;
+  }
+}
+
+@media (min-width: 768px) {
+  .sky-photo__img {
+    max-height: 600px;
+  }
 }
 
 .sky-card {

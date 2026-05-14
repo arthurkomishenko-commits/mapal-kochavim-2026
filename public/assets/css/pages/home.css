@@ -12,8 +12,63 @@
   justify-content: center;
   min-height: 100dvh;
   overflow: hidden;
-  /* Sky rendered on canvas — this is just a fallback */
-  background: var(--color-sky-deepest);
+  background: var(--color-sky-deepest, #070B1F);
+}
+
+/* Mobile: photo background instead of canvas galaxy */
+@media (max-width: 767px) {
+  .hero {
+    background: url('/images/hero-mobile.jpg') center center / cover no-repeat;
+    background-color: var(--color-sky-deepest);
+  }
+  .sky-canvas {
+    display: none;
+  }
+  .hero {
+    overflow: visible;
+    min-height: auto;
+    height: 100dvh;
+  }
+  .hero__content {
+    padding: var(--space-3);
+    padding-block-start: var(--nav-height);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    box-sizing: border-box;
+  }
+  .hero__title {
+    font-size: clamp(1.8rem, 8vw, 3rem);
+    margin-block-end: var(--space-2);
+  }
+  .hero__subtitle {
+    font-size: var(--text-sm);
+    letter-spacing: 0.1em;
+    margin-block-end: var(--space-3);
+  }
+  .hero__countdown {
+    margin-block-end: var(--space-3);
+    gap: var(--space-1);
+  }
+  .countdown__number {
+    font-size: var(--text-2xl);
+  }
+  .countdown__unit {
+    min-width: 44px;
+  }
+  .countdown__separator {
+    font-size: var(--text-xl);
+  }
+  .hero__cta {
+    padding: var(--space-3) var(--space-5);
+    font-size: var(--text-base);
+    min-height: 44px;
+  }
+  .hero__scroll-hint {
+    display: none;
+  }
 }
 
 .hero__content {
@@ -48,6 +103,21 @@
     font-size: var(--text-2xl);
     letter-spacing: 0.2em;
   }
+}
+
+/* ── Private badge ── */
+
+.hero__private-badge {
+  display: inline-block;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(232, 175, 100, 0.7);
+  border: 1px solid rgba(232, 175, 100, 0.15);
+  border-radius: 20px;
+  padding: 5px 16px;
+  margin-block-end: var(--space-5);
 }
 
 /* ── Countdown ── */
@@ -389,7 +459,7 @@
     0 0 12px rgba(255, 220, 150, 0.6),
     0 0 20px rgba(255, 180, 80, 0.25);
   transform: rotate(var(--angle)) translate3d(0, 0, 0);
-  will-change: transform, opacity, filter;
+  will-change: transform, opacity;
   animation: meteor-flight var(--duration) cubic-bezier(.22, .61, .36, 1) forwards;
 }
 
@@ -411,8 +481,8 @@
     rgba(255, 230, 180, 0.65) 72%,
     rgba(255, 255, 255, 1) 100%
   );
-  filter: blur(0.35px);
   opacity: 0;
+  will-change: transform, opacity;
   animation: meteor-trail var(--duration) ease-out forwards;
 }
 
@@ -422,32 +492,26 @@
   0% {
     opacity: 0;
     transform: rotate(var(--angle)) translate3d(0, 0, 0) scale(0.65);
-    filter: brightness(0.7) saturate(0.8);
   }
   12% {
-    opacity: 0.45;
-    transform: rotate(var(--angle)) translate3d(calc(var(--travel) * 0.04), 0, 0);
-    filter: brightness(1) saturate(1);
+    opacity: 0.5;
+    transform: rotate(var(--angle)) translate3d(calc(var(--travel) * 0.04), 0, 0) scale(0.85);
   }
   28% {
     opacity: 1;
     transform: rotate(var(--angle)) translate3d(calc(var(--travel) * 0.15), 0, 0) scale(1);
-    filter: brightness(1.35) saturate(1.1);
   }
   55% {
     opacity: 1;
     transform: rotate(var(--angle)) translate3d(calc(var(--travel) * 0.55), 0, 0) scale(1.05);
-    filter: brightness(1.8) saturate(1.2);
   }
   78% {
-    opacity: 0.5;
-    transform: rotate(var(--angle)) translate3d(calc(var(--travel) * 0.8), 0, 0);
-    filter: brightness(1.1) saturate(0.9);
+    opacity: 0.45;
+    transform: rotate(var(--angle)) translate3d(calc(var(--travel) * 0.8), 0, 0) scale(0.95);
   }
   100% {
     opacity: 0;
-    transform: rotate(var(--angle)) translate3d(var(--travel), 0, 0) scale(0.85);
-    filter: brightness(0.6) saturate(0.6);
+    transform: rotate(var(--angle)) translate3d(var(--travel), 0, 0) scale(0.8);
   }
 }
 
@@ -494,7 +558,6 @@
     rgba(255, 240, 200, 0.85) 80%,
     rgba(255, 255, 255, 1) 100%
   );
-  filter: blur(0.5px) drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
 }
 
 /* ── Reduced motion ── */

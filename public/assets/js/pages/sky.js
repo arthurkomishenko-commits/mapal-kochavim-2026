@@ -12,8 +12,9 @@ export function renderSky(container) {
           ${i18n.t('sky.title')}
         </h1>
 
-        <!-- TODO: Replace with real photo (see TODO-PHOTOS.md #4) -->
-        <div class="placeholder-img placeholder-img--meteors" role="img" aria-label="Perseids meteor shower"></div>
+        <div class="sky-photo sky-photo--hero">
+          <img src="images/person-milkyway.jpg" alt="Person with flashlight under the Milky Way in Negev" loading="eager" class="sky-photo__img">
+        </div>
 
         <div class="sky-card sky-card--featured">
           <h2 data-i18n="sky.perseidsTitle">${i18n.t('sky.perseidsTitle')}</h2>
@@ -24,8 +25,9 @@ export function renderSky(container) {
           </div>
         </div>
 
-        <!-- TODO: Replace with real photo (see TODO-PHOTOS.md #5) -->
-        <div class="placeholder-img placeholder-img--night-sky" role="img" aria-label="Telescope stargazing"></div>
+        <div class="sky-photo">
+          <img src="images/milkyway-closeup.jpg" alt="Milky Way galactic center — close-up astrophoto" loading="lazy" class="sky-photo__img">
+        </div>
 
         <div class="sky-card">
           <h2 data-i18n="sky.telescopeTitle">${i18n.t('sky.telescopeTitle')}</h2>

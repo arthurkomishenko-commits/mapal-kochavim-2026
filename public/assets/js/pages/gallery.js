@@ -18,6 +18,27 @@ export function renderGallery(container) {
           ${i18n.t('gallery.subtitle')}
         </p>
 
+        <div class="gallery__preview">
+          <div class="gallery__preview-item">
+            <img src="images/person-milkyway.jpg" alt="" loading="lazy">
+          </div>
+          <div class="gallery__preview-item">
+            <img src="images/milkyway-campfire.jpg" alt="" loading="lazy">
+          </div>
+          <div class="gallery__preview-item">
+            <img src="images/night-camp.jpg" alt="" loading="lazy">
+          </div>
+          <div class="gallery__preview-item">
+            <img src="images/sunset-negev.webp" alt="" loading="lazy">
+          </div>
+          <div class="gallery__preview-item">
+            <img src="images/campsite-day.jpg" alt="" loading="lazy">
+          </div>
+          <div class="gallery__preview-item">
+            <img src="images/negev-panorama.jpg" alt="" loading="lazy">
+          </div>
+        </div>
+
         <div class="gallery__cta-card">
           <div class="gallery__icon" aria-hidden="true">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
