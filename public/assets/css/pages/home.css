@@ -155,33 +155,136 @@
   z-index: 1;
 }
 
-/* ── Individual JS-generated stars ── */
+/* ══════════════════════════════════════════════════════
+   Stars — real Negev sky, opacity-only animations
+   ══════════════════════════════════════════════════════ */
 
 .star {
   position: absolute;
   border-radius: 50%;
-  background: var(--color-starlight);
-  animation: twinkle var(--star-duration, 4s) var(--ease-natural) infinite alternate;
-  animation-delay: var(--star-delay, 0s);
+  transform: translate(-50%, -50%);
 }
 
-.star--warm {
-  background: var(--color-meteor);
+/* ── Milky Way haze layer ── */
+
+.milky-way {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 
+/* ── Deep sky objects ── */
+
+.dso--galaxy {
+  position: absolute;
+  width: 8px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(200, 210, 240, 0.10);
+  transform: translate(-50%, -50%) rotate(-35deg);
+}
+
+/* ── Scintillation: 5 levels, irregular keyframes ──
+   ONLY opacity is animated. No transform, no filter.
+   Each keyframe has 6-8 irregular points. */
+
+/* Brilliant (mag < 0.5): rock stable, barely breathes */
+.star--brilliant {
+  animation: twink-brilliant 10s ease-in-out infinite;
+}
+@keyframes twink-brilliant {
+  0%   { opacity: 1; }
+  18%  { opacity: 0.97; }
+  37%  { opacity: 1; }
+  52%  { opacity: 0.96; }
+  71%  { opacity: 1; }
+  88%  { opacity: 0.98; }
+  100% { opacity: 1; }
+}
+
+/* Bright (mag 0.5-1.5): gentle slow pulse */
 .star--bright {
-  box-shadow: 0 0 3px 1px rgba(245, 239, 224, 0.3);
+  animation: twink-bright 7s ease-in-out infinite;
+}
+@keyframes twink-bright {
+  0%   { opacity: 1; }
+  14%  { opacity: 0.92; }
+  28%  { opacity: 0.97; }
+  45%  { opacity: 0.88; }
+  62%  { opacity: 0.95; }
+  78%  { opacity: 0.90; }
+  100% { opacity: 1; }
 }
 
-@keyframes twinkle {
-  0%   { opacity: var(--star-min-opacity, 0.3); }
-  100% { opacity: var(--star-max-opacity, 1); }
+/* Medium (mag 1.5-2.5): noticeable flicker */
+.star--medium {
+  animation: twink-medium 5s ease-in-out infinite;
+}
+@keyframes twink-medium {
+  0%   { opacity: 1; }
+  11%  { opacity: 0.82; }
+  23%  { opacity: 0.94; }
+  38%  { opacity: 0.75; }
+  50%  { opacity: 0.90; }
+  67%  { opacity: 0.78; }
+  82%  { opacity: 0.95; }
+  100% { opacity: 1; }
 }
 
+/* Dim (mag 2.5-3.5): fast, nervous */
+.star--dim {
+  animation: twink-dim 3s ease-in-out infinite;
+}
+@keyframes twink-dim {
+  0%   { opacity: 1; }
+  8%   { opacity: 0.68; }
+  20%  { opacity: 0.88; }
+  33%  { opacity: 0.60; }
+  48%  { opacity: 0.82; }
+  60%  { opacity: 0.55; }
+  75%  { opacity: 0.78; }
+  90%  { opacity: 0.65; }
+  100% { opacity: 1; }
+}
+
+/* Faint (mag 3.5+): rapid flickering, almost unstable */
+.star--faint {
+  animation: twink-faint 2.2s ease-in-out infinite;
+}
+@keyframes twink-faint {
+  0%   { opacity: 0.55; }
+  12%  { opacity: 0.35; }
+  25%  { opacity: 0.50; }
+  37%  { opacity: 0.28; }
+  50%  { opacity: 0.48; }
+  65%  { opacity: 0.32; }
+  78%  { opacity: 0.52; }
+  90%  { opacity: 0.38; }
+  100% { opacity: 0.55; }
+}
+
+/* Horizon (alt < 15°): intense flicker.
+   Chromatic dispersion is done via STATIC box-shadow
+   set in JS — no animated filter. */
+.star--horizon {
+  animation: twink-horizon 2s ease-in-out infinite;
+}
+@keyframes twink-horizon {
+  0%   { opacity: 0.7; }
+  10%  { opacity: 0.45; }
+  22%  { opacity: 0.65; }
+  35%  { opacity: 0.35; }
+  48%  { opacity: 0.60; }
+  58%  { opacity: 0.30; }
+  72%  { opacity: 0.55; }
+  85%  { opacity: 0.40; }
+  100% { opacity: 0.7; }
+}
+
+/* ── Reduced motion: everything static ── */
 @media (prefers-reduced-motion: reduce) {
   .star {
-    animation: none;
-    opacity: var(--star-max-opacity, 0.7);
+    animation: none !important;
   }
 }
 
