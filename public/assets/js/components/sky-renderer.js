@@ -341,12 +341,25 @@ export default class SkyRenderer {
     this._targetPX = 0;
     this._targetPY = 0;
 
-    // Parallax only on desktop (mouse). No gyro — too jittery on mobile.
+    // Parallax only on desktop, only when mouse is over the sky area
     this._isMobile = window.innerWidth < 768;
+    this._mouseInSky = false;
     this._onMouse = (e) => {
       if (this._isMobile) return;
-      this._targetPX = (e.clientX / window.innerWidth - 0.5) * 20;
-      this._targetPY = (e.clientY / window.innerHeight - 0.5) * 12;
+      // Check if mouse is within the canvas/hero area
+      const rect = this.canvas.getBoundingClientRect();
+      this._mouseInSky = (
+        e.clientY >= rect.top && e.clientY <= rect.bottom &&
+        e.clientX >= rect.left && e.clientX <= rect.right
+      );
+      if (this._mouseInSky) {
+        this._targetPX = (e.clientX / window.innerWidth - 0.5) * 20;
+        this._targetPY = ((e.clientY - rect.top) / rect.height - 0.5) * 12;
+      } else {
+        // Ease back to center when mouse leaves
+        this._targetPX = 0;
+        this._targetPY = 0;
+      }
     };
     window.addEventListener('mousemove', this._onMouse, { passive: true });
 
