@@ -121,11 +121,12 @@ function mwProximity(az, alt) {
     const pB = a.b + t * (b.b - a.b);
 
     const dist = sqrt((az - pAz) ** 2 + (alt - pAlt) ** 2);
-    const halfW = pW / 2;
+    const halfW = pW; // Full width, not half — MW is WIDE
 
     if (dist < halfW) {
-      // Gaussian falloff from center
-      const factor = Math.exp(-(dist * dist) / (2 * (halfW * 0.5) ** 2));
+      // Gaussian with wide sigma — gradual falloff
+      const sigma = halfW * 0.4;
+      const factor = Math.exp(-(dist * dist) / (2 * sigma * sigma));
       const val = factor * pB;
       if (val > best) best = val;
     }
@@ -217,10 +218,14 @@ function generateStars(count, W, H) {
     const cloud = cloudMultiplier(az, alt);
     const dark = darkNebulaFactor(az, alt);
 
-    let prob = sb * (1 + mw * 8) * cloud * (1 - dark * 0.7);
+    // Base probability ensures EVERY part of sky has stars.
+    // MW multiplier adds density on top, doesn't create empty zones.
+    const baseDensity = 0.35; // 35% chance even with no MW
+    const mwBoost = mw * 4;  // up to +4x in MW band
+    let prob = (baseDensity + mwBoost) * sb * cloud * (1 - dark * 0.6);
 
-    // Normalize — max theoretical is ~1 * 9 * 5 * 1 = 45
-    prob = prob / 12; // target acceptance ~30-50%
+    // Normalize
+    prob = min(prob / 3, 0.95);
 
     if (Math.random() > prob) continue;
 
