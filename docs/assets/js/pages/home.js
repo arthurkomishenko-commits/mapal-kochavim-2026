@@ -82,6 +82,97 @@ function renderHomeBringing() {
   grid.innerHTML = html;
 }
 
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+function getAllParticipants() {
+  const list = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key.startsWith('mapal-rsvp-')) continue;
+    try {
+      const data = JSON.parse(localStorage.getItem(key));
+      if (data && !data.cancelled) list.push(data);
+    } catch {}
+  }
+  return list;
+}
+
+function initWhoButton() {
+  const btn = document.getElementById('home-who-btn');
+  const table = document.getElementById('home-who-table');
+  if (!btn || !table) return;
+
+  btn.addEventListener('click', () => {
+    const isOpen = table.style.display !== 'none';
+    if (isOpen) {
+      table.style.display = 'none';
+      btn.textContent = i18n.t('home.whoBtn');
+    } else {
+      renderWhoTable(table);
+      table.style.display = '';
+      btn.textContent = i18n.t('home.whoBtnClose');
+    }
+  });
+}
+
+function renderWhoTable(container) {
+  const participants = getAllParticipants();
+
+  if (participants.length === 0) {
+    container.innerHTML = `<p class="home-who-empty">${i18n.t('common.empty')}</p>`;
+    return;
+  }
+
+  let html = '';
+  participants.forEach(p => {
+    // What they're bringing (non-zero items)
+    let itemsHtml = '';
+    if (p.bringing) {
+      const active = Object.entries(p.bringing).filter(([, v]) => v);
+      if (active.length > 0) {
+        itemsHtml = active.map(([k, v]) => {
+          const label = i18n.t(ITEM_LABELS[k] || k);
+          const qty = typeof v === 'number' && v > 1 ? `\u00D7${v}` : '';
+          return `<span class="who-chip">${label}${qty ? ' ' + qty : ''}</span>`;
+        }).join('');
+      }
+    }
+
+    // Companions
+    let compHtml = '';
+    if (p.companions && p.companions.length > 0) {
+      compHtml = p.companions.map(c =>
+        `<span class="who-companion">${esc(c.name)}</span>`
+      ).join('');
+    }
+
+    // Kids
+    let kidsHtml = '';
+    if (p.kids > 0) {
+      kidsHtml = `<span class="who-companion">${p.kids} ${i18n.t('rsvp.kidsLabel')}</span>`;
+    }
+
+    const car = p.isDriving ? ' &#x1F697;' : '';
+
+    html += `
+      <div class="who-row">
+        <div class="who-row__header">
+          <span class="who-row__name">${esc(p.name)}${car}</span>
+          ${p.city ? `<span class="who-row__city">${esc(p.city)}</span>` : ''}
+        </div>
+        ${compHtml || kidsHtml ? `<div class="who-row__companions">${compHtml}${kidsHtml}</div>` : ''}
+        ${itemsHtml ? `<div class="who-row__items">${itemsHtml}</div>` : ''}
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
 export function renderHome(container) {
   container.innerHTML = `
     <section class="hero" aria-labelledby="hero-title">
@@ -214,6 +305,8 @@ export function renderHome(container) {
       <div class="home-section__inner">
         <h2 class="home-section__title" data-i18n="home.bringingTitle">${i18n.t('home.bringingTitle')}</h2>
         <div id="home-bringing-grid" class="home-bringing-grid"></div>
+        <button type="button" class="home-who-btn" id="home-who-btn" data-i18n="home.whoBtn">${i18n.t('home.whoBtn')}</button>
+        <div id="home-who-table" class="home-who-table" style="display:none;"></div>
       </div>
     </section>
 
@@ -335,6 +428,7 @@ export function renderHome(container) {
 
   initCountdown();
   renderHomeBringing();
+  initWhoButton();
 
   // Start meteors only after welcome overlay is dismissed
   if (document.getElementById('welcome-overlay')) {
