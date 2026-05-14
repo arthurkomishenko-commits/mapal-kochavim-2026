@@ -822,6 +822,55 @@
   }
 }
 
+/* ── Contacts ── */
+
+.home-contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.home-contact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--color-bg-card, rgba(245,239,224,0.03));
+  border: 1px solid var(--color-border-subtle, rgba(245,239,224,0.06));
+  border-radius: 12px;
+}
+
+.home-contact__name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #A5A09A);
+}
+
+.home-contact__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(37, 211, 102, 0.1);
+  color: #25D366;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-contact__btn:active {
+  background: rgba(37, 211, 102, 0.25);
+  transform: scale(0.95);
+}
+
+@media (min-width: 768px) {
+  .home-contact__btn:hover {
+    background: rgba(37, 211, 102, 0.2);
+  }
+}
+
 /* ── What we're bringing ── */
 
 .home-bringing-grid {

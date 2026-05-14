@@ -160,7 +160,9 @@
     "vladimir": "Владимир",
     "vladimirRole": "Базовый кемпинг",
     "andrey": "Андрей",
-    "andreyRole": "Инструменты"
+    "andreyRole": "Инструменты",
+    "evgeny": "Евгений",
+    "evgenyRole": "Организация"
   },
   "rsvp": {
     "title": "Запись",
