@@ -321,27 +321,52 @@ export default class SkyRenderer {
     this.rafId = null;
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Parallax — subtle shift on mouse/gyro
+    // Parallax — smooth lerp toward target
     this.parallaxX = 0;
     this.parallaxY = 0;
+    this._targetPX = 0;
+    this._targetPY = 0;
+
     this._onMouse = (e) => {
-      // -15px to +15px based on mouse position
-      this.parallaxX = (e.clientX / window.innerWidth - 0.5) * 30;
-      this.parallaxY = (e.clientY / window.innerHeight - 0.5) * 20;
+      this._targetPX = (e.clientX / window.innerWidth - 0.5) * 24;
+      this._targetPY = (e.clientY / window.innerHeight - 0.5) * 16;
     };
     this._onGyro = (e) => {
-      // Mobile device orientation
       if (e.gamma != null) {
-        this.parallaxX = (e.gamma / 45) * 25; // tilt left/right
-        this.parallaxY = ((e.beta - 45) / 45) * 15; // tilt forward/back
+        this._targetPX = Math.max(-20, Math.min(20, (e.gamma / 30) * 20));
+        this._targetPY = Math.max(-12, Math.min(12, ((e.beta - 50) / 30) * 12));
       }
     };
     window.addEventListener('mousemove', this._onMouse, { passive: true });
-    window.addEventListener('deviceorientation', this._onGyro, { passive: true });
+
+    // iOS gyroscope requires permission
+    this._setupGyro();
 
     // Bind
     this._onResize = this._debounce(() => this.render(), 200);
     window.addEventListener('resize', this._onResize);
+  }
+
+  _setupGyro() {
+    // iOS 13+ requires explicit permission for DeviceOrientation
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      // Will request on first user tap
+      const handler = () => {
+        DeviceOrientationEvent.requestPermission()
+          .then(state => {
+            if (state === 'granted') {
+              window.addEventListener('deviceorientation', this._onGyro, { passive: true });
+            }
+          })
+          .catch(() => {});
+        document.removeEventListener('touchstart', handler);
+      };
+      document.addEventListener('touchstart', handler, { once: true });
+    } else {
+      // Android / non-iOS — just listen
+      window.addEventListener('deviceorientation', this._onGyro, { passive: true });
+    }
   }
 
   render() {
@@ -612,10 +637,14 @@ export default class SkyRenderer {
     const self = this;
 
     function frame(ts) {
-      // ── Parallax: redraw static at offset ──
-      const mainCtx = self.ctx;
+      // ── Smooth parallax via lerp ──
+      const lerp = 0.06; // lower = smoother/slower
+      self.parallaxX += (self._targetPX - self.parallaxX) * lerp;
+      self.parallaxY += (self._targetPY - self.parallaxY) * lerp;
       const px = self.parallaxX;
       const py = self.parallaxY;
+
+      const mainCtx = self.ctx;
       mainCtx.clearRect(0, 0, self.W, self.H);
       mainCtx.drawImage(self.staticCanvas, -self.PAD + px, -self.PAD + py);
 
@@ -667,6 +696,8 @@ export default class SkyRenderer {
   destroy() {
     this.stopTwinkling();
     window.removeEventListener('resize', this._onResize);
+    window.removeEventListener('mousemove', this._onMouse);
+    window.removeEventListener('deviceorientation', this._onGyro);
     if (this.overlayCanvas && this.overlayCanvas.parentElement) {
       this.overlayCanvas.remove();
     }
