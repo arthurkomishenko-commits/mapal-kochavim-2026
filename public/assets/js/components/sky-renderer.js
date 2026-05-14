@@ -327,47 +327,23 @@ export default class SkyRenderer {
     this._targetPX = 0;
     this._targetPY = 0;
 
-    this._onMouse = (e) => {
-      this._targetPX = (e.clientX / window.innerWidth - 0.5) * 24;
-      this._targetPY = (e.clientY / window.innerHeight - 0.5) * 16;
-    };
-    this._onGyro = (e) => {
-      if (e.gamma != null) {
-        this._targetPX = Math.max(-20, Math.min(20, (e.gamma / 30) * 20));
-        this._targetPY = Math.max(-12, Math.min(12, ((e.beta - 50) / 30) * 12));
-      }
-    };
-    window.addEventListener('mousemove', this._onMouse, { passive: true });
+    this._isMobile = window.innerWidth < 768;
 
-    // iOS gyroscope requires permission
-    this._setupGyro();
+    if (!this._isMobile) {
+      // Desktop only — subtle mouse parallax
+      this._onMouse = (e) => {
+        this._targetPX = (e.clientX / window.innerWidth - 0.5) * 16;
+        this._targetPY = (e.clientY / window.innerHeight - 0.5) * 10;
+      };
+      window.addEventListener('mousemove', this._onMouse, { passive: true });
+    }
+    // No gyro parallax on mobile — saves battery and avoids jank
 
     // Bind
     this._onResize = this._debounce(() => this.render(), 200);
     window.addEventListener('resize', this._onResize);
   }
 
-  _setupGyro() {
-    // iOS 13+ requires explicit permission for DeviceOrientation
-    if (typeof DeviceOrientationEvent !== 'undefined' &&
-        typeof DeviceOrientationEvent.requestPermission === 'function') {
-      // Will request on first user tap
-      const handler = () => {
-        DeviceOrientationEvent.requestPermission()
-          .then(state => {
-            if (state === 'granted') {
-              window.addEventListener('deviceorientation', this._onGyro, { passive: true });
-            }
-          })
-          .catch(() => {});
-        document.removeEventListener('touchstart', handler);
-      };
-      document.addEventListener('touchstart', handler, { once: true });
-    } else {
-      // Android / non-iOS — just listen
-      window.addEventListener('deviceorientation', this._onGyro, { passive: true });
-    }
-  }
 
   render() {
     const W = window.innerWidth;
@@ -638,20 +614,19 @@ export default class SkyRenderer {
     let frameCount = 0;
 
     function frame(ts) {
-      // ── Parallax via CSS transform (GPU-free, no canvas redraw) ──
-      self.parallaxX += (self._targetPX - self.parallaxX) * 0.06;
-      self.parallaxY += (self._targetPY - self.parallaxY) * 0.06;
-      const px = self.parallaxX;
-      const py = self.parallaxY;
+      // ── Desktop parallax only ──
+      if (!self._isMobile) {
+        self.parallaxX += (self._targetPX - self.parallaxX) * 0.06;
+        self.parallaxY += (self._targetPY - self.parallaxY) * 0.06;
+        const tx = `translate3d(${self.parallaxX.toFixed(1)}px,${self.parallaxY.toFixed(1)}px,0)`;
+        self.canvas.style.transform = tx;
+        if (self.overlayCanvas) self.overlayCanvas.style.transform = tx;
+      }
 
-      // Move BOTH canvases via CSS — zero GPU cost
-      const tx = `translate3d(${px.toFixed(1)}px,${py.toFixed(1)}px,0)`;
-      self.canvas.style.transform = tx;
-      if (self.overlayCanvas) self.overlayCanvas.style.transform = tx;
-
-      // ── Twinkle: every 4th frame (15fps is fine for shimmer) ──
+      // ── Twinkle: throttled (desktop 15fps, mobile 10fps) ──
       frameCount++;
-      if (frameCount % 4 === 0) {
+      const throttle = self._isMobile ? 6 : 4;
+      if (frameCount % throttle === 0) {
         const ctx = self.overlayCtx;
         const W = self.overlayCanvas.width;
         const H = self.overlayCanvas.height;
@@ -691,7 +666,6 @@ export default class SkyRenderer {
     this.stopTwinkling();
     window.removeEventListener('resize', this._onResize);
     window.removeEventListener('mousemove', this._onMouse);
-    window.removeEventListener('deviceorientation', this._onGyro);
     if (this.overlayCanvas && this.overlayCanvas.parentElement) {
       this.overlayCanvas.remove();
     }
