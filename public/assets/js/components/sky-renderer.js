@@ -80,8 +80,13 @@ function hexToRGB(hex) {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
+// Projection center at az=300° — puts the wrap seam at az=120°
+// where there's NO Milky Way. MW band stays continuous across screen.
+// Left edge ≈ SSE, center ≈ NW, right edge ≈ ESE
+const AZ_CENTER = 300;
+
 function azAltToXY(az, alt, W, H) {
-  const x = ((az - 180 + 540) % 360) / 360 * W;
+  const x = ((az - AZ_CENTER + 540) % 360) / 360 * W;
   const y = (1 - sin(alt * PI / 180)) * H * 0.95;
   return [x, y];
 }
