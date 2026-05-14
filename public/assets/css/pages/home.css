@@ -800,3 +800,18 @@
 .home-bring-item__label {
   color: var(--color-text-secondary, #A5A09A);
 }
+
+.home-bring-item--highlight {
+  background: rgba(232, 155, 75, 0.08);
+  border-color: rgba(232, 155, 75, 0.2);
+  padding: 12px 22px;
+}
+
+.home-bring-item--highlight .home-bring-item__count {
+  font-size: 1.4rem;
+}
+
+.home-bring-item--highlight .home-bring-item__label {
+  color: var(--color-starlight, #F5EFE0);
+  font-weight: 500;
+}
