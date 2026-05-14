@@ -170,49 +170,28 @@
   image-rendering: auto;
 }
 
-/* ── Diffraction spikes on bright stars (mag < 2) ── */
+/* ── Subtle diffraction spikes — only on brightest stars ── */
 .star--brilliant::before,
-.star--brilliant::after,
-.star--bright::before,
-.star--bright::after {
+.star--brilliant::after {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  background: inherit;
   border-radius: 0;
-  opacity: 0.35;
 }
 
-/* Horizontal spike */
-.star--brilliant::before,
-.star--bright::before {
-  width: 250%;
-  height: 1px;
-}
-
-/* Vertical spike */
-.star--brilliant::after,
-.star--bright::after {
-  width: 1px;
-  height: 250%;
-}
-
-/* Brilliant stars: longer, brighter spikes */
-.star--brilliant::before { width: 400%; opacity: 0.45; }
-.star--brilliant::after  { height: 400%; opacity: 0.45; }
-
-/* Medium stars: subtle tiny cross */
-.star--medium::before {
-  content: '';
-  position: absolute;
-  top: 50%; left: 50%;
+.star--brilliant::before {
   transform: translate(-50%, -50%);
-  width: 180%;
+  width: 200%;
   height: 1px;
-  background: inherit;
-  opacity: 0.15;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2) 30%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0.2) 70%, transparent);
+}
+
+.star--brilliant::after {
+  transform: translate(-50%, -50%);
+  width: 1px;
+  height: 200%;
+  background: linear-gradient(180deg, transparent, rgba(255,255,255,0.15) 30%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.15) 70%, transparent);
 }
 
 /* ── Milky Way haze layer ── */
@@ -267,71 +246,64 @@
   100% { opacity: 1; }
 }
 
-/* Medium (mag 1.5-2.5): strong flicker */
+/* Medium (mag 1.5-2.5): gentle noticeable shimmer */
 .star--medium {
-  animation: twink-medium 4.5s ease-in-out infinite;
+  animation: twink-medium 5.5s ease-in-out infinite;
 }
 @keyframes twink-medium {
   0%   { opacity: 1; }
-  10%  { opacity: 0.55; }
-  22%  { opacity: 0.85; }
-  35%  { opacity: 0.45; }
-  48%  { opacity: 0.78; }
-  60%  { opacity: 0.40; }
-  75%  { opacity: 0.72; }
-  88%  { opacity: 0.50; }
+  12%  { opacity: 0.72; }
+  28%  { opacity: 0.90; }
+  42%  { opacity: 0.65; }
+  58%  { opacity: 0.85; }
+  72%  { opacity: 0.68; }
+  88%  { opacity: 0.88; }
   100% { opacity: 1; }
 }
 
-/* Dim (mag 2.5-3.5): fast nervous twitching */
+/* Dim (mag 2.5-3.5): moderate flicker */
 .star--dim {
-  animation: twink-dim 2.8s ease-in-out infinite;
+  animation: twink-dim 4s ease-in-out infinite;
 }
 @keyframes twink-dim {
-  0%   { opacity: 0.9; }
-  8%   { opacity: 0.35; }
-  18%  { opacity: 0.70; }
-  30%  { opacity: 0.25; }
-  42%  { opacity: 0.65; }
-  55%  { opacity: 0.30; }
-  68%  { opacity: 0.60; }
-  80%  { opacity: 0.35; }
-  92%  { opacity: 0.55; }
-  100% { opacity: 0.9; }
+  0%   { opacity: 0.8; }
+  10%  { opacity: 0.50; }
+  25%  { opacity: 0.72; }
+  38%  { opacity: 0.42; }
+  52%  { opacity: 0.68; }
+  65%  { opacity: 0.45; }
+  80%  { opacity: 0.65; }
+  100% { opacity: 0.8; }
 }
 
-/* Faint (mag 3.5+): rapid unstable flickering */
+/* Faint (mag 3.5+): quicker flicker, but not frantic */
 .star--faint {
-  animation: twink-faint 2s ease-in-out infinite;
+  animation: twink-faint 3s ease-in-out infinite;
 }
 @keyframes twink-faint {
-  0%   { opacity: 0.5; }
-  10%  { opacity: 0.15; }
-  22%  { opacity: 0.42; }
-  35%  { opacity: 0.10; }
-  48%  { opacity: 0.38; }
-  60%  { opacity: 0.12; }
-  72%  { opacity: 0.35; }
-  85%  { opacity: 0.18; }
-  100% { opacity: 0.5; }
+  0%   { opacity: 0.45; }
+  12%  { opacity: 0.22; }
+  28%  { opacity: 0.40; }
+  42%  { opacity: 0.18; }
+  58%  { opacity: 0.38; }
+  72%  { opacity: 0.20; }
+  88%  { opacity: 0.35; }
+  100% { opacity: 0.45; }
 }
 
-/* Horizon (alt < 15°): intense unstable flicker
-   + static chromatic box-shadow from JS */
+/* Horizon (alt < 15°): more intense but not strobing */
 .star--horizon {
-  animation: twink-horizon 1.8s ease-in-out infinite;
+  animation: twink-horizon 2.5s ease-in-out infinite;
 }
 @keyframes twink-horizon {
-  0%   { opacity: 0.65; }
-  10%  { opacity: 0.20; }
-  20%  { opacity: 0.55; }
-  32%  { opacity: 0.15; }
-  45%  { opacity: 0.50; }
-  55%  { opacity: 0.12; }
-  68%  { opacity: 0.45; }
-  80%  { opacity: 0.18; }
-  92%  { opacity: 0.40; }
-  100% { opacity: 0.65; }
+  0%   { opacity: 0.55; }
+  14%  { opacity: 0.28; }
+  28%  { opacity: 0.48; }
+  42%  { opacity: 0.22; }
+  58%  { opacity: 0.45; }
+  72%  { opacity: 0.25; }
+  88%  { opacity: 0.42; }
+  100% { opacity: 0.55; }
 }
 
 /* ── Reduced motion: everything static ── */

@@ -168,10 +168,10 @@ function createStarElement(x, y, size, color, twinkCls, baseOpacity) {
   const renderSize = size * 3;
 
   let shadow = '';
-  if (size >= 3.5) {
-    shadow = `box-shadow: 0 0 ${size * 2}px ${color}55, 0 0 ${size * 4}px ${color}18;`;
-  } else if (size >= 2.5) {
-    shadow = `box-shadow: 0 0 ${size * 1.5}px ${color}33;`;
+  if (size >= 4) {
+    shadow = `box-shadow: 0 0 ${size}px ${color}33, 0 0 ${size * 2}px ${color}11;`;
+  } else if (size >= 3) {
+    shadow = `box-shadow: 0 0 ${size}px ${color}22;`;
   }
 
   // Soft radial glow — bright core fading to transparent
