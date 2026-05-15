@@ -635,24 +635,16 @@
    ═══════════════════════════════════════════════════ */
 
 .home-section {
-  padding: var(--space-9) var(--space-5);
-  background: linear-gradient(
-    to bottom,
-    var(--color-sky-deepest, #070B1F) 0%,
-    var(--color-sky-deep, #0A0E27) 100%
-  );
+  padding: var(--space-7) var(--space-5);
+  background: var(--color-sky-deepest, #070B1F);
 }
 
 .home-section--dark {
-  background: linear-gradient(
-    to bottom,
-    var(--color-sky-deep, #0A0E27) 0%,
-    var(--color-sky-deepest, #070B1F) 100%
-  );
+  background: var(--color-sky-deepest, #070B1F);
 }
 
 .home-section--cta {
-  padding: var(--space-10) var(--space-5);
+  padding: var(--space-8) var(--space-5);
   background: linear-gradient(
     to bottom,
     var(--color-sky-deepest, #070B1F) 0%,
