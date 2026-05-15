@@ -18,6 +18,45 @@ export function renderGallery(container) {
           ${i18n.t('gallery.subtitle')}
         </p>
 
+        <div class="video-featured">
+          <video controls preload="metadata" playsinline poster="images/milkyway-campfire.jpg">
+            <source src="videos/campfire-real.mp4" type="video/mp4">
+          </video>
+        </div>
+
+        <div class="video-grid">
+          <div class="video-card">
+            <video controls preload="metadata" playsinline>
+              <source src="videos/drone-camp-close.mp4" type="video/mp4">
+            </video>
+          </div>
+          <div class="video-card">
+            <video controls preload="metadata" playsinline>
+              <source src="videos/drone-camp-wide.mp4" type="video/mp4">
+            </video>
+          </div>
+          <div class="video-card">
+            <video controls preload="metadata" playsinline>
+              <source src="videos/camp-daytime.mp4" type="video/mp4">
+            </video>
+          </div>
+          <div class="video-card">
+            <video controls preload="metadata" playsinline>
+              <source src="videos/camp-night-arrival.mp4" type="video/mp4">
+            </video>
+          </div>
+          <div class="video-card">
+            <video controls preload="metadata" playsinline>
+              <source src="videos/cooking-pilaf.mp4" type="video/mp4">
+            </video>
+          </div>
+          <div class="video-card">
+            <video controls preload="metadata" playsinline>
+              <source src="videos/telescope-tour.mp4" type="video/mp4">
+            </video>
+          </div>
+        </div>
+
         <div class="gallery__preview">
           <div class="gallery__preview-item">
             <img src="images/moon-telescope.jpg" alt="Moon through telescope" loading="lazy">

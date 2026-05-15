@@ -45,8 +45,10 @@ export function renderSky(container) {
           <p class="text-secondary" data-i18n="sky.telescopeText">${i18n.t('sky.telescopeText')}</p>
         </div>
 
-        <div class="sky-photo">
-          <img src="images/telescope-real.jpg" alt="Robert's Skywatcher telescope at camp" loading="lazy" class="sky-photo__img">
+        <div class="video-featured">
+          <video controls preload="metadata" playsinline>
+            <source src="videos/telescope-tour.mp4" type="video/mp4">
+          </video>
         </div>
 
         <div class="sky-info-grid">
