@@ -1,49 +1,41 @@
-# TODO — GPT Review Findings (2026-05-15)
+# TODO — Status (2026-05-15)
 
-## DONE
+## DONE ✅
 
-### 1. Auth token system ✅
-- [x] Generate random token on first registration
-- [x] Save token in Firestore participant doc + localStorage
-- [x] Edit/delete only if token matches (Firestore rules)
-
-### 2. Firestore Security Rules ✅
-- [x] Create requires token
-- [x] Update requires matching token
-- [x] Cannot change phone/token/createdAt
-- [x] No hard deletes
-
-### 3. Admin panel hardening ✅
-- [x] "Clear all" requires typing DELETE
-
-### 4. Public data limits ✅
-- [x] "Who is coming" table: names only, no phones
-
-### 5. Astronomy tips ✅
-- [x] Red flashlight warning
-- [x] Eyes adapt in 20 minutes
-- [x] Best viewing after midnight
-
-### 6. Cleanup ✅
-- [x] Removed star-field.js (legacy)
-- [x] Removed placeholder-img.css (unused)
+- [x] Auth token system (generate, store, verify)
+- [x] Firestore Security Rules (token-protected writes)
+- [x] Admin panel hardening (type DELETE to clear)
+- [x] Public data limits (no phones in public table)
+- [x] Astronomy tips (red light, 20 min adaptation, after midnight)
+- [x] Cleanup (removed legacy files)
+- [x] Session recovery (recovery URL with token, copy button in Me)
+- [x] Tonight's Sky section (sunset, moonrise, peak times)
+- [x] Cinematic countdown timer (digit slide animation)
+- [x] Global star background (3 layers, page-specific density)
+- [x] Premium visual refine (desaturated colors, softer borders, cinematic transitions)
+- [x] Hero visual hierarchy (vignette, content zone, readable UI)
+- [x] 17 real photos distributed across all pages
+- [x] 7 real videos with native controls in Gallery + Sky
+- [x] Campfire removed (was too aggressive)
+- [x] Confirmed/maybe status for participants
+- [x] Companion linking (added-by system)
+- [x] Phone-based registration with Firestore
+- [x] WhatsApp group chat + individual contacts
+- [x] Welcome overlay (staggered animation, 7-day dismiss)
+- [x] Mobile bottom bar (Chat + RSVP, hidden after login)
+- [x] Bilingual RTL/LTR (Hebrew + Russian)
+- [x] Domain registered (mapal-kochavim-2026.is-a.dev — pending approval)
 
 ## REMAINING
 
-### 7. Session recovery
-- [ ] "Edit link" with token URL copied on registration
-- [ ] Fallback if user clears browser data
+### Before sending to people:
+- [ ] **Deploy Firestore rules** — go to Firebase Console → Firestore → Rules → paste firestore.rules → Publish
+- [ ] **Test full flow** on mobile: register → edit → me → who's coming
+- [ ] **Test on Hebrew** — verify all i18n renders correctly
+- [ ] **Clear test data** from Firestore before launch
 
-### 8. Service worker
-- [ ] Before event: remove or make network-first only
-
-### 9. "Tonight's Sky" live section
-- [ ] Sunset/moonrise times for event date
-- [ ] Peak Perseids viewing hour
-
-### 10. Firestore rules deployment
-- [ ] Deploy firestore.rules to Firebase Console (Rules tab → Publish)
-
-### 11. Admin improvements
-- [ ] Admin token in Firestore (not client-side phone check)
-- [ ] Check-in mode for arrival night
+### Nice to have (not blocking):
+- [ ] Service worker: remove or make network-first before event
+- [ ] Admin: check-in mode for arrival night
+- [ ] Admin: server-side token validation (currently client-side phone check)
+- [ ] Tonight's Sky: auto-calculate times instead of hardcoded

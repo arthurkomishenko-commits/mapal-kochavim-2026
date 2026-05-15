@@ -713,3 +713,31 @@
     transform: translateX(-50%) translateY(0);
   }
 }
+
+/* ═══════════════════════════════════════════════════
+   Mobile-first fixes (320px-480px)
+   ═══════════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+  /* Companion row: stack vertically */
+  .companion-row {
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+  }
+  .companion-row .form-group {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  /* Chips smaller */
+  .chip { padding: 8px 12px; font-size: 0.8rem; }
+  .chip-qty { padding: 4px 6px 4px 12px; font-size: 0.8rem; }
+  .chip-qty__btn { width: 28px; height: 28px; font-size: 0.85rem; }
+
+  /* Admin panel compact */
+  .admin-stat { font-size: 0.7rem; padding: 3px 8px; }
+  .admin-row { font-size: 0.8rem; }
+  .admin-row__phone { font-size: 0.7rem; }
+  .admin-panel__actions { flex-wrap: wrap; }
+}

@@ -1223,3 +1223,30 @@
 .home-bring-item--maybe .home-bring-item__label {
   color: rgba(165, 160, 154, 0.6);
 }
+
+/* ═══════════════════════════════════════════════════
+   Mobile-first fixes (320px-480px)
+   ═══════════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+  /* Countdown: fit on 320px */
+  .cd { gap: 4px; }
+  .cd__digits { gap: 1px; }
+  .cd-digit { width: 26px; height: 38px; border-radius: 5px; }
+  .cd-digit__current, .cd-digit__next { font-size: 1.3rem; }
+  .cd__label { font-size: 0.7rem; }
+  .cd__sep { font-size: 1.1rem; line-height: 38px; }
+
+  /* Section titles responsive */
+  .home-section__title { font-size: clamp(1.4rem, 6vw, 2rem); }
+
+  /* Bringing items smaller */
+  .home-bring-item { padding: 8px 12px; font-size: 0.8rem; }
+  .home-bring-item--highlight { padding: 10px 14px; }
+  .home-bring-item--highlight .home-bring-item__count { font-size: 1.1rem; }
+
+  /* Who table tighter */
+  .who-row { padding: 10px 12px; }
+  .who-row__name { font-size: 0.85rem; }
+  .who-chip { font-size: 0.65rem; padding: 2px 6px; }
+}

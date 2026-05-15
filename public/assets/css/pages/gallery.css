@@ -161,3 +161,13 @@
     max-height: 600px;
   }
 }
+
+/* ── Mobile: single column videos ── */
+@media (max-width: 480px) {
+  .video-grid {
+    grid-template-columns: 1fr;
+  }
+  .gallery__preview {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

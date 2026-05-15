@@ -110,3 +110,14 @@
   color: var(--color-ember-bright);
   margin-block-end: var(--space-3);
 }
+
+/* ── Very small screens: single column ── */
+@media (max-width: 400px) {
+  .place-photos-grid {
+    grid-template-columns: 1fr;
+  }
+  .place-photos-grid .place-photo__img {
+    height: auto;
+    max-height: 250px;
+  }
+}
