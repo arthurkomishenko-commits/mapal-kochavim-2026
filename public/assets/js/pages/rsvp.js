@@ -120,7 +120,7 @@ let containerEl = null;
 
 function resetState() {
   formData = {
-    phone: '', name: '', city: '', isDriving: false, confirmed: true, kids: 0,
+    phone: '', name: '', city: '', isDriving: false, confirmed: true, kids: 0, arrivalDay: '13', departureDay: '15',
     companions: [], bringing: {},
     addedByPhone: null, addedByName: null,
   };
@@ -319,6 +319,77 @@ function renderForm() {
   confirmHint.setAttribute('data-i18n', 'rsvp.confirmedHint');
   confirmSection.appendChild(confirmHint);
   inner.appendChild(confirmSection);
+
+  // ── Arrival / Departure days ──
+  const daysSection = document.createElement('div');
+  daysSection.className = 'form-section';
+
+  const daysTitle = document.createElement('div');
+  daysTitle.className = 'form-section__title';
+  daysTitle.textContent = i18n.t('rsvp.daysTitle');
+  daysTitle.setAttribute('data-i18n', 'rsvp.daysTitle');
+  daysSection.appendChild(daysTitle);
+
+  // Arrival
+  const arrLabel = document.createElement('div');
+  arrLabel.className = 'form-label';
+  arrLabel.textContent = i18n.t('rsvp.arrivalLabel');
+  arrLabel.setAttribute('data-i18n', 'rsvp.arrivalLabel');
+  daysSection.appendChild(arrLabel);
+
+  const arrChips = document.createElement('div');
+  arrChips.className = 'chips-grid';
+  arrChips.id = 'rsvp-arrival';
+  ['13', '14'].forEach(day => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = `chip ${formData.arrivalDay === day ? 'chip--active' : ''}`;
+    chip.dataset.day = day;
+    chip.textContent = `${day} ${i18n.t('rsvp.aug')}`;
+    chip.addEventListener('click', () => {
+      arrChips.querySelectorAll('.chip').forEach(c => c.classList.remove('chip--active'));
+      chip.classList.add('chip--active');
+    });
+    arrChips.appendChild(chip);
+  });
+  // Default to 13 if nothing selected
+  if (!formData.arrivalDay) {
+    const first = arrChips.querySelector('.chip');
+    if (first) first.classList.add('chip--active');
+  }
+  daysSection.appendChild(arrChips);
+
+  // Departure
+  const depLabel = document.createElement('div');
+  depLabel.className = 'form-label';
+  depLabel.style.marginBlockStart = '12px';
+  depLabel.textContent = i18n.t('rsvp.departureLabel');
+  depLabel.setAttribute('data-i18n', 'rsvp.departureLabel');
+  daysSection.appendChild(depLabel);
+
+  const depChips = document.createElement('div');
+  depChips.className = 'chips-grid';
+  depChips.id = 'rsvp-departure';
+  ['14', '15'].forEach(day => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = `chip ${formData.departureDay === day ? 'chip--active' : ''}`;
+    chip.dataset.day = day;
+    chip.textContent = `${day} ${i18n.t('rsvp.aug')}`;
+    chip.addEventListener('click', () => {
+      depChips.querySelectorAll('.chip').forEach(c => c.classList.remove('chip--active'));
+      chip.classList.add('chip--active');
+    });
+    depChips.appendChild(chip);
+  });
+  // Default to 15 if nothing selected
+  if (!formData.departureDay) {
+    const last = depChips.querySelectorAll('.chip')[1];
+    if (last) last.classList.add('chip--active');
+  }
+  daysSection.appendChild(depChips);
+
+  inner.appendChild(daysSection);
 
   // ── Driving toggle ──
   const drivingSection = document.createElement('div');
@@ -647,6 +718,8 @@ async function handleSave() {
   const city = cityInput?.value.trim() || '';
   const isDriving = document.getElementById('rsvp-driving-toggle')?.classList.contains('form-toggle--active') || false;
   const confirmed = document.getElementById('rsvp-confirmed-toggle')?.classList.contains('form-toggle--active') ?? true;
+  const arrivalDay = document.querySelector('#rsvp-arrival .chip--active')?.dataset.day || '13';
+  const departureDay = document.querySelector('#rsvp-departure .chip--active')?.dataset.day || '15';
   const kids = parseInt(document.querySelector('#rsvp-kids .chip-qty__count')?.textContent) || 0;
 
   // Validate name
@@ -686,6 +759,8 @@ async function handleSave() {
     city,
     isDriving,
     confirmed,
+    arrivalDay,
+    departureDay,
     kids,
     companions,
     companionPhones,

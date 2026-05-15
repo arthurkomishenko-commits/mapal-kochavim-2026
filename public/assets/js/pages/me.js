@@ -174,6 +174,10 @@ function renderProfile(data) {
           </div>
           ` : ''}
           <div class="me-field">
+            <span class="me-field__label" data-i18n="rsvp.daysTitle">${i18n.t('rsvp.daysTitle')}</span>
+            <span class="me-field__value">${data.arrivalDay || '13'} – ${data.departureDay || '15'} ${i18n.t('rsvp.aug')}</span>
+          </div>
+          <div class="me-field">
             <span class="me-field__label" data-i18n="rsvp.drivingLabel">${i18n.t('rsvp.drivingLabel')}</span>
             <span class="me-field__value">${data.isDriving ? i18n.t('rsvp.drivingYes') : i18n.t('rsvp.drivingNo')}</span>
           </div>
