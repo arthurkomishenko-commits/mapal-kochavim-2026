@@ -7,6 +7,7 @@ import { router } from './core/router.js';
 import { auth } from './core/auth.js';
 import { initNav } from './components/nav.js';
 import { initWelcomeOverlay } from './components/welcome-overlay.js';
+import { initCampfire } from './components/campfire.js';
 
 import { renderHome } from './pages/home.js';
 import { renderPlace } from './pages/place.js';
@@ -55,6 +56,9 @@ async function boot() {
   }
   updateBottomBar();
   window.addEventListener('authchange', updateBottomBar);
+
+  // Campfire
+  initCampfire(document.getElementById('campfire'));
 
   // Start
   router.init(document.getElementById('page-container'));

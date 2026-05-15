@@ -1,0 +1,286 @@
+/* ═══════════════════════════════════════════════════
+   Campfire — cinematic desert fire in footer
+
+   Philosophy: "tiny human warmth beneath massive cold cosmos"
+   - Small, low, off-center fire
+   - Slow turbulent movement (no fast pulsing)
+   - Only transform + opacity animated (GPU-safe)
+   - Static glow (no animated blur/filter)
+   - Rare embers (1 every ~15 sec)
+   - Desert terrain silhouette
+   ═══════════════════════════════════════════════════ */
+
+.campfire {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  overflow: hidden;
+  pointer-events: none;
+  margin-block-end: -1px; /* seamless with footer bg */
+}
+
+/* ── Desert terrain silhouette ── */
+
+.campfire__terrain {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 35px;
+  background: #050815;
+  border-radius: 80% 60% 0 0 / 100% 100% 0 0;
+}
+
+.campfire__terrain::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -10%;
+  width: 120%;
+  height: 25px;
+  background: #040610;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+}
+
+/* ── Fire container — slightly off-center ── */
+
+.campfire__fire {
+  position: absolute;
+  bottom: 28px;
+  left: 45%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 50px;
+}
+
+/* ── Glow — large, soft, warm, static ── */
+
+.campfire__glow {
+  position: absolute;
+  bottom: 10px;
+  left: 45%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 100px;
+  background: radial-gradient(
+    ellipse 50% 60% at 50% 80%,
+    rgba(255, 177, 92, 0.08) 0%,
+    rgba(255, 138, 61, 0.04) 30%,
+    rgba(201, 151, 82, 0.02) 50%,
+    transparent 70%
+  );
+  animation: glow-breathe 12s ease-in-out infinite;
+}
+
+/* ── Ground illumination ── */
+
+.campfire__ground-light {
+  position: absolute;
+  bottom: 20px;
+  left: 45%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 20px;
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgba(255, 177, 92, 0.06) 0%,
+    transparent 70%
+  );
+  border-radius: 50%;
+}
+
+/* ── Flames — layered, each with unique timing ── */
+
+.campfire__flame {
+  position: absolute;
+  bottom: 0;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  transform-origin: bottom center;
+}
+
+/* Main flame — tallest, central */
+.campfire__flame--1 {
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 28px;
+  background: linear-gradient(
+    to top,
+    rgba(255, 138, 61, 0.9) 0%,
+    rgba(255, 177, 92, 0.7) 40%,
+    rgba(255, 210, 122, 0.4) 70%,
+    transparent 100%
+  );
+  animation: flame-dance-1 3.2s ease-in-out infinite;
+}
+
+/* Left flame — shorter, leaning */
+.campfire__flame--2 {
+  left: 30%;
+  width: 9px;
+  height: 20px;
+  background: linear-gradient(
+    to top,
+    rgba(255, 138, 61, 0.8) 0%,
+    rgba(255, 177, 92, 0.5) 50%,
+    transparent 100%
+  );
+  animation: flame-dance-2 4.1s ease-in-out infinite;
+}
+
+/* Right flame — medium, slightly delayed */
+.campfire__flame--3 {
+  right: 25%;
+  width: 10px;
+  height: 22px;
+  background: linear-gradient(
+    to top,
+    rgba(201, 151, 82, 0.85) 0%,
+    rgba(255, 177, 92, 0.5) 45%,
+    transparent 100%
+  );
+  animation: flame-dance-3 3.7s ease-in-out infinite;
+}
+
+/* Tiny wisp — very small, erratic */
+.campfire__flame--4 {
+  left: 55%;
+  width: 6px;
+  height: 14px;
+  background: linear-gradient(
+    to top,
+    rgba(255, 210, 122, 0.6) 0%,
+    rgba(255, 177, 92, 0.3) 60%,
+    transparent 100%
+  );
+  animation: flame-dance-4 2.8s ease-in-out infinite;
+}
+
+/* ── Logs ── */
+
+.campfire__logs {
+  position: absolute;
+  bottom: 24px;
+  left: 45%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 12px;
+}
+
+.campfire__log {
+  position: absolute;
+  background: #1a1410;
+  border-radius: 2px;
+}
+
+.campfire__log--1 {
+  bottom: 0;
+  left: 2px;
+  width: 30px;
+  height: 5px;
+  transform: rotate(-8deg);
+  box-shadow: 0 -1px 3px rgba(255, 138, 61, 0.15);
+}
+
+.campfire__log--2 {
+  bottom: 2px;
+  right: 2px;
+  width: 28px;
+  height: 4px;
+  transform: rotate(12deg);
+  box-shadow: 0 -1px 3px rgba(255, 138, 61, 0.12);
+}
+
+/* ── Ember particle (spawned by JS) ── */
+
+.campfire__ember {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #FFD27A;
+  opacity: 0;
+  animation: ember-rise 3.5s ease-out forwards;
+  will-change: transform, opacity;
+}
+
+/* ═══ ANIMATIONS ═══ */
+
+/* Glow breathing — very slow, barely noticeable */
+@keyframes glow-breathe {
+  0%, 100% { opacity: 0.8; }
+  35% { opacity: 1; }
+  65% { opacity: 0.7; }
+}
+
+/* Flame 1 — main, slow sway + height variation */
+@keyframes flame-dance-1 {
+  0%   { transform: translateX(-50%) scaleY(1) scaleX(1) rotate(0deg); opacity: 0.9; }
+  20%  { transform: translateX(-50%) scaleY(1.08) scaleX(0.92) rotate(-2deg); opacity: 1; }
+  40%  { transform: translateX(-50%) scaleY(0.95) scaleX(1.05) rotate(1deg); opacity: 0.85; }
+  60%  { transform: translateX(-50%) scaleY(1.12) scaleX(0.88) rotate(-1deg); opacity: 0.95; }
+  80%  { transform: translateX(-50%) scaleY(0.98) scaleX(1.02) rotate(2deg); opacity: 0.88; }
+  100% { transform: translateX(-50%) scaleY(1) scaleX(1) rotate(0deg); opacity: 0.9; }
+}
+
+/* Flame 2 — left, different rhythm */
+@keyframes flame-dance-2 {
+  0%   { transform: scaleY(1) rotate(-5deg); opacity: 0.8; }
+  25%  { transform: scaleY(1.15) rotate(-8deg); opacity: 0.9; }
+  50%  { transform: scaleY(0.85) rotate(-3deg); opacity: 0.7; }
+  75%  { transform: scaleY(1.05) rotate(-10deg); opacity: 0.85; }
+  100% { transform: scaleY(1) rotate(-5deg); opacity: 0.8; }
+}
+
+/* Flame 3 — right, slower */
+@keyframes flame-dance-3 {
+  0%   { transform: scaleY(1) rotate(4deg); opacity: 0.85; }
+  30%  { transform: scaleY(0.9) rotate(7deg); opacity: 0.75; }
+  55%  { transform: scaleY(1.1) rotate(2deg); opacity: 0.92; }
+  80%  { transform: scaleY(0.95) rotate(6deg); opacity: 0.8; }
+  100% { transform: scaleY(1) rotate(4deg); opacity: 0.85; }
+}
+
+/* Flame 4 — wisp, erratic */
+@keyframes flame-dance-4 {
+  0%   { transform: scaleY(1) translateX(0); opacity: 0.6; }
+  15%  { transform: scaleY(1.2) translateX(2px); opacity: 0.75; }
+  40%  { transform: scaleY(0.7) translateX(-1px); opacity: 0.5; }
+  65%  { transform: scaleY(1.3) translateX(1px); opacity: 0.7; }
+  85%  { transform: scaleY(0.8) translateX(-2px); opacity: 0.55; }
+  100% { transform: scaleY(1) translateX(0); opacity: 0.6; }
+}
+
+/* Ember — slow rise, fade */
+@keyframes ember-rise {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.8;
+  }
+  30% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(var(--ember-dx, 8px), var(--ember-dy, -60px)) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .campfire__flame,
+  .campfire__glow,
+  .campfire__ember {
+    animation: none !important;
+  }
+  .campfire__flame { opacity: 0.8; }
+  .campfire__glow { opacity: 0.7; }
+  .campfire__ember { display: none; }
+}
+
+/* ── Responsive — slightly smaller on very small screens ── */
+@media (max-width: 380px) {
+  .campfire__fire {
+    transform: translateX(-50%) scale(0.85);
+  }
+}
