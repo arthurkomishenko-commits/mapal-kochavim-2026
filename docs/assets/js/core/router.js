@@ -19,6 +19,25 @@ function getRouteFromHash() {
   return hash || DEFAULT_ROUTE;
 }
 
+/**
+ * Handle recovery links: #recover/phone/token
+ * Restores session from token and redirects to #me
+ */
+function checkRecoveryLink() {
+  const hash = window.location.hash;
+  if (!hash.startsWith('#recover/')) return false;
+  const parts = hash.slice(9).split('/'); // remove #recover/
+  if (parts.length >= 2) {
+    const phone = parts[0];
+    const token = parts[1];
+    // Store in localStorage — auth module will pick it up
+    localStorage.setItem('mapal-user', JSON.stringify({ phone, name: '', token }));
+    window.location.hash = 'me';
+    return true;
+  }
+  return false;
+}
+
 async function navigate(routeName) {
   const handler = routes.get(routeName);
   if (!handler) {
@@ -75,6 +94,7 @@ async function navigate(routeName) {
 }
 
 function handleHashChange() {
+  if (checkRecoveryLink()) return;
   const route = getRouteFromHash();
   navigate(route);
 }

@@ -124,3 +124,38 @@
 .sky-tips li:last-child {
   border: none;
 }
+
+/* ── Tonight's sky schedule ── */
+
+.sky-tonight {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-block-start: var(--space-4);
+}
+
+.sky-tonight__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-block-end: 1px solid rgba(245, 239, 224, 0.04);
+}
+
+.sky-tonight__item:last-child {
+  border: none;
+}
+
+.sky-tonight__label {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.sky-tonight__value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-ember-bright);
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+  display: inline-block;
+}

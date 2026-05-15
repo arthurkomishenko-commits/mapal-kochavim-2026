@@ -204,6 +204,10 @@ function renderProfile(data) {
         </button>
         ` : ''}
 
+        <button type="button" class="form-cancel-link" id="me-recovery" style="color:rgba(165,160,154,0.5);">
+          ${i18n.t('me.copyRecoveryLink')}
+        </button>
+
         <button type="button" class="form-cancel-link" id="me-logout" style="color:rgba(165,160,154,0.3);">
           ${i18n.t('common.logout')}
         </button>
@@ -221,6 +225,21 @@ function renderProfile(data) {
       localStorage.setItem('mapal-rsvp-' + data.phone, JSON.stringify(data));
       showToast(i18n.t('me.cancelled'));
       renderProfile(data);
+    });
+  }
+
+  // Recovery link
+  const recoveryBtn = document.getElementById('me-recovery');
+  if (recoveryBtn) {
+    recoveryBtn.addEventListener('click', () => {
+      const user = auth.getUser();
+      if (!user) return;
+      const url = `${location.origin}${location.pathname}#recover/${user.phone}/${user.token}`;
+      navigator.clipboard.writeText(url).then(() => {
+        showToast(i18n.t('me.recoveryLinkCopied'));
+      }).catch(() => {
+        prompt(i18n.t('me.copyRecoveryLink'), url);
+      });
     });
   }
 

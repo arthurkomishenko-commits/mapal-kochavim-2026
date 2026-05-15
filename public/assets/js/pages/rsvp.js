@@ -717,6 +717,10 @@ async function handleSave() {
     // Login with token
     auth.login(data.phone, data.name, data.token);
 
+    // Copy recovery link to clipboard (silent, no toast yet)
+    const recoveryUrl = `${location.origin}${location.pathname}#recover/${data.phone}/${data.token}`;
+    try { await navigator.clipboard.writeText(recoveryUrl); } catch {}
+
     showToast(i18n.t('rsvp.saved'));
 
     setTimeout(() => {

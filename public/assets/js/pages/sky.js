@@ -64,6 +64,32 @@ export function renderSky(container) {
           </div>
         </div>
 
+        <div class="sky-card" style="margin-block-start:var(--space-6);">
+          <h2 data-i18n="sky.tonightTitle">${i18n.t('sky.tonightTitle')}</h2>
+          <div class="sky-tonight">
+            <div class="sky-tonight__item">
+              <span class="sky-tonight__label" data-i18n="sky.tonightSunset">${i18n.t('sky.tonightSunset')}</span>
+              <span class="sky-tonight__value">19:22</span>
+            </div>
+            <div class="sky-tonight__item">
+              <span class="sky-tonight__label" data-i18n="sky.tonightSunrise">${i18n.t('sky.tonightSunrise')}</span>
+              <span class="sky-tonight__value">05:38</span>
+            </div>
+            <div class="sky-tonight__item">
+              <span class="sky-tonight__label" data-i18n="sky.tonightMoonrise">${i18n.t('sky.tonightMoonrise')}</span>
+              <span class="sky-tonight__value">00:30</span>
+            </div>
+            <div class="sky-tonight__item">
+              <span class="sky-tonight__label" data-i18n="sky.tonightPeak">${i18n.t('sky.tonightPeak')}</span>
+              <span class="sky-tonight__value">01:00–04:00</span>
+            </div>
+            <div class="sky-tonight__item">
+              <span class="sky-tonight__label" data-i18n="sky.tonightBest">${i18n.t('sky.tonightBest')}</span>
+              <span class="sky-tonight__value">02:00–03:30</span>
+            </div>
+          </div>
+        </div>
+
         <div class="sky-card sky-card--featured" style="margin-block-start:var(--space-6);">
           <h2 data-i18n="sky.tipsTitle">${i18n.t('sky.tipsTitle')}</h2>
           <ul class="sky-tips">

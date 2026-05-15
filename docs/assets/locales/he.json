@@ -131,6 +131,12 @@
     "moonText": "סהר הולך ונעלם, זריחת ירח אחרי חצות. כמעט לא מפריע לצפייה.",
     "planetsTitle": "כוכבי לכת",
     "planetsText": "שבתאי וצדק נראים כל הלילה.",
+    "tonightTitle": "ליל 13 באוגוסט",
+    "tonightSunset": "שקיעה",
+    "tonightSunrise": "זריחה",
+    "tonightMoonrise": "זריחת ירח",
+    "tonightPeak": "שיא הפרסאידים",
+    "tonightBest": "הזמן הטוב ביותר",
     "tipsTitle": "טיפים לצפייה",
     "tip1": "אל תשתמשו בפנס לבן ליד הטלסקופ — רק אור אדום.",
     "tip2": "העיניים מתרגלות לחושך תוך 20 דקות — תתאזרו בסבלנות, זה שווה.",
@@ -260,6 +266,8 @@
     "adminExport": "העתק רשימה",
     "adminClearAll": "מחק הכל",
     "adminClearConfirm": "הקלידו DELETE כדי למחוק את כל הרישומים:",
+    "copyRecoveryLink": "העתק קישור כניסה",
+    "recoveryLinkCopied": "הקישור הועתק — שמרו אותו",
     "lastUpdated": "עודכן לאחרונה"
   },
   "gallery": {
