@@ -315,6 +315,12 @@ export function renderHome(container) {
           </div>
         </div>
 
+        <div class="home-action-btns" style="margin-block-start:var(--space-6);">
+          <button type="button" class="home-who-btn" id="home-who-btn" data-i18n="home.whoBtn">${i18n.t('home.whoBtn')}</button>
+          <a href="#pack" class="home-who-btn" data-i18n="nav.pack">${i18n.t('nav.pack')}</a>
+        </div>
+        <div id="home-who-table" class="home-who-table" style="display:none;"></div>
+
       </div>
     </section>
 
@@ -323,11 +329,6 @@ export function renderHome(container) {
       <div class="home-section__inner">
         <h2 class="home-section__title" data-i18n="home.bringingTitle">${i18n.t('home.bringingTitle')}</h2>
         <div id="home-bringing-grid" class="home-bringing-grid"></div>
-        <div class="home-action-btns">
-          <button type="button" class="home-who-btn" id="home-who-btn" data-i18n="home.whoBtn">${i18n.t('home.whoBtn')}</button>
-          <a href="#pack" class="home-who-btn" data-i18n="nav.pack">${i18n.t('nav.pack')}</a>
-        </div>
-        <div id="home-who-table" class="home-who-table" style="display:none;"></div>
       </div>
     </section>
 
