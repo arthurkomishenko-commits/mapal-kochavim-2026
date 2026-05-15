@@ -26,6 +26,7 @@ async function loadSDK() {
 }
 
 function getFS() {
+  if (!db._fs) throw new Error('Firebase SDK not loaded');
   return db._fs;
 }
 

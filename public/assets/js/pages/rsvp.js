@@ -97,6 +97,7 @@ let formData = {
   name: '',
   city: '',
   isDriving: false,
+  kids: 0,
   companions: [],
   bringing: {},
   addedByPhone: null,
@@ -183,7 +184,7 @@ function renderPhoneEntry() {
   });
 }
 
-function handlePhoneSubmit() {
+async function handlePhoneSubmit() {
   const input = document.getElementById('rsvp-phone');
   const raw = input.value.trim();
 
@@ -597,7 +598,7 @@ function addCompanionRow(list, name = '', phone = '') {
 // SAVE
 // ═══════════════════════════════════════════════════
 
-function handleSave() {
+async function handleSave() {
   const nameInput = document.getElementById('rsvp-name');
   const cityInput = document.getElementById('rsvp-city');
   const name = nameInput?.value.trim() || '';
@@ -632,7 +633,7 @@ function handleSave() {
   });
   document.querySelectorAll('.chip-qty').forEach(wrap => {
     const n = parseInt(wrap.querySelector('.chip-qty__count')?.textContent) || 0;
-    bringing[wrap.dataset.item] = n;
+    if (n > 0) bringing[wrap.dataset.item] = n;
   });
 
   const data = {

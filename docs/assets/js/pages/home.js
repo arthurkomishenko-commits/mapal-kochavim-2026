@@ -454,6 +454,7 @@ export function renderHome(container) {
     renderHomeBringing();
     initWhoButton();
   }).catch(() => {
+    cachedParticipants = getAllParticipantsLocal();
     renderHomeBringing();
     initWhoButton();
   });

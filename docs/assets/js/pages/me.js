@@ -207,9 +207,10 @@ function renderProfile(data) {
   // Cancel handler
   const cancelBtn = document.getElementById('me-cancel');
   if (cancelBtn) {
-    cancelBtn.addEventListener('click', () => {
+    cancelBtn.addEventListener('click', async () => {
       data.cancelled = true;
       data.updatedAt = new Date().toISOString();
+      try { await db.saveParticipant(data); } catch {}
       localStorage.setItem('mapal-rsvp-' + data.phone, JSON.stringify(data));
       showToast(i18n.t('me.cancelled'));
       renderProfile(data);
@@ -227,7 +228,7 @@ function renderProfile(data) {
 
   // Admin panel
   if (auth.isAdmin()) {
-    renderAdminPanel();
+    renderAdminPanel().catch(() => {});
   }
 }
 
