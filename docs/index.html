@@ -25,24 +25,25 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rubik:wght@400;600;700;800&display=swap">
 
   <!-- CSS: tokens → reset → typography → components → pages -->
-  <link rel="stylesheet" href="assets/css/tokens.css?v=24">
-  <link rel="stylesheet" href="assets/css/reset.css?v=24">
-  <link rel="stylesheet" href="assets/css/typography.css?v=24">
-  <link rel="stylesheet" href="assets/css/components/nav.css?v=24">
-  <link rel="stylesheet" href="assets/css/components/welcome.css?v=24">
-  <link rel="stylesheet" href="assets/css/components/page-section.css?v=24">
-  <link rel="stylesheet" href="assets/css/components/footer.css?v=24">
-  <link rel="stylesheet" href="assets/css/components/form.css?v=24">
-  <link rel="stylesheet" href="assets/css/components/campfire.css?v=24">
-  <link rel="stylesheet" href="assets/css/pages/home.css?v=24">
-  <link rel="stylesheet" href="assets/css/pages/place.css?v=24">
-  <link rel="stylesheet" href="assets/css/pages/program.css?v=24">
-  <link rel="stylesheet" href="assets/css/pages/pack.css?v=24">
-  <link rel="stylesheet" href="assets/css/pages/sky.css?v=24">
-  <link rel="stylesheet" href="assets/css/pages/safety.css?v=24">
-  <link rel="stylesheet" href="assets/css/pages/contacts.css?v=24">
-  <link rel="stylesheet" href="assets/css/pages/gallery.css?v=24">
-  <link rel="stylesheet" href="assets/css/pages/people.css?v=24">
+  <link rel="stylesheet" href="assets/css/tokens.css?v=25">
+  <link rel="stylesheet" href="assets/css/reset.css?v=25">
+  <link rel="stylesheet" href="assets/css/typography.css?v=25">
+  <link rel="stylesheet" href="assets/css/components/nav.css?v=25">
+  <link rel="stylesheet" href="assets/css/components/welcome.css?v=25">
+  <link rel="stylesheet" href="assets/css/components/page-section.css?v=25">
+  <link rel="stylesheet" href="assets/css/components/footer.css?v=25">
+  <link rel="stylesheet" href="assets/css/components/form.css?v=25">
+  <link rel="stylesheet" href="assets/css/components/stars-bg.css?v=25">
+  <link rel="stylesheet" href="assets/css/components/campfire.css?v=25">
+  <link rel="stylesheet" href="assets/css/pages/home.css?v=25">
+  <link rel="stylesheet" href="assets/css/pages/place.css?v=25">
+  <link rel="stylesheet" href="assets/css/pages/program.css?v=25">
+  <link rel="stylesheet" href="assets/css/pages/pack.css?v=25">
+  <link rel="stylesheet" href="assets/css/pages/sky.css?v=25">
+  <link rel="stylesheet" href="assets/css/pages/safety.css?v=25">
+  <link rel="stylesheet" href="assets/css/pages/contacts.css?v=25">
+  <link rel="stylesheet" href="assets/css/pages/gallery.css?v=25">
+  <link rel="stylesheet" href="assets/css/pages/people.css?v=25">
 
   <!-- Prevent FOUC -->
   <style>html { background-color: #070B1F; }</style>
@@ -55,6 +56,14 @@
       <a href="#home" class="nav__logo">מפל כוכבים 2026</a>
     </nav>
   </header>
+
+  <!-- ═══ Global star background ═══ -->
+  <div class="stars-bg" id="stars-bg" aria-hidden="true">
+    <div class="stars-bg__layer stars-bg__faint"></div>
+    <div class="stars-bg__layer stars-bg__medium"></div>
+    <div class="stars-bg__layer stars-bg__bright"></div>
+    <div class="stars-bg__vignette"></div>
+  </div>
 
   <!-- ═══ Page container (router renders here) ═══ -->
   <main id="page-container"></main>
@@ -110,6 +119,6 @@
       });
     }
   </script>
-  <script type="module" src="assets/js/main.js?v=24"></script>
+  <script type="module" src="assets/js/main.js?v=25"></script>
 </body>
 </html>
