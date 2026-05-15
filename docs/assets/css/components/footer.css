@@ -34,6 +34,71 @@
   color: var(--color-ember);
 }
 
+/* ── Sticky bottom bar (mobile only, hidden after login) ── */
+
+.bottom-bar {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 9000;
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    background: rgba(7, 11, 31, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-block-start: 1px solid rgba(245, 239, 224, 0.06);
+  }
+
+  .bottom-bar--hidden {
+    display: none !important;
+  }
+
+  .bottom-bar__btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    min-height: 48px;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.2s ease;
+  }
+
+  .bottom-bar__btn:active {
+    opacity: 0.8;
+  }
+
+  .bottom-bar__btn--chat {
+    background: rgba(37, 211, 102, 0.12);
+    border: 1px solid rgba(37, 211, 102, 0.2);
+    color: #25D366;
+  }
+
+  .bottom-bar__btn--rsvp {
+    background: linear-gradient(135deg, #D4853A 0%, #E89B4B 100%);
+    color: var(--color-sky-deepest, #070B1F);
+    border: none;
+  }
+
+  /* Add padding to footer so it's not hidden behind bottom bar */
+  .footer {
+    padding-block-end: 80px;
+  }
+}
+
 .footer__safety-link {
   display: inline-block;
   margin-block-start: var(--space-4);

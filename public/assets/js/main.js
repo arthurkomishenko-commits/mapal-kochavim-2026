@@ -44,6 +44,16 @@ async function boot() {
   // Re-render on language switch
   window.addEventListener('langchange', () => router.refresh());
 
+  // Bottom bar — hide after login
+  function updateBottomBar() {
+    const bar = document.getElementById('bottom-bar');
+    if (!bar) return;
+    const user = JSON.parse(localStorage.getItem('mapal-user') || 'null');
+    bar.classList.toggle('bottom-bar--hidden', !!user);
+  }
+  updateBottomBar();
+  window.addEventListener('authchange', updateBottomBar);
+
   // Start
   router.init(document.getElementById('page-container'));
 }

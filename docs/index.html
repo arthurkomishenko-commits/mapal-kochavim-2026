@@ -25,24 +25,24 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rubik:wght@400;600;700;800&display=swap">
 
   <!-- CSS: tokens → reset → typography → components → pages -->
-  <link rel="stylesheet" href="assets/css/tokens.css?v=9">
-  <link rel="stylesheet" href="assets/css/reset.css?v=9">
-  <link rel="stylesheet" href="assets/css/typography.css?v=9">
-  <link rel="stylesheet" href="assets/css/components/nav.css?v=9">
-  <link rel="stylesheet" href="assets/css/components/welcome.css?v=9">
-  <link rel="stylesheet" href="assets/css/components/page-section.css?v=9">
-  <link rel="stylesheet" href="assets/css/components/footer.css?v=9">
-  <link rel="stylesheet" href="assets/css/components/form.css?v=9">
-  <link rel="stylesheet" href="assets/css/components/placeholder-img.css?v=9">
-  <link rel="stylesheet" href="assets/css/pages/home.css?v=9">
-  <link rel="stylesheet" href="assets/css/pages/place.css?v=9">
-  <link rel="stylesheet" href="assets/css/pages/program.css?v=9">
-  <link rel="stylesheet" href="assets/css/pages/pack.css?v=9">
-  <link rel="stylesheet" href="assets/css/pages/sky.css?v=9">
-  <link rel="stylesheet" href="assets/css/pages/safety.css?v=9">
-  <link rel="stylesheet" href="assets/css/pages/contacts.css?v=9">
-  <link rel="stylesheet" href="assets/css/pages/gallery.css?v=9">
-  <link rel="stylesheet" href="assets/css/pages/people.css?v=9">
+  <link rel="stylesheet" href="assets/css/tokens.css?v=10">
+  <link rel="stylesheet" href="assets/css/reset.css?v=10">
+  <link rel="stylesheet" href="assets/css/typography.css?v=10">
+  <link rel="stylesheet" href="assets/css/components/nav.css?v=10">
+  <link rel="stylesheet" href="assets/css/components/welcome.css?v=10">
+  <link rel="stylesheet" href="assets/css/components/page-section.css?v=10">
+  <link rel="stylesheet" href="assets/css/components/footer.css?v=10">
+  <link rel="stylesheet" href="assets/css/components/form.css?v=10">
+  <link rel="stylesheet" href="assets/css/components/placeholder-img.css?v=10">
+  <link rel="stylesheet" href="assets/css/pages/home.css?v=10">
+  <link rel="stylesheet" href="assets/css/pages/place.css?v=10">
+  <link rel="stylesheet" href="assets/css/pages/program.css?v=10">
+  <link rel="stylesheet" href="assets/css/pages/pack.css?v=10">
+  <link rel="stylesheet" href="assets/css/pages/sky.css?v=10">
+  <link rel="stylesheet" href="assets/css/pages/safety.css?v=10">
+  <link rel="stylesheet" href="assets/css/pages/contacts.css?v=10">
+  <link rel="stylesheet" href="assets/css/pages/gallery.css?v=10">
+  <link rel="stylesheet" href="assets/css/pages/people.css?v=10">
 
   <!-- Prevent FOUC -->
   <style>html { background-color: #070B1F; }</style>
@@ -71,6 +71,17 @@
     <a href="#safety" class="footer__safety-link" data-i18n="nav.safety">Safety</a>
   </footer>
 
+  <!-- ═══ Mobile bottom bar (hidden after login) ═══ -->
+  <div class="bottom-bar" id="bottom-bar">
+    <a href="https://chat.whatsapp.com/LdDC7EBT1vC7HMhaRjPchc?mode=gi_t" target="_blank" rel="noopener" class="bottom-bar__btn bottom-bar__btn--chat">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.553 4.12 1.523 5.855L0 24l6.335-1.652A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75c-1.875 0-3.615-.525-5.107-1.432l-.366-.217-3.795.99.999-3.648-.238-.378A9.69 9.69 0 0 1 2.25 12 9.75 9.75 0 1 1 12 21.75z"/></svg>
+      <span data-i18n="home.groupChat">Chat</span>
+    </a>
+    <a href="#rsvp" class="bottom-bar__btn bottom-bar__btn--rsvp">
+      <span data-i18n="home.cta">RSVP</span>
+    </a>
+  </div>
+
   <!-- ═══ Scripts ═══ -->
   <!-- Kill service worker + caches before loading app -->
   <script>
@@ -83,6 +94,6 @@
       });
     }
   </script>
-  <script type="module" src="assets/js/main.js?v=9"></script>
+  <script type="module" src="assets/js/main.js?v=10"></script>
 </body>
 </html>
