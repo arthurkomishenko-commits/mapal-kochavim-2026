@@ -119,6 +119,10 @@ function setDisplay(id, value) {
 }
 
 export function initCountdown() {
+  // Clear previous interval (navigated away and back)
+  if (intervalId) { clearInterval(intervalId); intervalId = null; }
+  prevValues = { days: '', hours: '', minutes: '', seconds: '' };
+
   const el = document.getElementById('cd-days');
   if (!el) return;
 
