@@ -204,7 +204,7 @@ function renderWhoTable(container) {
       kidsHtml = `<span class="who-companion">${p.kids} ${i18n.t('rsvp.kidsLabel')}</span>`;
     }
 
-    const car = p.isDriving ? ' <svg class="who-car-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M5 17a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1l2-3h8l2 3h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2M5 17a2 2 0 1 0 4 0M19 17a2 2 0 1 0-4 0"/></svg>' : '';
+    const car = p.isDriving ? '<span class="who-car-badge">car</span>' : '';
 
     html += `
       <div class="who-row">

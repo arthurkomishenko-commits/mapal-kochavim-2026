@@ -1252,10 +1252,18 @@
 }
 
 /* ── Car icon (inline SVG in who table) ── */
-.who-car-icon {
-  display: inline-block;
-  vertical-align: middle;
+.who-car-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--color-ember-bright, #E8A855);
-  margin-inline-start: 4px;
-  opacity: 0.8;
+  background: rgba(212, 146, 63, 0.1);
+  border: 1px solid rgba(212, 146, 63, 0.15);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-inline-start: 6px;
+  vertical-align: middle;
 }
