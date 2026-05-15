@@ -312,6 +312,16 @@ export function renderHome(container) {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
           <span data-i18n="nav.gallery">${i18n.t('nav.gallery')}</span>
         </a>
+        <div class="home-map-btns">
+          <a href="https://waze.com/ul?ll=30.6167,34.7833&navigate=yes" target="_blank" rel="noopener" class="home-map-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Waze
+          </a>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=30.6167,34.7833" target="_blank" rel="noopener" class="home-map-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Google Maps
+          </a>
+        </div>
       </div>
     </section>
 

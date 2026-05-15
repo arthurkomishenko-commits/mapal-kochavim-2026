@@ -1014,6 +1014,48 @@
   .home-gallery-btn:hover svg { opacity: 1; }
 }
 
+/* ── Map buttons ── */
+
+.home-map-btns {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-block-start: 16px;
+}
+
+.home-map-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #A5A09A);
+  background: transparent;
+  border: 1px solid rgba(245, 239, 224, 0.08);
+  border-radius: 20px;
+  text-decoration: none;
+  min-height: 40px;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-map-btn svg {
+  opacity: 0.5;
+}
+
+.home-map-btn:active {
+  background: rgba(245, 239, 224, 0.05);
+  color: var(--color-starlight, #F5EFE0);
+}
+
+@media (min-width: 768px) {
+  .home-map-btn:hover {
+    background: rgba(245, 239, 224, 0.05);
+    color: var(--color-starlight, #F5EFE0);
+  }
+}
+
 /* ── WhatsApp group link ── */
 
 .home-group-chat {
