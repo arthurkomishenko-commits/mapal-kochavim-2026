@@ -21,7 +21,7 @@ export function renderPlace(container) {
         </p>
 
         <div class="place-photo place-photo--hero">
-          <img src="images/negev-panorama.jpg" alt="Negev desert panorama — Borot Lotz area" loading="eager" class="place-photo__img">
+          <img src="images/camp-day-tents.jpg" alt="Camp at Borot Lotz — tents and cars" loading="eager" class="place-photo__img">
         </div>
 
         <div class="place-card">
@@ -42,16 +42,22 @@ export function renderPlace(container) {
 
         <div class="place-photos-grid">
           <div class="place-photo">
-            <img src="images/campsite-day.jpg" alt="Borot Lotz campsite — daytime view" loading="lazy" class="place-photo__img">
+            <img src="images/camp-sunset-wide.jpg" alt="Camp at sunset" loading="lazy" class="place-photo__img">
           </div>
           <div class="place-photo">
-            <img src="images/campsite-dusk.webp" alt="Borot Lotz campsite at dusk" loading="lazy" class="place-photo__img">
+            <img src="images/rocks-sunset.jpg" alt="Desert rocks at sunset" loading="lazy" class="place-photo__img">
           </div>
           <div class="place-photo">
-            <img src="images/negev-tree.jpg" alt="Lone tree in the Negev desert" loading="lazy" class="place-photo__img">
+            <img src="images/negev-panorama-wide.jpg" alt="Negev desert panorama" loading="lazy" class="place-photo__img">
           </div>
           <div class="place-photo">
-            <img src="images/negev-hills.webp" alt="Negev hills and valleys" loading="lazy" class="place-photo__img">
+            <img src="images/camp-cliff.jpg" alt="Car and tent at cliff" loading="lazy" class="place-photo__img">
+          </div>
+          <div class="place-photo">
+            <img src="images/road-negev.jpg" alt="Road to Negev" loading="lazy" class="place-photo__img">
+          </div>
+          <div class="place-photo">
+            <img src="images/camp-sunset-vertical.jpg" alt="Camp at sunset — vertical" loading="lazy" class="place-photo__img">
           </div>
         </div>
 

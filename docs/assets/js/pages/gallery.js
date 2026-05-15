@@ -20,22 +20,40 @@ export function renderGallery(container) {
 
         <div class="gallery__preview">
           <div class="gallery__preview-item">
-            <img src="images/person-milkyway.jpg" alt="" loading="lazy">
+            <img src="images/moon-telescope.jpg" alt="Moon through telescope" loading="lazy">
           </div>
           <div class="gallery__preview-item">
-            <img src="images/milkyway-campfire.jpg" alt="" loading="lazy">
+            <img src="images/milkyway-purple.jpg" alt="Milky Way" loading="lazy">
           </div>
           <div class="gallery__preview-item">
-            <img src="images/night-camp.jpg" alt="" loading="lazy">
+            <img src="images/camp-sunset-wide.jpg" alt="Camp at sunset" loading="lazy">
           </div>
           <div class="gallery__preview-item">
-            <img src="images/sunset-negev.webp" alt="" loading="lazy">
+            <img src="images/grilling-night.jpg" alt="Night BBQ" loading="lazy">
           </div>
           <div class="gallery__preview-item">
-            <img src="images/campsite-day.jpg" alt="" loading="lazy">
+            <img src="images/person-car-night.jpg" alt="Night vibes" loading="lazy">
           </div>
           <div class="gallery__preview-item">
-            <img src="images/negev-panorama.jpg" alt="" loading="lazy">
+            <img src="images/rocks-sunset.jpg" alt="Desert sunset" loading="lazy">
+          </div>
+          <div class="gallery__preview-item">
+            <img src="images/telescope-real.jpg" alt="Skywatcher telescope" loading="lazy">
+          </div>
+          <div class="gallery__preview-item">
+            <img src="images/bbq-grill.jpg" alt="BBQ grill" loading="lazy">
+          </div>
+          <div class="gallery__preview-item">
+            <img src="images/pilaf-pot.jpg" alt="Pilaf" loading="lazy">
+          </div>
+          <div class="gallery__preview-item">
+            <img src="images/stars-shelter.jpg" alt="Stars over shelter" loading="lazy">
+          </div>
+          <div class="gallery__preview-item">
+            <img src="images/chopping-wood.jpg" alt="Chopping wood" loading="lazy">
+          </div>
+          <div class="gallery__preview-item">
+            <img src="images/camp-day-tents.jpg" alt="Camp daytime" loading="lazy">
           </div>
         </div>
 

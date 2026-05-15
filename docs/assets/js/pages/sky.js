@@ -1,5 +1,5 @@
 /**
- * Sky page — astronomy, Perseids info
+ * Sky page — astronomy, Perseids info, telescope, real photos
  */
 
 import { i18n } from '../core/i18n.js';
@@ -13,7 +13,7 @@ export function renderSky(container) {
         </h1>
 
         <div class="sky-photo sky-photo--hero">
-          <img src="images/person-milkyway.jpg" alt="Person with flashlight under the Milky Way in Negev" loading="eager" class="sky-photo__img">
+          <img src="images/moon-telescope.jpg" alt="Moon through Robert's Skywatcher telescope" loading="eager" class="sky-photo__img">
         </div>
 
         <div class="sky-card sky-card--featured">
@@ -25,13 +25,28 @@ export function renderSky(container) {
           </div>
         </div>
 
-        <div class="sky-photo">
-          <img src="images/milkyway-closeup.jpg" alt="Milky Way galactic center" loading="lazy" class="sky-photo__img">
+        <div class="place-photos-grid">
+          <div class="place-photo">
+            <img src="images/milkyway-purple.jpg" alt="Milky Way — real photo from Borot Lotz" loading="lazy" class="place-photo__img">
+          </div>
+          <div class="place-photo">
+            <img src="images/milkyway-real.jpg" alt="Night sky with Milky Way" loading="lazy" class="place-photo__img">
+          </div>
+          <div class="place-photo">
+            <img src="images/stars-shelter.jpg" alt="Stars above the camp shelter" loading="lazy" class="place-photo__img">
+          </div>
+          <div class="place-photo">
+            <img src="images/person-milkyway.jpg" alt="Person under Milky Way" loading="lazy" class="place-photo__img">
+          </div>
         </div>
 
         <div class="sky-card">
           <h2 data-i18n="sky.telescopeTitle">${i18n.t('sky.telescopeTitle')}</h2>
           <p class="text-secondary" data-i18n="sky.telescopeText">${i18n.t('sky.telescopeText')}</p>
+        </div>
+
+        <div class="sky-photo">
+          <img src="images/telescope-real.jpg" alt="Robert's Skywatcher telescope at camp" loading="lazy" class="sky-photo__img">
         </div>
 
         <div class="sky-info-grid">
