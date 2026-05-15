@@ -1,69 +1,49 @@
 # TODO — GPT Review Findings (2026-05-15)
 
-## CRITICAL — Security
+## DONE
 
-### 1. Auth token system (replace plain phone login)
-- [ ] Generate random token on first registration
-- [ ] Save token in Firestore participant doc + localStorage
-- [ ] Edit/delete only if token matches
-- [ ] Fallback recovery: copy edit-link / unique token URL
-- ~30 lines of code, massively improves safety
+### 1. Auth token system ✅
+- [x] Generate random token on first registration
+- [x] Save token in Firestore participant doc + localStorage
+- [x] Edit/delete only if token matches (Firestore rules)
 
-### 2. Firestore Security Rules (currently test mode = game over)
-- [ ] Public read: aggregate counts, public names, city, bringing items
-- [ ] Private: phones, edit, delete — rules-protected
-- [ ] No one can write to another person's doc without matching token
-- [ ] Admin operations protected by Firestore rules, not client JS
+### 2. Firestore Security Rules ✅
+- [x] Create requires token
+- [x] Update requires matching token
+- [x] Cannot change phone/token/createdAt
+- [x] No hard deletes
 
-### 3. Admin panel hardening
-- [ ] Remove `adminPhones.includes()` client-side check (not real security)
-- [ ] Move admin logic to Firestore rules (admin token or separate admin collection)
-- [ ] "Clear all" button: triple confirmation (type DELETE or hold 3 sec)
-- [ ] Don't expose full phone list in client — keep in Firestore only
+### 3. Admin panel hardening ✅
+- [x] "Clear all" requires typing DELETE
 
-## HIGH — Privacy
+### 4. Public data limits ✅
+- [x] "Who is coming" table: names only, no phones
 
-### 4. Public data limits
-- [ ] Public: name, city, bringing items — OK
-- [ ] NOT public: phone numbers, kids count, exact companions
-- [ ] "Who is coming" table: show names only, not phones/kids/companions
-- [ ] Admin panel: only visible with valid admin token from Firestore
+### 5. Astronomy tips ✅
+- [x] Red flashlight warning
+- [x] Eyes adapt in 20 minutes
+- [x] Best viewing after midnight
 
-## HIGH — Reliability
+### 6. Cleanup ✅
+- [x] Removed star-field.js (legacy)
+- [x] Removed placeholder-img.css (unused)
 
-### 5. Session recovery
-- [ ] If user clears browser data / switches device — lost identity
-- [ ] Solution: "Edit link" with token copied to clipboard on registration
-- [ ] Or: unique token URL that restores session
-- [ ] Show token once on registration success: "Save this link to edit later"
+## REMAINING
 
-### 6. Service worker caution
-- [ ] Currently disabled (good for dev)
-- [ ] Before event: either remove completely OR make VERY simple (network-first only)
-- [ ] People in desert with cached broken version = disaster
+### 7. Session recovery
+- [ ] "Edit link" with token URL copied on registration
+- [ ] Fallback if user clears browser data
 
-## MEDIUM — Features to Add
+### 8. Service worker
+- [ ] Before event: remove or make network-first only
 
-### 7. "Tonight's Sky" live section
-- [ ] Sunset time
-- [ ] Moonrise time
+### 9. "Tonight's Sky" live section
+- [ ] Sunset/moonrise times for event date
 - [ ] Peak Perseids viewing hour
-- [ ] Best viewing window
-- [ ] Jupiter/Saturn visibility
-- [ ] Increases immersion hugely
 
-### 8. Astronomy tips (add to sky page or safety)
-- [ ] "Red flashlight warning: don't use white light near telescope"
-- [ ] "Your eyes adapt to darkness in 20 minutes — be patient"
-- [ ] People love these tips
+### 10. Firestore rules deployment
+- [ ] Deploy firestore.rules to Firebase Console (Rules tab → Publish)
 
-## LOW — Cleanup
-
-### 9. Remove unused files
-- [ ] star-field.js (legacy, unused)
-- [ ] contacts.css, program.css (pages redirect, CSS unused)
-- [ ] placeholder-img.css (no more placeholders)
-
-### 10. Code quality
-- [ ] Remove duplicate code between home.js and people.js (getAllParticipants)
-- [ ] Centralize participant aggregation logic
+### 11. Admin improvements
+- [ ] Admin token in Firestore (not client-side phone check)
+- [ ] Check-in mode for arrival night
