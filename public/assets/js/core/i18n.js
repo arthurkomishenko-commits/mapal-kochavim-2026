@@ -93,7 +93,7 @@ function t(key) {
     if (result == null || typeof result !== 'object') return key;
     result = result[part];
   }
-  return (typeof result === 'string') ? result : key;
+  return (result !== undefined && result !== null) ? result : key;
 }
 
 /**
