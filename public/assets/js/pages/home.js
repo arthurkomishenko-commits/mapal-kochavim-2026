@@ -103,7 +103,9 @@ function renderHomeBringing() {
 
   section.style.display = '';
   let html = entries.map(([id, count]) => {
-    const label = i18n.t(ITEM_LABELS[id] || id);
+    const labelKey = ITEM_LABELS[id];
+    if (!labelKey) return ''; // skip unknown items
+    const label = i18n.t(labelKey);
     return `<div class="home-bring-item">
       <span class="home-bring-item__count">${count}</span>
       <span class="home-bring-item__label">${label}</span>
@@ -183,7 +185,9 @@ function renderWhoTable(container) {
       const active = Object.entries(p.bringing).filter(([, v]) => v);
       if (active.length > 0) {
         itemsHtml = active.map(([k, v]) => {
-          const label = i18n.t(ITEM_LABELS[k] || k);
+          const labelKey = ITEM_LABELS[k];
+          if (!labelKey) return '';
+          const label = i18n.t(labelKey);
           const qty = typeof v === 'number' && v > 1 ? `\u00D7${v}` : '';
           return `<span class="who-chip">${label}${qty ? ' ' + qty : ''}</span>`;
         }).join('');
