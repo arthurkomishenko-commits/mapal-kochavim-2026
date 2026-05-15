@@ -265,6 +265,34 @@ export function renderHome(container) {
       </div>
     </section>
 
+    <!-- ═══ Quick info ═══ -->
+    <section class="home-section" aria-labelledby="home-details">
+      <div class="home-section__inner">
+        <h2 id="home-details" class="home-section__title" data-i18n="home.detailsTitle">
+          ${i18n.t('home.detailsTitle')}
+        </h2>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-item__label" data-i18n="home.detailWhen">${i18n.t('home.detailWhen')}</span>
+            <span class="detail-item__value" data-i18n="home.detailWhenVal">${i18n.t('home.detailWhenVal')}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-item__label" data-i18n="home.detailWhere">${i18n.t('home.detailWhere')}</span>
+            <span class="detail-item__value" data-i18n="home.detailWhereVal">${i18n.t('home.detailWhereVal')}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-item__label" data-i18n="home.detailWho">${i18n.t('home.detailWho')}</span>
+            <span class="detail-item__value" data-i18n="home.detailWhoVal">${i18n.t('home.detailWhoVal')}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-item__label" data-i18n="home.detailHighlight">${i18n.t('home.detailHighlight')}</span>
+            <span class="detail-item__value" data-i18n="home.detailHighlightVal">${i18n.t('home.detailHighlightVal')}</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
     <!-- ═══ What awaits ═══ -->
     <section class="home-section" aria-labelledby="home-highlights">
       <div class="home-section__inner">
@@ -302,34 +330,6 @@ export function renderHome(container) {
             <p data-i18n="home.card3Text">${i18n.t('home.card3Text')}</p>
           </a>
         </div>
-      </div>
-    </section>
-
-    <!-- ═══ Quick info ═══ -->
-    <section class="home-section home-section--dark" aria-labelledby="home-details">
-      <div class="home-section__inner">
-        <h2 id="home-details" class="home-section__title" data-i18n="home.detailsTitle">
-          ${i18n.t('home.detailsTitle')}
-        </h2>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="detail-item__label" data-i18n="home.detailWhen">${i18n.t('home.detailWhen')}</span>
-            <span class="detail-item__value" data-i18n="home.detailWhenVal">${i18n.t('home.detailWhenVal')}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-item__label" data-i18n="home.detailWhere">${i18n.t('home.detailWhere')}</span>
-            <span class="detail-item__value" data-i18n="home.detailWhereVal">${i18n.t('home.detailWhereVal')}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-item__label" data-i18n="home.detailWho">${i18n.t('home.detailWho')}</span>
-            <span class="detail-item__value" data-i18n="home.detailWhoVal">${i18n.t('home.detailWhoVal')}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-item__label" data-i18n="home.detailHighlight">${i18n.t('home.detailHighlight')}</span>
-            <span class="detail-item__value" data-i18n="home.detailHighlightVal">${i18n.t('home.detailHighlightVal')}</span>
-          </div>
-        </div>
-
       </div>
     </section>
 
