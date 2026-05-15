@@ -11,7 +11,14 @@
 
 import { i18n } from '../core/i18n.js';
 import { auth } from '../core/auth.js';
-import { db } from '../core/db.js';
+let db = null;
+async function getDb() {
+  if (!db) {
+    const mod = await import('../core/db.js');
+    db = mod.db;
+  }
+  return db;
+}
 
 // ═══════════════════════════════════════════════════
 // CONSTANTS
@@ -207,7 +214,8 @@ async function handlePhoneSubmit() {
 
   try {
     // Check Firestore for existing registration
-    const existing = await db.getParticipant(phone);
+    const d = await getDb();
+    const existing = await d.getParticipant(phone);
     if (existing) {
       auth.login(phone, existing.name);
       localStorage.setItem('mapal-rsvp-' + phone, JSON.stringify(existing));
@@ -216,7 +224,7 @@ async function handlePhoneSubmit() {
     }
 
     // Check if listed as companion
-    const link = await db.findCompanionLink(phone);
+    const link = await d.findCompanionLink(phone);
     if (link) {
       formData.addedByPhone = link.addedByPhone;
       formData.addedByName = link.addedByName;
@@ -661,7 +669,8 @@ async function handleSave() {
 
   try {
     // Save to Firestore + localStorage cache
-    await db.saveParticipant(data);
+    const d = await getDb();
+    await d.saveParticipant(data);
     localStorage.setItem('mapal-rsvp-' + data.phone, JSON.stringify(data));
 
     // Login

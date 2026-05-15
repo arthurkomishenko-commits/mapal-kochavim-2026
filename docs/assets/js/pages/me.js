@@ -5,7 +5,14 @@
 
 import { i18n } from '../core/i18n.js';
 import { auth } from '../core/auth.js';
-import { db } from '../core/db.js';
+let db = null;
+async function getDb() {
+  if (!db) {
+    const mod = await import('../core/db.js');
+    db = mod.db;
+  }
+  return db;
+}
 
 let containerEl = null;
 
@@ -64,7 +71,7 @@ async function handlePhoneLookup() {
 
   let data = null;
   try {
-    data = await db.getParticipant(phone);
+    const d1 = await getDb(); data = await d1.getParticipant(phone);
   } catch {
     // Fallback to localStorage
     const saved = localStorage.getItem('mapal-rsvp-' + phone);
@@ -210,7 +217,7 @@ function renderProfile(data) {
     cancelBtn.addEventListener('click', async () => {
       data.cancelled = true;
       data.updatedAt = new Date().toISOString();
-      try { await db.saveParticipant(data); } catch {}
+      try { const d2 = await getDb(); await d2.saveParticipant(data); } catch {}
       localStorage.setItem('mapal-rsvp-' + data.phone, JSON.stringify(data));
       showToast(i18n.t('me.cancelled'));
       renderProfile(data);
@@ -241,7 +248,7 @@ async function renderAdminPanel() {
   // Gather all participants from Firestore
   let all = [];
   try {
-    all = await db.getAllParticipants();
+    const d3 = await getDb(); all = await d3.getAllParticipants();
   } catch {
     // Fallback localStorage
     for (let i = 0; i < localStorage.length; i++) {
@@ -332,7 +339,8 @@ export async function renderMe(container) {
   const user = auth.getUser();
   if (user && user.phone) {
     try {
-      const data = await db.getParticipant(user.phone);
+      const d = await getDb();
+      const data = await d.getParticipant(user.phone);
       if (data) {
         localStorage.setItem('mapal-rsvp-' + user.phone, JSON.stringify(data));
         renderProfile(data);

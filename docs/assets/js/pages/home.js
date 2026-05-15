@@ -6,7 +6,15 @@ import { i18n } from '../core/i18n.js';
 import { initCountdown } from '../components/countdown.js';
 import { initShootingStar } from '../components/shooting-star.js';
 import SkyRenderer from '../components/sky-renderer.js';
-import { db } from '../core/db.js';
+// db loaded lazily — not imported statically to avoid blocking page load
+let db = null;
+async function getDb() {
+  if (!db) {
+    const mod = await import('../core/db.js');
+    db = mod.db;
+  }
+  return db;
+}
 
 // Item ID → i18n key map (same as rsvp.js categories)
 const ITEM_LABELS = {
@@ -101,7 +109,8 @@ function getAllParticipantsLocal() {
 
 async function loadParticipants() {
   try {
-    cachedParticipants = await db.getAllParticipants();
+    const d = await getDb();
+    cachedParticipants = await d.getAllParticipants();
   } catch {
     cachedParticipants = getAllParticipantsLocal();
   }
