@@ -661,6 +661,10 @@ async function handleSave() {
 
   if (!isEditing) {
     data.createdAt = new Date().toISOString();
+    data.token = auth.generateToken();
+  } else {
+    // Preserve existing token
+    data.token = auth.getToken() || formData.token || '';
   }
 
   const saveBtn = document.getElementById('rsvp-save');
@@ -673,8 +677,8 @@ async function handleSave() {
     await d.saveParticipant(data);
     localStorage.setItem('mapal-rsvp-' + data.phone, JSON.stringify(data));
 
-    // Login
-    auth.login(data.phone, data.name);
+    // Login with token
+    auth.login(data.phone, data.name, data.token);
 
     showToast(i18n.t('rsvp.saved'));
 

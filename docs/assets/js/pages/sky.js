@@ -48,6 +48,15 @@ export function renderSky(container) {
             <p class="text-secondary" data-i18n="sky.planetsText">${i18n.t('sky.planetsText')}</p>
           </div>
         </div>
+
+        <div class="sky-card sky-card--featured" style="margin-block-start:var(--space-6);">
+          <h2 data-i18n="sky.tipsTitle">${i18n.t('sky.tipsTitle')}</h2>
+          <ul class="sky-tips">
+            <li data-i18n="sky.tip1">${i18n.t('sky.tip1')}</li>
+            <li data-i18n="sky.tip2">${i18n.t('sky.tip2')}</li>
+            <li data-i18n="sky.tip3">${i18n.t('sky.tip3')}</li>
+          </ul>
+        </div>
       </div>
     </section>
   `;

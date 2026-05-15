@@ -107,3 +107,20 @@
   color: var(--color-ember-bright);
   font-size: var(--text-lg);
 }
+
+.sky-tips {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sky-tips li {
+  padding: var(--space-3) 0;
+  color: var(--color-text-secondary);
+  line-height: var(--leading-relaxed);
+  border-block-end: 1px solid rgba(245, 239, 224, 0.04);
+}
+
+.sky-tips li:last-child {
+  border: none;
+}

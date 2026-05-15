@@ -1,7 +1,9 @@
 /**
- * Auth — phone-based session (localStorage)
- * No passwords, no SMS. Phone number is the identity.
- * For a private event of 45 friends.
+ * Auth — phone + token session
+ *
+ * On first registration: random token generated, saved in Firestore + localStorage.
+ * Edit/delete only possible if token matches.
+ * No passwords, no SMS. Phone + token is the identity.
  */
 
 const STORAGE_KEY = 'mapal-user';
@@ -14,22 +16,24 @@ const ADMIN_PHONES = [
   '0542273518', // Evgeny
 ];
 
+function generateToken() {
+  const arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+}
+
 function normalizePhone(input) {
   if (!input) return '';
-  // Strip everything except digits and leading +
   let phone = input.replace(/[^\d+]/g, '');
-  // Remove + from anywhere except start
   phone = phone.replace(/(?!^)\+/g, '');
-  // +972 → 0
   if (phone.startsWith('+972')) phone = '0' + phone.slice(4);
-  // 972XXXXXXX (10+ digits starting with 972) → 0
   if (phone.startsWith('972') && phone.length >= 12) phone = '0' + phone.slice(3);
   return phone;
 }
 
-function login(phone, name) {
+function login(phone, name, token) {
   const normalized = normalizePhone(phone);
-  const user = { phone: normalized, name: name || '' };
+  const user = { phone: normalized, name: name || '', token: token || '' };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
   window.dispatchEvent(new CustomEvent('authchange', { detail: { user } }));
   return user;
@@ -49,6 +53,11 @@ function getUser() {
   }
 }
 
+function getToken() {
+  const user = getUser();
+  return user ? user.token || '' : '';
+}
+
 function updateUser(fields) {
   const user = getUser();
   if (!user) return null;
@@ -66,7 +75,6 @@ function isAdmin() {
   return user ? ADMIN_PHONES.includes(user.phone) : false;
 }
 
-// Emit initial auth state on load
 function initAuth() {
   const user = getUser();
   window.dispatchEvent(new CustomEvent('authchange', { detail: { user } }));
@@ -74,9 +82,11 @@ function initAuth() {
 
 export const auth = {
   normalizePhone,
+  generateToken,
   login,
   logout,
   getUser,
+  getToken,
   updateUser,
   isLoggedIn,
   isAdmin,

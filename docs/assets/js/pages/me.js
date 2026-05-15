@@ -310,10 +310,14 @@ async function renderAdminPanel() {
     });
   }
 
-  // Clear all (dangerous)
+  // Clear all (dangerous — triple confirmation)
   if (clearBtn) {
     clearBtn.addEventListener('click', () => {
-      if (!confirm(i18n.t('me.adminClearConfirm'))) return;
+      const typed = prompt(i18n.t('me.adminClearConfirm'));
+      if (typed !== 'DELETE') {
+        if (typed !== null) showToast('Type DELETE to confirm', true);
+        return;
+      }
       const keys = [];
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);

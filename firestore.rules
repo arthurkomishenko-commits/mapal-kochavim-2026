@@ -3,68 +3,28 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Admin helper ──
-    function isAdmin() {
-      return request.auth != null
-        && request.auth.token.email == 'Arthur.komishenko@gmail.com';
-    }
-
-    function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
-    }
-
-    function isLoggedIn() {
-      return request.auth != null;
-    }
-
-    // ── Public aggregates (read-only, written by Cloud Functions) ──
-    match /aggregates/public {
-      allow read: if true;
-      allow write: if false; // Only Cloud Functions
-    }
-
-    // ── Participants ──
-    match /participants/{userId} {
-      // Anyone can read public fields
+    // ── Participants (phone-keyed) ──
+    match /participants/{phone} {
+      // Anyone can read public data (for "who is coming" list)
+      // But phone numbers and tokens are stored — client should filter
       allow read: if true;
 
-      // Only the owner can create/update their own document
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId)
-        // Cannot change these fields
-        && !request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['googleEmail', 'createdAt']);
+      // Anyone can create if doc ID matches the phone field
+      // Token must be provided (generated client-side)
+      allow create: if request.resource.data.phone == phone
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() > 0
+                    && request.resource.data.token is string
+                    && request.resource.data.token.size() > 0;
 
-      // Soft-delete only (set cancelled: true), no hard delete
-      allow delete: if false;
+      // Update only if token matches existing document
+      // Cannot change phone, token, or createdAt
+      allow update: if request.resource.data.phone == phone
+                    && request.resource.data.token == resource.data.token
+                    && !request.resource.data.diff(resource.data).affectedKeys()
+                        .hasAny(['phone', 'token', 'createdAt']);
 
-      // ── Change log (admin read-only) ──
-      match /changeLog/{entryId} {
-        allow read: if isAdmin();
-        allow write: if false; // Only Cloud Functions
-      }
-    }
-
-    // ── Carpool requests ──
-    match /carpoolRequests/{requestId} {
-      // Requester or driver can read
-      allow read: if isLoggedIn()
-        && (resource.data.fromUserId == request.auth.uid
-            || resource.data.toDriverId == request.auth.uid
-            || isAdmin());
-
-      // Any logged-in user can create a request
-      allow create: if isLoggedIn()
-        && request.resource.data.fromUserId == request.auth.uid
-        && request.resource.data.status == 'pending';
-
-      // Driver can update status to accepted/declined
-      allow update: if isLoggedIn()
-        && resource.data.toDriverId == request.auth.uid
-        && request.resource.data.status in ['accepted', 'declined']
-        && !request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['fromUserId', 'toDriverId', 'createdAt']);
-
+      // No hard deletes
       allow delete: if false;
     }
 
