@@ -135,18 +135,21 @@
   }
 }
 
-/* ── Page transitions ── */
+/* ── Page transitions (cinematic: fade + gentle drift) ── */
 
 .page--leaving {
   opacity: 0;
-  transition: opacity 200ms var(--ease-natural);
+  transform: translateY(-4px);
+  transition: opacity 280ms ease, transform 280ms ease;
 }
 
 .page--entering {
   opacity: 0;
+  transform: translateY(6px);
 }
 
 #page-container {
   opacity: 1;
-  transition: opacity 200ms var(--ease-natural);
+  transform: translateY(0);
+  transition: opacity 400ms ease, transform 400ms var(--ease-out-cubic);
 }

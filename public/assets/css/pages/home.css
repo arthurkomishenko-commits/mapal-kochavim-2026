@@ -764,11 +764,11 @@
 }
 
 .highlight-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border-subtle);
+  background: rgba(14, 18, 40, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: var(--radius-md);
   padding: var(--space-6);
-  transition: all var(--duration-normal) var(--ease-natural);
+  transition: all var(--duration-normal) var(--ease-out-cubic);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -816,8 +816,8 @@
 }
 
 .detail-item {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border-subtle);
+  background: rgba(14, 18, 40, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.03);
   border-radius: var(--radius-md);
   padding: var(--space-5);
   display: flex;

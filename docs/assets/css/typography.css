@@ -1,7 +1,5 @@
 /* ═══════════════════════════════════════════════════
-   Typography
-   Font families are placeholders until Gemini font
-   pair decision. System fonts for now.
+   Typography — premium, editorial, night-readable
    ═══════════════════════════════════════════════════ */
 
 body {
@@ -9,12 +7,15 @@ body {
   font-size: var(--text-base);
   line-height: var(--leading-relaxed);
   color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   font-weight: 700;
   color: var(--color-text-primary);
+  line-height: var(--leading-snug);
 }
 
 h1 { font-size: var(--text-4xl); }
@@ -28,7 +29,7 @@ h4 { font-size: var(--text-xl); }
   h3 { font-size: var(--text-3xl); }
 }
 
-/* RTL-specific: Hebrew is denser, slightly reduce letter-spacing */
+/* RTL: Hebrew denser */
 [dir="rtl"] h1,
 [dir="rtl"] h2,
 [dir="rtl"] h3 {
@@ -38,7 +39,7 @@ h4 { font-size: var(--text-xl); }
 [dir="ltr"] h1,
 [dir="ltr"] h2,
 [dir="ltr"] h3 {
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 }
 
 /* Secondary text */
@@ -50,7 +51,7 @@ h4 { font-size: var(--text-xl); }
   color: var(--color-text-tertiary);
 }
 
-/* Links */
+/* Links — understated, warm on hover */
 a:not([class]) {
   color: var(--color-ember-bright);
   text-decoration-thickness: 1px;
@@ -60,4 +61,9 @@ a:not([class]) {
 
 a:not([class]):hover {
   color: var(--color-ember);
+}
+
+/* Tabular numbers for countdown/stats */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
