@@ -171,3 +171,109 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ═══════════════════════════════════════════════════
+   Lightbox — fullscreen photo viewer with navigation
+   ═══════════════════════════════════════════════════ */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lightbox--visible {
+  opacity: 1;
+}
+
+.lightbox__img {
+  max-width: 92vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 4px;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.lightbox__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 2;
+  -webkit-appearance: none;
+}
+
+.lightbox__close:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.lightbox__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.4rem;
+  cursor: pointer;
+  z-index: 2;
+  -webkit-appearance: none;
+  transition: background 0.2s ease;
+}
+
+.lightbox__nav:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.lightbox__nav--prev { left: 12px; }
+.lightbox__nav--next { right: 12px; }
+
+.lightbox__counter {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Mobile: larger touch zones */
+@media (max-width: 768px) {
+  .lightbox__nav {
+    width: 44px;
+    height: 80px;
+    border-radius: 8px;
+    top: 50%;
+  }
+  .lightbox__nav--prev { left: 4px; }
+  .lightbox__nav--next { right: 4px; }
+  .lightbox__img {
+    max-width: 96vw;
+    max-height: 80vh;
+  }
+}
