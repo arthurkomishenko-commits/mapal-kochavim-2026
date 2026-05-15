@@ -6,6 +6,7 @@ import { i18n } from '../core/i18n.js';
 import { initCountdown } from '../components/countdown.js';
 import { initShootingStar } from '../components/shooting-star.js';
 import SkyRenderer from '../components/sky-renderer.js';
+import { db } from '../core/db.js';
 
 // Item ID → i18n key map (same as rsvp.js categories)
 const ITEM_LABELS = {
@@ -26,29 +27,24 @@ function renderHomeBringing() {
   const grid = document.getElementById('home-bringing-grid');
   if (!section || !grid) return;
 
-  // Aggregate from all registrations
+  // Aggregate from all registrations (Firestore or localStorage)
+  const participants = getAllParticipants();
   const totals = {};
   let totalPeople = 0;
   let totalCars = 0;
 
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (!key.startsWith('mapal-rsvp-')) continue;
-    try {
-      const data = JSON.parse(localStorage.getItem(key));
-      if (data.cancelled) continue;
-      totalPeople++;
-      if (data.companions) totalPeople += data.companions.length;
-      if (data.kids) totalPeople += data.kids;
-      if (data.isDriving) totalCars++;
-      if (!data.bringing) continue;
-      for (const [id, val] of Object.entries(data.bringing)) {
-        if (!val) continue;
-        const n = (typeof val === 'number') ? val : 1;
-        totals[id] = (totals[id] || 0) + n;
-      }
-    } catch {}
-  }
+  participants.forEach(data => {
+    totalPeople++;
+    if (data.companions) totalPeople += data.companions.length;
+    if (data.kids) totalPeople += data.kids;
+    if (data.isDriving) totalCars++;
+    if (!data.bringing) return;
+    for (const [id, val] of Object.entries(data.bringing)) {
+      if (!val) continue;
+      const n = (typeof val === 'number') ? val : 1;
+      totals[id] = (totals[id] || 0) + n;
+    }
+  });
 
   if (totalPeople === 0) {
     section.style.display = 'none';
@@ -88,7 +84,9 @@ function esc(str) {
   return d.innerHTML;
 }
 
-function getAllParticipants() {
+let cachedParticipants = null;
+
+function getAllParticipantsLocal() {
   const list = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
@@ -99,6 +97,19 @@ function getAllParticipants() {
     } catch {}
   }
   return list;
+}
+
+async function loadParticipants() {
+  try {
+    cachedParticipants = await db.getAllParticipants();
+  } catch {
+    cachedParticipants = getAllParticipantsLocal();
+  }
+  return cachedParticipants;
+}
+
+function getAllParticipants() {
+  return cachedParticipants || getAllParticipantsLocal();
 }
 
 function initWhoButton() {
@@ -437,8 +448,15 @@ export function renderHome(container) {
   }
 
   initCountdown();
-  renderHomeBringing();
-  initWhoButton();
+
+  // Load from Firestore then render
+  loadParticipants().then(() => {
+    renderHomeBringing();
+    initWhoButton();
+  }).catch(() => {
+    renderHomeBringing();
+    initWhoButton();
+  });
 
   // Start meteors only after welcome overlay is dismissed
   if (document.getElementById('welcome-overlay')) {

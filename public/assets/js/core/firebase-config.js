@@ -1,17 +1,13 @@
 /**
  * Firebase configuration
- *
- * TODO: Replace placeholder values with real Firebase project config.
  * These values are public (by design) — security is via Firestore rules.
  */
 
 export const firebaseConfig = {
-  apiKey: 'PLACEHOLDER',
+  apiKey: 'AIzaSyAFvQSJhwaDp-rQus9Q6-zAPsK7vWBLMpc',
   authDomain: 'mapal-kochavim.firebaseapp.com',
   projectId: 'mapal-kochavim',
-  storageBucket: 'mapal-kochavim.appspot.com',
-  messagingSenderId: 'PLACEHOLDER',
-  appId: 'PLACEHOLDER',
+  storageBucket: 'mapal-kochavim.firebasestorage.app',
+  messagingSenderId: '314333080882',
+  appId: '1:314333080882:web:4343d0165b5120b4cdbb2b',
 };
-
-export const ADMIN_EMAIL = 'Arthur.komishenko@gmail.com';

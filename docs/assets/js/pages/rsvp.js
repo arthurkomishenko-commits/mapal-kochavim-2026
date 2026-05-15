@@ -11,6 +11,7 @@
 
 import { i18n } from '../core/i18n.js';
 import { auth } from '../core/auth.js';
+import { db } from '../core/db.js';
 
 // ═══════════════════════════════════════════════════
 // CONSTANTS
@@ -200,33 +201,41 @@ function handlePhoneSubmit() {
   input.classList.remove('form-input--error');
   formData.phone = phone;
 
-  // Check localStorage for existing registration
-  const saved = localStorage.getItem('mapal-rsvp-' + phone);
-  if (saved) {
-    try {
-      JSON.parse(saved); // validate
-      auth.login(phone, JSON.parse(saved).name);
+  const btn = document.getElementById('rsvp-phone-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+  try {
+    // Check Firestore for existing registration
+    const existing = await db.getParticipant(phone);
+    if (existing) {
+      auth.login(phone, existing.name);
+      localStorage.setItem('mapal-rsvp-' + phone, JSON.stringify(existing));
       window.location.hash = 'me';
       return;
-    } catch {}
+    }
+
+    // Check if listed as companion
+    const link = await db.findCompanionLink(phone);
+    if (link) {
+      formData.addedByPhone = link.addedByPhone;
+      formData.addedByName = link.addedByName;
+      formData.name = link.name || '';
+    }
+  } catch (err) {
+    console.warn('Firestore check failed, using localStorage fallback:', err);
+    // Fallback to localStorage
+    const saved = localStorage.getItem('mapal-rsvp-' + phone);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        auth.login(phone, parsed.name);
+        window.location.hash = 'me';
+        return;
+      } catch {}
+    }
   }
 
-  // Check if listed as companion by someone else
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (!key.startsWith('mapal-rsvp-')) continue;
-    try {
-      const p = JSON.parse(localStorage.getItem(key));
-      if (p.companionPhones && Array.isArray(p.companionPhones) && p.companionPhones.includes(phone)) {
-        const comp = (p.companions || []).find(c => c.phone && auth.normalizePhone(c.phone) === phone);
-        formData.addedByPhone = p.phone;
-        formData.addedByName = p.name;
-        if (comp) formData.name = comp.name;
-        break;
-      }
-    } catch {}
-  }
-
+  if (btn) { btn.disabled = false; btn.textContent = i18n.t('rsvp.continue'); }
   renderForm();
 }
 
@@ -650,10 +659,8 @@ function handleSave() {
   saveBtn.textContent = i18n.t('rsvp.saving');
 
   try {
-    // TODO: Save to Firestore when Firebase is connected
-    // await db.saveParticipant(data);
-
-    // Save to localStorage
+    // Save to Firestore + localStorage cache
+    await db.saveParticipant(data);
     localStorage.setItem('mapal-rsvp-' + data.phone, JSON.stringify(data));
 
     // Login

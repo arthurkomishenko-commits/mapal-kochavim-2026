@@ -5,6 +5,7 @@
 
 import { i18n } from '../core/i18n.js';
 import { auth } from '../core/auth.js';
+import { db } from '../core/db.js';
 
 let containerEl = null;
 
@@ -53,7 +54,7 @@ function renderPhoneEntry() {
   });
 }
 
-function handlePhoneLookup() {
+async function handlePhoneLookup() {
   const input = document.getElementById('me-phone');
   const raw = input.value.trim();
   if (!raw) { input.classList.add('form-input--error'); return; }
@@ -61,15 +62,23 @@ function handlePhoneLookup() {
   const phone = auth.normalizePhone(raw);
   if (phone.length < 9) { input.classList.add('form-input--error'); return; }
 
-  const saved = localStorage.getItem('mapal-rsvp-' + phone);
-  if (!saved) {
+  let data = null;
+  try {
+    data = await db.getParticipant(phone);
+  } catch {
+    // Fallback to localStorage
+    const saved = localStorage.getItem('mapal-rsvp-' + phone);
+    if (saved) data = JSON.parse(saved);
+  }
+
+  if (!data) {
     renderNotFound();
     return;
   }
 
   try {
-    const data = JSON.parse(saved);
     auth.login(phone, data.name);
+    localStorage.setItem('mapal-rsvp-' + phone, JSON.stringify(data));
     renderProfile(data);
   } catch {
     renderNotFound();
@@ -222,18 +231,23 @@ function renderProfile(data) {
   }
 }
 
-function renderAdminPanel() {
+async function renderAdminPanel() {
   const statsEl = document.getElementById('admin-stats');
   const listEl = document.getElementById('admin-list');
   const exportBtn = document.getElementById('admin-export');
   const clearBtn = document.getElementById('admin-clear-all');
 
-  // Gather all participants
-  const all = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (!key.startsWith('mapal-rsvp-')) continue;
-    try { all.push(JSON.parse(localStorage.getItem(key))); } catch {}
+  // Gather all participants from Firestore
+  let all = [];
+  try {
+    all = await db.getAllParticipants();
+  } catch {
+    // Fallback localStorage
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key.startsWith('mapal-rsvp-')) continue;
+      try { all.push(JSON.parse(localStorage.getItem(key))); } catch {}
+    }
   }
 
   const active = all.filter(p => !p.cancelled);
@@ -311,17 +325,27 @@ function esc(str) {
   return d.innerHTML;
 }
 
-export function renderMe(container) {
+export async function renderMe(container) {
   containerEl = container;
 
   const user = auth.getUser();
   if (user && user.phone) {
-    const saved = localStorage.getItem('mapal-rsvp-' + user.phone);
-    if (saved) {
-      try {
-        renderProfile(JSON.parse(saved));
+    try {
+      const data = await db.getParticipant(user.phone);
+      if (data) {
+        localStorage.setItem('mapal-rsvp-' + user.phone, JSON.stringify(data));
+        renderProfile(data);
         return;
-      } catch {}
+      }
+    } catch {
+      // Fallback to localStorage
+      const saved = localStorage.getItem('mapal-rsvp-' + user.phone);
+      if (saved) {
+        try {
+          renderProfile(JSON.parse(saved));
+          return;
+        } catch {}
+      }
     }
   }
 
