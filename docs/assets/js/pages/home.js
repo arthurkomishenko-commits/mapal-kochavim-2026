@@ -31,6 +31,8 @@ const ITEM_LABELS = {
 };
 
 function renderHomeBringing() {
+  // Guard: skip if home page is no longer mounted
+  if (!homeContainerRef || !homeContainerRef.isConnected) return;
   const section = document.getElementById('home-bringing-section');
   const grid = document.getElementById('home-bringing-grid');
   if (!section || !grid) return;
@@ -101,6 +103,7 @@ function esc(str) {
 }
 
 let cachedParticipants = null;
+let homeContainerRef = null; // track if home page still mounted
 
 function getAllParticipantsLocal() {
   const list = [];
@@ -202,6 +205,8 @@ function renderWhoTable(container) {
 }
 
 export function renderHome(container) {
+  cachedParticipants = null; // fresh load each time
+  homeContainerRef = container;
   container.innerHTML = `
     <section class="hero" aria-labelledby="hero-title">
       <canvas class="sky-canvas" aria-hidden="true"></canvas>

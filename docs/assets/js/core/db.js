@@ -9,25 +9,23 @@ import { firebaseConfig } from './firebase-config.js';
 
 let app = null;
 let dbInstance = null;
+let fsModule = null;
 let sdkLoaded = false;
 
 async function loadSDK() {
   if (sdkLoaded) return;
 
   const appModule = await import('https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js');
-  const firestoreModule = await import('https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js');
+  fsModule = await import('https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js');
 
   app = appModule.initializeApp(firebaseConfig);
-  dbInstance = firestoreModule.getFirestore(app);
-
-  // Store module references for use in operations
-  db._fs = firestoreModule;
+  dbInstance = fsModule.getFirestore(app);
   sdkLoaded = true;
 }
 
 function getFS() {
-  if (!db._fs) throw new Error('Firebase SDK not loaded');
-  return db._fs;
+  if (!fsModule) throw new Error('Firebase SDK not loaded');
+  return fsModule;
 }
 
 // ═══════════════════════════════════════════════════
@@ -51,7 +49,6 @@ async function saveParticipant(data) {
     updatedAt: fs.serverTimestamp(),
   }, { merge: true });
 
-  // Also save to localStorage as cache
   localStorage.setItem('mapal-rsvp-' + data.phone, JSON.stringify(data));
 }
 
@@ -89,5 +86,4 @@ export const db = {
   saveParticipant,
   getAllParticipants,
   findCompanionLink,
-  _fs: null,
 };

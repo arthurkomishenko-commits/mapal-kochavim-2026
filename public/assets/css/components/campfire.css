@@ -35,7 +35,7 @@
 .campfire__fire {
   position: absolute;
   bottom: 38px;
-  left: 46%;
+  left: 50%;
   transform: translateX(-50%);
   width: 60px;
   height: 70px;
@@ -46,7 +46,7 @@
 .campfire__glow {
   position: absolute;
   bottom: 15px;
-  left: 46%;
+  left: 50%;
   transform: translateX(-50%);
   width: 300px;
   height: 140px;
@@ -65,7 +65,7 @@
 .campfire__ground-light {
   position: absolute;
   bottom: 25px;
-  left: 46%;
+  left: 50%;
   transform: translateX(-50%);
   width: 180px;
   height: 30px;
@@ -149,7 +149,7 @@
 .campfire__logs {
   position: absolute;
   bottom: 30px;
-  left: 46%;
+  left: 50%;
   transform: translateX(-50%);
   width: 70px;
   height: 16px;

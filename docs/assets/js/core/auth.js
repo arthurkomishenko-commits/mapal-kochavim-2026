@@ -15,12 +15,15 @@ const ADMIN_PHONES = [
 ];
 
 function normalizePhone(input) {
+  if (!input) return '';
   // Strip everything except digits and leading +
   let phone = input.replace(/[^\d+]/g, '');
+  // Remove + from anywhere except start
+  phone = phone.replace(/(?!^)\+/g, '');
   // +972 → 0
   if (phone.startsWith('+972')) phone = '0' + phone.slice(4);
-  // 972 → 0
-  if (phone.startsWith('972') && phone.length > 10) phone = '0' + phone.slice(3);
+  // 972XXXXXXX (10+ digits starting with 972) → 0
+  if (phone.startsWith('972') && phone.length >= 12) phone = '0' + phone.slice(3);
   return phone;
 }
 

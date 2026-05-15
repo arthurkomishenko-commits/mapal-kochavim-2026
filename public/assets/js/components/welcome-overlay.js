@@ -39,8 +39,13 @@ function shouldShow() {
   return Date.now() - dismissedAt > DISMISS_DURATION_MS;
 }
 
+function handleEsc(e) {
+  if (e.key === 'Escape') dismiss();
+}
+
 function dismiss() {
   localStorage.setItem(STORAGE_KEY, String(Date.now()));
+  document.removeEventListener('keydown', handleEsc);
   const overlay = document.getElementById('welcome-overlay');
   if (!overlay) return;
 
@@ -101,13 +106,6 @@ export function initWelcomeOverlay() {
   });
 
   overlay.querySelector('.welcome__enter').addEventListener('click', dismiss);
-
-  const handleEsc = (e) => {
-    if (e.key === 'Escape') {
-      dismiss();
-      document.removeEventListener('keydown', handleEsc);
-    }
-  };
   document.addEventListener('keydown', handleEsc);
 
   overlay.querySelector('.welcome__enter').focus();
