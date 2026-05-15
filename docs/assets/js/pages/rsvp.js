@@ -700,14 +700,14 @@ export function renderRsvp(container) {
 
   const user = auth.getUser();
   if (user && user.phone) {
+    formData.phone = user.phone;
     const saved = localStorage.getItem('mapal-rsvp-' + user.phone);
     if (saved) {
-      // Already registered — go to My Cabinet
-      window.location.hash = 'me';
-      return;
+      try {
+        formData = { ...formData, ...JSON.parse(saved), phone: user.phone };
+        isEditing = true;
+      } catch {}
     }
-    // Logged in but not registered — show form
-    formData.phone = user.phone;
     renderForm();
   } else {
     renderPhoneEntry();
