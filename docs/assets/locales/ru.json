@@ -177,6 +177,9 @@
     "namePlaceholder": "Имя",
     "cityLabel": "Город",
     "cityPlaceholder": "Например, Тель-Авив",
+    "confirmedLabel": "Точно еду",
+    "confirmedHint": "Если ещё не уверен — можешь отметить позже",
+    "confirmedYes": "Точно",
     "drivingLabel": "Ты на машине?",
     "drivingYes": "Да",
     "drivingNo": "Нет",
@@ -230,6 +233,8 @@
   "people": {
     "title": "Кто едет",
     "participants": "участников",
+    "confirmed": "точно едут",
+    "maybe": "думают",
     "cars": "машин",
     "tents": "палаток"
   },

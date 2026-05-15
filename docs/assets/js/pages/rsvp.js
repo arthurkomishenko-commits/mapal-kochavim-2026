@@ -120,7 +120,7 @@ let containerEl = null;
 
 function resetState() {
   formData = {
-    phone: '', name: '', city: '', isDriving: false, kids: 0,
+    phone: '', name: '', city: '', isDriving: false, confirmed: true, kids: 0,
     companions: [], bringing: {},
     addedByPhone: null, addedByName: null,
   };
@@ -297,6 +297,28 @@ function renderForm() {
       placeholder="${i18n.t('rsvp.cityPlaceholder')}">
   `;
   inner.appendChild(cityGroup);
+
+  // ── Confirmed toggle ──
+  const confirmSection = document.createElement('div');
+  confirmSection.className = 'form-section';
+  const confirmToggle = document.createElement('label');
+  confirmToggle.id = 'rsvp-confirmed-toggle';
+  confirmToggle.className = `form-toggle ${formData.confirmed !== false ? 'form-toggle--active' : ''}`;
+  confirmToggle.innerHTML = `
+    <span class="form-toggle__track"><span class="form-toggle__thumb"></span></span>
+    <span class="form-toggle__label" data-i18n="rsvp.confirmedLabel">${i18n.t('rsvp.confirmedLabel')}</span>
+  `;
+  confirmToggle.addEventListener('click', (e) => {
+    e.preventDefault();
+    confirmToggle.classList.toggle('form-toggle--active');
+  });
+  confirmSection.appendChild(confirmToggle);
+  const confirmHint = document.createElement('div');
+  confirmHint.className = 'form-section__hint';
+  confirmHint.textContent = i18n.t('rsvp.confirmedHint');
+  confirmHint.setAttribute('data-i18n', 'rsvp.confirmedHint');
+  confirmSection.appendChild(confirmHint);
+  inner.appendChild(confirmSection);
 
   // ── Driving toggle ──
   const drivingSection = document.createElement('div');
@@ -489,7 +511,7 @@ function renderForm() {
 
   // Populate companions
   if (formData.companions && formData.companions.length > 0) {
-    formData.companions.forEach(c => addCompanionRow(compList, c.name, c.phone));
+    formData.companions.forEach(c => addCompanionRow(compList, c.name, c.phone, c.confirmed !== false));
   }
 }
 
@@ -565,7 +587,7 @@ function renderBringStats(container) {
 // COMPANION ROW
 // ═══════════════════════════════════════════════════
 
-function addCompanionRow(list, name = '', phone = '') {
+function addCompanionRow(list, name = '', phone = '', confirmed = true) {
   const row = document.createElement('div');
   row.className = 'companion-row';
 
@@ -591,6 +613,18 @@ function addCompanionRow(list, name = '', phone = '') {
   phoneGroup.appendChild(phoneInput);
   row.appendChild(phoneGroup);
 
+  // Confirmed chip
+  const confirmChip = document.createElement('button');
+  confirmChip.type = 'button';
+  confirmChip.className = `chip companion-confirmed ${confirmed ? 'chip--active' : ''}`;
+  confirmChip.textContent = confirmed ? i18n.t('rsvp.confirmedYes') : '?';
+  confirmChip.addEventListener('click', () => {
+    confirmChip.classList.toggle('chip--active');
+    confirmChip.textContent = confirmChip.classList.contains('chip--active')
+      ? i18n.t('rsvp.confirmedYes') : '?';
+  });
+  row.appendChild(confirmChip);
+
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
   removeBtn.className = 'companion-remove';
@@ -612,6 +646,7 @@ async function handleSave() {
   const name = nameInput?.value.trim() || '';
   const city = cityInput?.value.trim() || '';
   const isDriving = document.getElementById('rsvp-driving-toggle')?.classList.contains('form-toggle--active') || false;
+  const confirmed = document.getElementById('rsvp-confirmed-toggle')?.classList.contains('form-toggle--active') ?? true;
   const kids = parseInt(document.querySelector('#rsvp-kids .chip-qty__count')?.textContent) || 0;
 
   // Validate name
@@ -627,9 +662,10 @@ async function handleSave() {
   document.querySelectorAll('.companion-row').forEach(row => {
     const n = row.querySelector('.companion-name')?.value.trim() || '';
     const p = row.querySelector('.companion-phone')?.value.trim() || '';
+    const conf = row.querySelector('.companion-confirmed')?.classList.contains('chip--active') ?? true;
     if (n && p) {
       const normalizedP = auth.normalizePhone(p);
-      companions.push({ name: n, phone: normalizedP });
+      companions.push({ name: n, phone: normalizedP, confirmed: conf });
       companionPhones.push(normalizedP);
     }
   });
@@ -649,6 +685,7 @@ async function handleSave() {
     name,
     city,
     isDriving,
+    confirmed,
     kids,
     companions,
     companionPhones,

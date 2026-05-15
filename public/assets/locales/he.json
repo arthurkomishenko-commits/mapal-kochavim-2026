@@ -177,6 +177,9 @@
     "namePlaceholder": "שם",
     "cityLabel": "עיר",
     "cityPlaceholder": "למשל, תל אביב",
+    "confirmedLabel": "בטוח מגיע",
+    "confirmedHint": "אם עדיין לא בטוח — אפשר לעדכן אחר כך",
+    "confirmedYes": "בטוח",
     "drivingLabel": "אתה עם רכב?",
     "drivingYes": "כן",
     "drivingNo": "לא",
@@ -230,6 +233,8 @@
   "people": {
     "title": "מי מגיע",
     "participants": "משתתפים",
+    "confirmed": "בטוח מגיעים",
+    "maybe": "חושבים",
     "cars": "רכבים",
     "tents": "אוהלים"
   },

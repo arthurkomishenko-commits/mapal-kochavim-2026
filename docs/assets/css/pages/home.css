@@ -1210,3 +1210,16 @@
   color: var(--color-starlight, #F5EFE0);
   font-weight: 500;
 }
+
+.home-bring-item--maybe {
+  background: rgba(165, 160, 154, 0.06);
+  border-color: rgba(165, 160, 154, 0.15);
+}
+
+.home-bring-item--maybe .home-bring-item__count {
+  color: var(--color-text-secondary, #A5A09A);
+}
+
+.home-bring-item--maybe .home-bring-item__label {
+  color: rgba(165, 160, 154, 0.6);
+}

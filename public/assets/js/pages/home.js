@@ -42,10 +42,21 @@ function renderHomeBringing() {
   const totals = {};
   let totalPeople = 0;
   let totalCars = 0;
+  let totalMaybe = 0;
 
   participants.forEach(data => {
-    totalPeople++;
-    if (data.companions) totalPeople += data.companions.length;
+    const isConfirmed = data.confirmed !== false;
+    if (isConfirmed) {
+      totalPeople++;
+    } else {
+      totalMaybe++;
+    }
+    if (data.companions) {
+      data.companions.forEach(c => {
+        if (c.confirmed !== false) totalPeople++;
+        else totalMaybe++;
+      });
+    }
     if (data.kids) totalPeople += data.kids;
     if (data.isDriving) totalCars++;
     if (!data.bringing) return;
@@ -60,17 +71,23 @@ function renderHomeBringing() {
   const countSection = document.getElementById('home-count-section');
   const countGrid = document.getElementById('home-count-grid');
   if (countSection && countGrid) {
-    if (totalPeople > 0) {
+    if (totalPeople > 0 || totalMaybe > 0) {
       countSection.style.display = '';
       countGrid.innerHTML = `
         <div class="home-bring-item home-bring-item--highlight">
           <span class="home-bring-item__count">${totalPeople}</span>
-          <span class="home-bring-item__label">${i18n.t('people.participants')}</span>
+          <span class="home-bring-item__label">${i18n.t('people.confirmed')}</span>
         </div>
         <div class="home-bring-item home-bring-item--highlight">
           <span class="home-bring-item__count">${totalCars}</span>
           <span class="home-bring-item__label">${i18n.t('people.cars')}</span>
         </div>
+        ${totalMaybe > 0 ? `
+        <div class="home-bring-item home-bring-item--maybe">
+          <span class="home-bring-item__count">${totalMaybe}</span>
+          <span class="home-bring-item__label">${i18n.t('people.maybe')}</span>
+        </div>
+        ` : ''}
       `;
     } else {
       countSection.style.display = 'none';
