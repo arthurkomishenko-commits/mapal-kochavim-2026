@@ -4,6 +4,7 @@
 
 import { i18n } from './core/i18n.js';
 import { router } from './core/router.js';
+import { auth } from './core/auth.js';
 import { initNav } from './components/nav.js';
 import { initWelcomeOverlay } from './components/welcome-overlay.js';
 
@@ -23,6 +24,7 @@ import { renderNotFound } from './pages/not-found.js';
 
 async function boot() {
   await i18n.init();
+  auth.initAuth();
   initNav();
   initWelcomeOverlay();
 

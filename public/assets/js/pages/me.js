@@ -281,7 +281,7 @@ function renderAdminPanel() {
       });
       const text = lines.join('\n');
       navigator.clipboard.writeText(text).then(() => {
-        showToast(i18n.t('safety.copied'));
+        showToast(i18n.t('common.saved'));
       }).catch(() => {
         prompt('Copy:', text);
       });

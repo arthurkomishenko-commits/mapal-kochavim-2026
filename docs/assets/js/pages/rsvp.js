@@ -217,8 +217,8 @@ function handlePhoneSubmit() {
     if (!key.startsWith('mapal-rsvp-')) continue;
     try {
       const p = JSON.parse(localStorage.getItem(key));
-      if (p.companionPhones && p.companionPhones.includes(phone)) {
-        const comp = p.companions.find(c => auth.normalizePhone(c.phone) === phone);
+      if (p.companionPhones && Array.isArray(p.companionPhones) && p.companionPhones.includes(phone)) {
+        const comp = (p.companions || []).find(c => c.phone && auth.normalizePhone(c.phone) === phone);
         formData.addedByPhone = p.phone;
         formData.addedByName = p.name;
         if (comp) formData.name = comp.name;

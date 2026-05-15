@@ -32,12 +32,15 @@ function unlockScroll() {
 }
 
 function shouldShow() {
-  // TODO: restore localStorage check after design is finalized
-  return true;
+  const dismissed = localStorage.getItem(STORAGE_KEY);
+  if (!dismissed) return true;
+  const dismissedAt = parseInt(dismissed, 10);
+  if (isNaN(dismissedAt)) return true;
+  return Date.now() - dismissedAt > DISMISS_DURATION_MS;
 }
 
 function dismiss() {
-  // TODO: restore localStorage.setItem when done testing
+  localStorage.setItem(STORAGE_KEY, String(Date.now()));
   const overlay = document.getElementById('welcome-overlay');
   if (!overlay) return;
 
