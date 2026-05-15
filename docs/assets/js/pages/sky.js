@@ -1,2 +1,5 @@
 /** Sky → redirects to Place (combined page) */
-export function renderSky() { window.location.hash = 'place'; }
+export function renderSky(container) {
+  // Redirect via hash change after current handler completes
+  setTimeout(() => { window.location.hash = 'place'; }, 0);
+}

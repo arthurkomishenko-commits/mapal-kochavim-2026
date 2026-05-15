@@ -5,8 +5,8 @@
 import { i18n } from '../core/i18n.js';
 
 const BOROT_LOTZ_COORDS = { lat: 30.6167, lng: 34.7833 };
-const WAZE_LINK = `https://waze.com/ul?ll=${BOROT_LOTZ_COORDS.lat},${BOROT_LOTZ_COORDS.lng}&navigate=yes`;
-const GMAPS_LINK = `https://www.google.com/maps/dir/?api=1&destination=${BOROT_LOTZ_COORDS.lat},${BOROT_LOTZ_COORDS.lng}`;
+const WAZE_LINK = 'https://waze.com/ul/hsv2tedc1p';
+const GMAPS_LINK = 'https://maps.app.goo.gl/EaoofpuTeQ2TyPkZ7?g_st=ic';
 
 export function renderPlace(container) {
   container.innerHTML = `
