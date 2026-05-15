@@ -236,16 +236,7 @@ export function renderHome(container) {
           </div>
         </div>
         <a href="#rsvp" class="hero__cta" data-i18n="home.cta">${i18n.t('home.cta')}</a>
-      </div>
-      <div class="hero__scroll-hint" aria-hidden="true">
-        <div class="hero__scroll-arrow"></div>
-      </div>
-    </section>
-
-    <!-- ═══ Map buttons ═══ -->
-    <section class="home-section">
-      <div class="home-section__inner home-section__inner--center">
-        <div class="home-map-btns">
+        <div class="home-map-btns" style="margin-block-start:32px;">
           <a href="https://waze.com/ul/hsv2tedc1p" target="_blank" rel="noopener" class="home-map-btn">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
             Waze
@@ -255,6 +246,9 @@ export function renderHome(container) {
             Google Maps
           </a>
         </div>
+      </div>
+      <div class="hero__scroll-hint" aria-hidden="true">
+        <div class="hero__scroll-arrow"></div>
       </div>
     </section>
 
