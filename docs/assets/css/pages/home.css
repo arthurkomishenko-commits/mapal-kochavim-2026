@@ -717,16 +717,16 @@
 
 .home-section {
   padding: var(--space-7) var(--space-5);
-  background: var(--color-sky-deepest, #070B1F);
+  background: transparent;
 }
 
 .home-section--dark {
-  background: var(--color-sky-deepest, #070B1F);
+  background: transparent;
 }
 
 .home-section--cta {
   padding: var(--space-8) var(--space-5);
-  background: #070B1F;
+  background: transparent;
 }
 
 .home-section__inner {

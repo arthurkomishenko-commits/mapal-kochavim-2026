@@ -6,7 +6,7 @@
   min-height: 100dvh;
   padding-block-start: calc(var(--nav-height) + var(--space-8));
   padding-block-end: var(--space-9);
-  background: var(--color-sky-deepest);
+  background: transparent;
 }
 
 .page-section__inner {

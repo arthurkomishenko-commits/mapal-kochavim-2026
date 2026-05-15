@@ -16,7 +16,7 @@
   height: 160px;
   overflow: hidden;
   pointer-events: none;
-  background: #070B1F;
+  background: transparent;
 }
 
 /* ── Desert terrain silhouette — soft, no hard lines ── */
