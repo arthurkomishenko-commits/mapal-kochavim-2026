@@ -37,12 +37,6 @@ export function renderPack(container) {
             </ul>
           </div>
 
-          <div class="checklist__group">
-            <h2 class="checklist__group-title" data-i18n="pack.starsTitle">${i18n.t('pack.starsTitle')}</h2>
-            <ul class="checklist__items" data-group="stars">
-              ${renderItems('pack.stars')}
-            </ul>
-          </div>
         </div>
       </div>
     </section>
