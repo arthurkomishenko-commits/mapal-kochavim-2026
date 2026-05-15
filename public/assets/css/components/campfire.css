@@ -16,7 +16,7 @@
   height: 160px;
   overflow: hidden;
   pointer-events: none;
-  background: linear-gradient(to bottom, var(--color-sky-deepest, #070B1F), #050815);
+  background: #070B1F;
 }
 
 /* ── Desert terrain silhouette — soft, no hard lines ── */
@@ -27,7 +27,7 @@
   left: 0;
   right: 0;
   height: 50px;
-  background: linear-gradient(to bottom, transparent, #040610 40%);
+  background: linear-gradient(to bottom, transparent, #070B1F 40%);
 }
 
 /* ── Fire container — slightly off-center ── */

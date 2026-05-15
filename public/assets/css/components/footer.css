@@ -5,11 +5,7 @@
 .footer {
   padding: var(--space-8) var(--space-5) var(--space-6);
   text-align: center;
-  background: linear-gradient(
-    to bottom,
-    var(--color-sky-deepest, #070B1F) 0%,
-    #040610 100%
-  );
+  background: #070B1F;
 }
 
 .footer__divider {
