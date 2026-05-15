@@ -219,25 +219,37 @@ export function renderHome(container) {
           ${i18n.t('home.heroSubtitle')}
         </p>
         <span class="hero__private-badge" data-i18n="home.privateBadge">${i18n.t('home.privateBadge')}</span>
-        <div class="hero__countdown" aria-label="Countdown to event">
-          <div class="countdown__unit">
-            <span class="countdown__number tabular-nums" id="countdown-days">--</span>
-            <span class="countdown__label" data-i18n="home.countdown.days">${i18n.t('home.countdown.days')}</span>
+        <div class="cd" aria-label="Countdown to event" dir="ltr">
+          <div class="cd__unit">
+            <div class="cd__digits" id="cd-days">
+              <div class="cd-digit"><span class="cd-digit__current">-</span></div>
+              <div class="cd-digit"><span class="cd-digit__current">-</span></div>
+            </div>
+            <span class="cd__label" data-i18n="home.countdown.days">${i18n.t('home.countdown.days')}</span>
           </div>
-          <div class="countdown__separator" aria-hidden="true">:</div>
-          <div class="countdown__unit">
-            <span class="countdown__number tabular-nums" id="countdown-hours">--</span>
-            <span class="countdown__label" data-i18n="home.countdown.hours">${i18n.t('home.countdown.hours')}</span>
+          <div class="cd__sep" aria-hidden="true">:</div>
+          <div class="cd__unit">
+            <div class="cd__digits" id="cd-hours">
+              <div class="cd-digit"><span class="cd-digit__current">-</span></div>
+              <div class="cd-digit"><span class="cd-digit__current">-</span></div>
+            </div>
+            <span class="cd__label" data-i18n="home.countdown.hours">${i18n.t('home.countdown.hours')}</span>
           </div>
-          <div class="countdown__separator" aria-hidden="true">:</div>
-          <div class="countdown__unit">
-            <span class="countdown__number tabular-nums" id="countdown-minutes">--</span>
-            <span class="countdown__label" data-i18n="home.countdown.minutes">${i18n.t('home.countdown.minutes')}</span>
+          <div class="cd__sep" aria-hidden="true">:</div>
+          <div class="cd__unit">
+            <div class="cd__digits" id="cd-minutes">
+              <div class="cd-digit"><span class="cd-digit__current">-</span></div>
+              <div class="cd-digit"><span class="cd-digit__current">-</span></div>
+            </div>
+            <span class="cd__label" data-i18n="home.countdown.minutes">${i18n.t('home.countdown.minutes')}</span>
           </div>
-          <div class="countdown__separator" aria-hidden="true">:</div>
-          <div class="countdown__unit">
-            <span class="countdown__number tabular-nums" id="countdown-seconds">--</span>
-            <span class="countdown__label" data-i18n="home.countdown.seconds">${i18n.t('home.countdown.seconds')}</span>
+          <div class="cd__sep" aria-hidden="true">:</div>
+          <div class="cd__unit">
+            <div class="cd__digits" id="cd-seconds">
+              <div class="cd-digit"><span class="cd-digit__current">-</span></div>
+              <div class="cd-digit"><span class="cd-digit__current">-</span></div>
+            </div>
+            <span class="cd__label" data-i18n="home.countdown.seconds">${i18n.t('home.countdown.seconds')}</span>
           </div>
         </div>
         <a href="#rsvp" class="hero__cta" data-i18n="home.cta">${i18n.t('home.cta')}</a>

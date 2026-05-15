@@ -59,20 +59,6 @@
     letter-spacing: 0.1em;
     margin-block-end: var(--space-3);
   }
-  .hero__countdown {
-    margin-block-end: var(--space-3);
-    gap: var(--space-1);
-    direction: ltr;
-  }
-  .countdown__number {
-    font-size: var(--text-2xl);
-  }
-  .countdown__unit {
-    min-width: 44px;
-  }
-  .countdown__separator {
-    font-size: var(--text-xl);
-  }
   .hero__cta {
     padding: var(--space-3) var(--space-5);
     font-size: var(--text-base);
@@ -141,70 +127,136 @@
   margin-block-end: var(--space-5);
 }
 
-/* ── Countdown ── */
+/* ── Cinematic Countdown ── */
 
-.hero__countdown {
+.cd {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: center;
-  gap: var(--space-3);
-  margin-block-end: var(--space-8);
-  direction: ltr;
+  gap: 6px;
+  margin-block-end: var(--space-7);
 }
 
-.countdown__unit {
+.cd__unit {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 56px;
 }
 
-.countdown__number {
-  font-size: var(--text-5xl);
-  font-weight: 800;
-  color: var(--color-ember-bright);
-  line-height: 1;
+.cd__digits {
+  display: flex;
+  gap: 2px;
+}
+
+.cd-digit {
+  position: relative;
+  width: 32px;
+  height: 46px;
+  overflow: hidden;
+  background: rgba(245, 239, 224, 0.03);
+  border: 1px solid rgba(245, 239, 224, 0.06);
+  border-radius: 6px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.cd-digit__current {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #F3EEDF;
   font-variant-numeric: tabular-nums;
   text-shadow:
-    0 0 8px rgba(0, 0, 0, 0.9),
-    0 0 24px rgba(0, 0, 0, 0.6),
-    0 0 48px rgba(0, 0, 0, 0.3);
+    0 0 8px rgba(216, 168, 92, 0.15),
+    0 0 4px rgba(0, 0, 0, 0.8);
+  transition: none;
 }
 
+.cd-digit__current--exit {
+  transform: translateY(-100%);
+  opacity: 0;
+  transition: transform 420ms cubic-bezier(.22,.61,.36,1),
+              opacity 350ms ease;
+}
+
+.cd-digit__next {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #F3EEDF;
+  font-variant-numeric: tabular-nums;
+  text-shadow:
+    0 0 8px rgba(216, 168, 92, 0.15),
+    0 0 4px rgba(0, 0, 0, 0.8);
+  transform: translateY(100%);
+  opacity: 0;
+  transition: none;
+}
+
+.cd-digit__next--enter {
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform 420ms cubic-bezier(.22,.61,.36,1),
+              opacity 350ms ease;
+}
+
+.cd__label {
+  font-size: 0.6rem;
+  color: rgba(243, 238, 223, 0.5);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-block-start: 6px;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
+}
+
+.cd__sep {
+  font-size: 1.4rem;
+  color: rgba(216, 168, 92, 0.3);
+  line-height: 46px;
+  font-weight: 300;
+  padding-inline: 2px;
+}
+
+/* ── Desktop: larger digits ── */
 @media (min-width: 768px) {
-  .countdown__number {
-    font-size: var(--text-5xl);
+  .cd {
+    gap: 12px;
+  }
+  .cd__digits {
+    gap: 3px;
+  }
+  .cd-digit {
+    width: 44px;
+    height: 62px;
+    border-radius: 8px;
+  }
+  .cd-digit__current,
+  .cd-digit__next {
+    font-size: 2.2rem;
+  }
+  .cd__label {
+    font-size: 0.7rem;
+    margin-block-start: 8px;
+  }
+  .cd__sep {
+    font-size: 1.8rem;
+    line-height: 62px;
   }
 }
 
-.countdown__label {
-  font-size: var(--text-sm);
-  color: #fff;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-block-start: var(--space-1);
-  text-shadow:
-    0 0 6px rgba(0, 0, 0, 0.9),
-    0 0 16px rgba(0, 0, 0, 0.6);
-}
-
-.countdown__separator {
-  font-size: var(--text-3xl);
-  color: var(--color-text-tertiary);
-  line-height: 1;
-  opacity: 0.5;
-  animation: blink 2s var(--ease-natural) infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 0.15; }
-}
-
+/* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
-  .countdown__separator {
-    animation: none;
+  .cd-digit__current--exit,
+  .cd-digit__next--enter {
+    transition: none !important;
   }
 }
 

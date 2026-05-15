@@ -1,60 +1,129 @@
 /**
- * Countdown to event start.
- * Target: August 13, 2026 18:00 Asia/Jerusalem (evening arrival)
+ * Cinematic Countdown — observatory-style digit transitions
+ *
+ * Motion philosophy:
+ * Each digit change is a calm, restrained slide. The old digit
+ * drifts upward and fades; the new one emerges from below.
+ * The feeling is "soft mechanical astronomy instrument" —
+ * not a sports scoreboard.
+ *
+ * Performance: only transform + opacity animated.
+ * Reduced motion: simple instant update, no sliding.
  */
 
 const EVENT_START = new Date('2026-08-13T18:00:00+03:00');
 
-const ELEMENTS = {
-  days: null,
-  hours: null,
-  minutes: null,
-  seconds: null,
-};
-
 let intervalId = null;
+let prevValues = { days: '', hours: '', minutes: '', seconds: '' };
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function pad(n) {
   return String(n).padStart(2, '0');
 }
 
+/**
+ * Animate a single digit cell: old slides up + fades, new enters from below.
+ */
+function transitionDigit(cell, newChar, delay) {
+  const current = cell.querySelector('.cd-digit__current');
+  if (!current) return;
+
+  if (current.textContent === newChar) return;
+
+  if (reducedMotion) {
+    current.textContent = newChar;
+    return;
+  }
+
+  // Create incoming digit
+  const next = document.createElement('span');
+  next.className = 'cd-digit__next';
+  next.textContent = newChar;
+  cell.appendChild(next);
+
+  // Stagger
+  setTimeout(() => {
+    current.classList.add('cd-digit__current--exit');
+    next.classList.add('cd-digit__next--enter');
+
+    // After transition, swap
+    setTimeout(() => {
+      current.textContent = newChar;
+      current.classList.remove('cd-digit__current--exit');
+      next.remove();
+    }, 450);
+  }, delay);
+}
+
+/**
+ * Update all units. Each digit animated independently.
+ */
 function update() {
   const now = new Date();
   const diff = EVENT_START - now;
 
   if (diff <= 0) {
-    // Event has started or passed
-    Object.values(ELEMENTS).forEach(el => {
-      if (el) el.textContent = '00';
-    });
-    if (intervalId) {
-      clearInterval(intervalId);
-      intervalId = null;
-    }
+    setDisplay('days', '0');
+    setDisplay('hours', '00');
+    setDisplay('minutes', '00');
+    setDisplay('seconds', '00');
+    if (intervalId) { clearInterval(intervalId); intervalId = null; }
     return;
   }
 
-  const totalSeconds = Math.floor(diff / 1000);
-  const days = Math.floor(totalSeconds / 86400);
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
+  const total = Math.floor(diff / 1000);
+  const d = String(Math.floor(total / 86400));
+  const h = pad(Math.floor((total % 86400) / 3600));
+  const m = pad(Math.floor((total % 3600) / 60));
+  const s = pad(total % 60);
 
-  if (ELEMENTS.days) ELEMENTS.days.textContent = String(days);
-  if (ELEMENTS.hours) ELEMENTS.hours.textContent = pad(hours);
-  if (ELEMENTS.minutes) ELEMENTS.minutes.textContent = pad(minutes);
-  if (ELEMENTS.seconds) ELEMENTS.seconds.textContent = pad(seconds);
+  animateUnit('days', d, 0);
+  animateUnit('hours', h, 20);
+  animateUnit('minutes', m, 40);
+  animateUnit('seconds', s, 0); // seconds — no stagger, instant feel
+}
+
+/**
+ * Animate a unit (days/hours/etc). Compares each character.
+ */
+function animateUnit(id, value, baseDelay) {
+  if (prevValues[id] === value) return;
+  prevValues[id] = value;
+
+  const container = document.getElementById('cd-' + id);
+  if (!container) return;
+
+  const cells = container.querySelectorAll('.cd-digit');
+
+  // Pad value to match cell count
+  const chars = value.padStart(cells.length, ' ');
+
+  cells.forEach((cell, i) => {
+    transitionDigit(cell, chars[i] === ' ' ? '' : chars[i], baseDelay + i * 25);
+  });
+}
+
+/**
+ * Set display without animation (initial render).
+ */
+function setDisplay(id, value) {
+  const container = document.getElementById('cd-' + id);
+  if (!container) return;
+  const cells = container.querySelectorAll('.cd-digit');
+  const chars = value.padStart(cells.length, ' ');
+  cells.forEach((cell, i) => {
+    const current = cell.querySelector('.cd-digit__current');
+    if (current) current.textContent = chars[i] === ' ' ? '' : chars[i];
+  });
+  prevValues[id] = value;
 }
 
 export function initCountdown() {
-  ELEMENTS.days = document.getElementById('countdown-days');
-  ELEMENTS.hours = document.getElementById('countdown-hours');
-  ELEMENTS.minutes = document.getElementById('countdown-minutes');
-  ELEMENTS.seconds = document.getElementById('countdown-seconds');
+  const el = document.getElementById('cd-days');
+  if (!el) return;
 
-  // Bail if elements don't exist (not on home page)
-  if (!ELEMENTS.days) return;
-
+  // Initial render without animation
   update();
+  // Then animate every second
   intervalId = setInterval(update, 1000);
 }
