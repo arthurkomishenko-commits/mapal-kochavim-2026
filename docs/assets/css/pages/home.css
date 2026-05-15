@@ -89,6 +89,12 @@
   text-align: center;
   padding: var(--space-5);
   padding-block-start: var(--nav-height);
+  background: radial-gradient(
+    ellipse 70% 60% at 50% 45%,
+    rgba(5, 8, 21, 0.65) 0%,
+    rgba(5, 8, 21, 0.35) 50%,
+    transparent 100%
+  );
 }
 
 .hero__title {
@@ -98,8 +104,8 @@
   color: var(--color-starlight);
   margin-block-end: var(--space-4);
   text-shadow:
-    0 0 40px rgba(248, 217, 160, 0.1),
-    0 0 80px rgba(248, 217, 160, 0.05);
+    0 2px 20px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(248, 217, 160, 0.1);
 }
 
 .hero__subtitle {
@@ -108,6 +114,7 @@
   letter-spacing: 0.15em;
   text-transform: uppercase;
   margin-block-end: var(--space-8);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
 @media (min-width: 768px) {
@@ -156,6 +163,7 @@
   color: var(--color-ember-bright);
   line-height: 1;
   font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
 }
 
 @media (min-width: 768px) {
@@ -170,6 +178,7 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-block-start: var(--space-1);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
 }
 
 .countdown__separator {
