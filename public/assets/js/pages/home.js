@@ -279,16 +279,6 @@ export function renderHome(container) {
           </div>
         </div>
 
-        <div class="home-nav-buttons">
-          <a href="#place" class="home-nav-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <span data-i18n="home.btnPlaceProgram">${i18n.t('home.btnPlaceProgram')}</span>
-          </a>
-          <a href="#pack" class="home-nav-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a4 4 0 0 0-8 0v2"/></svg>
-            <span data-i18n="nav.pack">${i18n.t('nav.pack')}</span>
-          </a>
-        </div>
       </div>
     </section>
 
