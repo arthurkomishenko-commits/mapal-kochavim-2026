@@ -7,7 +7,6 @@ import { router } from './core/router.js';
 import { auth } from './core/auth.js';
 import { initNav } from './components/nav.js';
 import { initWelcomeOverlay } from './components/welcome-overlay.js';
-import { initCampfire } from './components/campfire.js';
 import { initStarsBg, setSkySensity, SKY_LEVELS } from './components/stars-bg.js';
 
 import { renderHome } from './pages/home.js';
@@ -65,8 +64,6 @@ async function boot() {
     setSkySensity(SKY_LEVELS[e.detail.route] || 'normal');
   });
 
-  // Campfire
-  initCampfire(document.getElementById('campfire'));
 
   // Start
   router.init(document.getElementById('page-container'));
