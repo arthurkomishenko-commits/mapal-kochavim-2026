@@ -54,28 +54,36 @@ function renderHomeBringing() {
     }
   });
 
-  if (totalPeople === 0) {
+  // Render count section (participants + cars)
+  const countSection = document.getElementById('home-count-section');
+  const countGrid = document.getElementById('home-count-grid');
+  if (countSection && countGrid) {
+    if (totalPeople > 0) {
+      countSection.style.display = '';
+      countGrid.innerHTML = `
+        <div class="home-bring-item home-bring-item--highlight">
+          <span class="home-bring-item__count">${totalPeople}</span>
+          <span class="home-bring-item__label">${i18n.t('people.participants')}</span>
+        </div>
+        <div class="home-bring-item home-bring-item--highlight">
+          <span class="home-bring-item__count">${totalCars}</span>
+          <span class="home-bring-item__label">${i18n.t('people.cars')}</span>
+        </div>
+      `;
+    } else {
+      countSection.style.display = 'none';
+    }
+  }
+
+  // Render bringing section (items only)
+  const entries = Object.entries(totals).filter(([, v]) => v > 0);
+  if (entries.length === 0) {
     section.style.display = 'none';
     return;
   }
 
   section.style.display = '';
-
-  // People + cars (highlighted)
-  let html = `
-    <div class="home-bring-item home-bring-item--highlight">
-      <span class="home-bring-item__count">${totalPeople}</span>
-      <span class="home-bring-item__label">${i18n.t('people.participants')}</span>
-    </div>
-    <div class="home-bring-item home-bring-item--highlight">
-      <span class="home-bring-item__count">${totalCars}</span>
-      <span class="home-bring-item__label">${i18n.t('people.cars')}</span>
-    </div>
-  `;
-
-  // Items
-  const entries = Object.entries(totals).filter(([, v]) => v > 0);
-  html += entries.map(([id, count]) => {
+  let html = entries.map(([id, count]) => {
     const label = i18n.t(ITEM_LABELS[id] || id);
     return `<div class="home-bring-item">
       <span class="home-bring-item__count">${count}</span>
@@ -231,6 +239,14 @@ export function renderHome(container) {
       </div>
       <div class="hero__scroll-hint" aria-hidden="true">
         <div class="hero__scroll-arrow"></div>
+      </div>
+    </section>
+
+    <!-- ═══ How many of us ═══ -->
+    <section class="home-section" id="home-count-section" style="display:none;">
+      <div class="home-section__inner home-section__inner--center">
+        <h2 class="home-section__title" data-i18n="home.countTitle">${i18n.t('home.countTitle')}</h2>
+        <div id="home-count-grid" class="home-bringing-grid"></div>
       </div>
     </section>
 
