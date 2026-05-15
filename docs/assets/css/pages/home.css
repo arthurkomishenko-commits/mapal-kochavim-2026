@@ -33,8 +33,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 160px;
-  background: linear-gradient(to bottom, transparent, var(--color-sky-deepest, #070B1F));
+  height: 200px;
+  background: linear-gradient(to bottom, transparent 0%, #070B1F 100%);
   pointer-events: none;
   z-index: 1;
 }
@@ -726,11 +726,7 @@
 
 .home-section--cta {
   padding: var(--space-8) var(--space-5);
-  background: linear-gradient(
-    to bottom,
-    var(--color-sky-deepest, #070B1F) 0%,
-    #050815 100%
-  );
+  background: #070B1F;
 }
 
 .home-section__inner {

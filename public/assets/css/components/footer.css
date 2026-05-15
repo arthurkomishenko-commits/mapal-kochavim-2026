@@ -46,7 +46,6 @@
     background: rgba(7, 11, 31, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-block-start: 1px solid rgba(245, 239, 224, 0.06);
   }
 
   .bottom-bar--hidden {
