@@ -1,9 +1,7 @@
 /**
  * Navigation — simple top bar
- * [Logo]  [My Cabinet]  [Lang]
- *
- * No hamburger, no drawer — everything accessible from home page.
- * "My Cabinet" appears after login (person icon + text on desktop).
+ * Not logged in: [RSVP btn]  [Logo]  [Lang]
+ * Logged in:     [My Cabinet] [Logo]  [Lang]
  */
 
 import { i18n } from '../core/i18n.js';
@@ -15,9 +13,18 @@ export function initNav() {
   const navInner = header.querySelector('.nav__inner');
 
   // Clean up any existing controls
-  header.querySelectorAll('.nav__lang-btn, .nav__menu-btn, .nav__me-btn').forEach(el => el.remove());
+  header.querySelectorAll('.nav__lang-btn, .nav__menu-btn, .nav__me-btn, .nav__rsvp-btn').forEach(el => el.remove());
 
-  // My cabinet link (left side, hidden until logged in)
+  // RSVP button (left side, shown when NOT logged in)
+  const rsvpBtn = document.createElement('a');
+  rsvpBtn.href = '#rsvp';
+  rsvpBtn.id = 'nav-rsvp-btn';
+  rsvpBtn.className = 'nav__rsvp-btn';
+  rsvpBtn.textContent = i18n.t('home.cta');
+  rsvpBtn.setAttribute('data-i18n', 'home.cta');
+  navInner.prepend(rsvpBtn);
+
+  // My cabinet link (left side, shown when logged in)
   const meBtn = document.createElement('a');
   meBtn.href = '#me';
   meBtn.id = 'nav-me-btn';
@@ -41,13 +48,15 @@ export function initNav() {
   langBtn.textContent = i18n.t('lang.switchTo');
   navInner.appendChild(langBtn);
 
-  // Show/hide me button on auth change
-  function updateMeBtn() {
+  // Show/hide buttons based on auth state
+  function updateNav() {
     const user = JSON.parse(localStorage.getItem('mapal-user') || 'null');
-    meBtn.style.display = user ? '' : 'none';
+    const loggedIn = !!user;
+    meBtn.style.display = loggedIn ? '' : 'none';
+    rsvpBtn.style.display = loggedIn ? 'none' : '';
   }
-  updateMeBtn();
-  window.addEventListener('authchange', updateMeBtn);
+  updateNav();
+  window.addEventListener('authchange', updateNav);
 
   // Language toggle
   langBtn.addEventListener('click', () => i18n.toggle());
@@ -55,6 +64,7 @@ export function initNav() {
     langBtn.textContent = i18n.t('lang.switchTo');
     const meLabel = meBtn.querySelector('[data-i18n]');
     if (meLabel) meLabel.textContent = i18n.t('nav.me');
+    rsvpBtn.textContent = i18n.t('home.cta');
   });
 
   return langBtn;
