@@ -11,16 +11,22 @@ let app = null;
 let dbInstance = null;
 let fsModule = null;
 let sdkLoaded = false;
+let sdkPromise = null;
 
 async function loadSDK() {
   if (sdkLoaded) return;
+  if (sdkPromise) return sdkPromise;
 
-  const appModule = await import('https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js');
-  fsModule = await import('https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js');
+  sdkPromise = (async () => {
+    const appModule = await import('https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js');
+    fsModule = await import('https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js');
 
-  app = appModule.initializeApp(firebaseConfig);
-  dbInstance = fsModule.getFirestore(app);
-  sdkLoaded = true;
+    app = appModule.initializeApp(firebaseConfig);
+    dbInstance = fsModule.getFirestore(app);
+    sdkLoaded = true;
+  })();
+
+  return sdkPromise;
 }
 
 function getFS() {

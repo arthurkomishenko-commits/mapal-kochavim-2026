@@ -15,6 +15,7 @@ let lightboxImg = null;
 let lightboxCounter = null;
 let allImages = [];
 let currentIndex = 0;
+let keydownHandler = null;
 
 function openLightbox(index) {
   currentIndex = index;
@@ -30,6 +31,10 @@ function closeLightbox() {
   if (!lightboxEl) return;
   document.documentElement.style.overflow = '';
   lightboxEl.classList.remove('lightbox--visible');
+  if (keydownHandler) {
+    document.removeEventListener('keydown', keydownHandler);
+    keydownHandler = null;
+  }
   setTimeout(() => {
     if (lightboxEl.parentElement) lightboxEl.remove();
   }, 300);
@@ -81,13 +86,14 @@ function createLightbox() {
     if (e.target === lightboxEl) closeLightbox();
   });
 
-  // Keyboard
-  document.addEventListener('keydown', (e) => {
+  // Keyboard (stored ref for cleanup)
+  keydownHandler = (e) => {
     if (!lightboxEl || !lightboxEl.parentElement) return;
     if (e.key === 'Escape') closeLightbox();
     if (e.key === 'ArrowLeft') navigate(-1);
     if (e.key === 'ArrowRight') navigate(1);
-  });
+  };
+  document.addEventListener('keydown', keydownHandler);
 
   // Swipe support
   let startX = 0;
