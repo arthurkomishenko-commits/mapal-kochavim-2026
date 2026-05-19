@@ -2,26 +2,26 @@
  * מפל כוכבים 2026 — Main entry point
  */
 
-import { i18n } from './core/i18n.js';
-import { router } from './core/router.js';
-import { auth } from './core/auth.js';
-import { initNav } from './components/nav.js';
-import { initWelcomeOverlay } from './components/welcome-overlay.js';
-import { initStarsBg, setSkySensity, SKY_LEVELS } from './components/stars-bg.js';
+import { i18n } from './core/i18n.js?v=36';
+import { router } from './core/router.js?v=36';
+import { auth } from './core/auth.js?v=36';
+import { initNav } from './components/nav.js?v=36';
+import { initWelcomeOverlay } from './components/welcome-overlay.js?v=36';
+import { initStarsBg, setSkySensity, SKY_LEVELS } from './components/stars-bg.js?v=36';
 
-import { renderHome } from './pages/home.js';
-import { renderPlace } from './pages/place.js';
-import { renderProgram } from './pages/program.js';
-import { renderPack } from './pages/pack.js';
-import { renderSky } from './pages/sky.js';
-import { renderSafety } from './pages/safety.js';
-import { renderContacts } from './pages/contacts.js';
-import { renderGallery } from './pages/gallery.js';
-import { renderRsvp } from './pages/rsvp.js';
-import { renderPeople } from './pages/people.js';
-import { renderRides } from './pages/rides.js';
-import { renderMe } from './pages/me.js';
-import { renderNotFound } from './pages/not-found.js';
+import { renderHome } from './pages/home.js?v=36';
+import { renderPlace } from './pages/place.js?v=36';
+import { renderProgram } from './pages/program.js?v=36';
+import { renderPack } from './pages/pack.js?v=36';
+import { renderSky } from './pages/sky.js?v=36';
+import { renderSafety } from './pages/safety.js?v=36';
+import { renderContacts } from './pages/contacts.js?v=36';
+import { renderGallery } from './pages/gallery.js?v=36';
+import { renderRsvp } from './pages/rsvp.js?v=36';
+import { renderPeople } from './pages/people.js?v=36';
+import { renderRides } from './pages/rides.js?v=36';
+import { renderMe } from './pages/me.js?v=36';
+import { renderNotFound } from './pages/not-found.js?v=36';
 
 async function boot() {
   await i18n.init();
