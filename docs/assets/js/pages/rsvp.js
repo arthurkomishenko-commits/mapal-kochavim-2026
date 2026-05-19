@@ -215,9 +215,23 @@ async function handlePhoneSubmit() {
   const btn = document.getElementById('rsvp-phone-btn');
   if (btn) { btn.disabled = true; btn.textContent = '...'; }
 
+  // Check localStorage first (instant, works offline)
+  const saved = localStorage.getItem('mapal-rsvp-' + phone);
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      auth.login(phone, parsed.name);
+      window.location.hash = 'me';
+      return;
+    } catch {}
+  }
+
+  // Try Firestore with timeout
   try {
-    // Check Firestore for existing registration
-    const d = await getDb();
+    const d = await Promise.race([
+      getDb(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 4000)),
+    ]);
     const existing = await d.getParticipant(phone);
     if (existing) {
       auth.login(phone, existing.name);
@@ -234,17 +248,7 @@ async function handlePhoneSubmit() {
       formData.name = link.name || '';
     }
   } catch (err) {
-    console.warn('Firestore check failed, using localStorage fallback:', err);
-    // Fallback to localStorage
-    const saved = localStorage.getItem('mapal-rsvp-' + phone);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        auth.login(phone, parsed.name);
-        window.location.hash = 'me';
-        return;
-      } catch {}
-    }
+    console.warn('Firestore unavailable, continuing offline:', err);
   }
 
   if (btn) { btn.disabled = false; btn.textContent = i18n.t('rsvp.continue'); }
@@ -786,31 +790,22 @@ async function handleSave() {
   saveBtn.disabled = true;
   saveBtn.textContent = i18n.t('rsvp.saving');
 
-  try {
-    // Save to Firestore + localStorage cache
-    const d = await getDb();
-    await d.saveParticipant(data);
-    localStorage.setItem('mapal-rsvp-' + data.phone, JSON.stringify(data));
+  // Always save to localStorage first (works offline)
+  localStorage.setItem('mapal-rsvp-' + data.phone, JSON.stringify(data));
+  auth.login(data.phone, data.name, data.token);
 
-    // Login with token
-    auth.login(data.phone, data.name, data.token);
+  // Firestore sync — fire-and-forget, never blocks the user
+  getDb().then(d => d.saveParticipant(data)).catch(() => {});
 
-    // Copy recovery link to clipboard (silent, no toast yet)
-    const recoveryUrl = `${location.origin}${location.pathname}#recover/${data.phone}/${data.token}`;
-    try { await navigator.clipboard.writeText(recoveryUrl); } catch {}
+  // Copy recovery link to clipboard (silent)
+  const recoveryUrl = `${location.origin}${location.pathname}#recover/${data.phone}/${data.token}`;
+  try { await navigator.clipboard.writeText(recoveryUrl); } catch {}
 
-    showToast(i18n.t('rsvp.saved'));
+  showToast(i18n.t('rsvp.saved'));
 
-    setTimeout(() => {
-      window.location.hash = 'me';
-    }, 1200);
-
-  } catch (err) {
-    console.error('Save failed:', err);
-    saveBtn.disabled = false;
-    saveBtn.textContent = i18n.t('rsvp.save');
-    showToast(i18n.t('common.error'), true);
-  }
+  setTimeout(() => {
+    window.location.hash = 'me';
+  }, 1200);
 }
 
 // ═══════════════════════════════════════════════════

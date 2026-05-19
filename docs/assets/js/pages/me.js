@@ -69,13 +69,22 @@ async function handlePhoneLookup() {
   const phone = auth.normalizePhone(raw);
   if (phone.length < 9) { input.classList.add('form-input--error'); return; }
 
+  // Check localStorage first (instant, works offline)
   let data = null;
-  try {
-    const d1 = await getDb(); data = await d1.getParticipant(phone);
-  } catch {
-    // Fallback to localStorage
-    const saved = localStorage.getItem('mapal-rsvp-' + phone);
-    if (saved) data = JSON.parse(saved);
+  const saved = localStorage.getItem('mapal-rsvp-' + phone);
+  if (saved) {
+    try { data = JSON.parse(saved); } catch {}
+  }
+
+  // Try Firestore with timeout if no local data
+  if (!data) {
+    try {
+      const d1 = await Promise.race([
+        getDb(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 4000)),
+      ]);
+      data = await d1.getParticipant(phone);
+    } catch {}
   }
 
   if (!data) {
@@ -365,24 +374,39 @@ export async function renderMe(container) {
 
   const user = auth.getUser();
   if (user && user.phone) {
+    // Show from localStorage immediately (works offline)
+    const saved = localStorage.getItem('mapal-rsvp-' + user.phone);
+    if (saved) {
+      try {
+        renderProfile(JSON.parse(saved));
+      } catch {
+        renderPhoneEntry();
+        return;
+      }
+
+      // Try to refresh from Firestore in background (non-blocking)
+      getDb().then(d => d.getParticipant(user.phone)).then(data => {
+        if (data) {
+          localStorage.setItem('mapal-rsvp-' + user.phone, JSON.stringify(data));
+          renderProfile(data);
+        }
+      }).catch(() => {});
+      return;
+    }
+
+    // No localStorage — try Firestore with timeout
     try {
-      const d = await getDb();
+      const d = await Promise.race([
+        getDb(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 4000)),
+      ]);
       const data = await d.getParticipant(user.phone);
       if (data) {
         localStorage.setItem('mapal-rsvp-' + user.phone, JSON.stringify(data));
         renderProfile(data);
         return;
       }
-    } catch {
-      // Fallback to localStorage
-      const saved = localStorage.getItem('mapal-rsvp-' + user.phone);
-      if (saved) {
-        try {
-          renderProfile(JSON.parse(saved));
-          return;
-        } catch {}
-      }
-    }
+    } catch {}
   }
 
   renderPhoneEntry();

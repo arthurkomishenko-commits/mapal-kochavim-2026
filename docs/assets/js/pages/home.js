@@ -197,9 +197,10 @@ function renderWhoTable(container) {
     // Companions
     let compHtml = '';
     if (p.companions && p.companions.length > 0) {
-      compHtml = p.companions.map(c =>
-        `<span class="who-companion">${esc(c.name)}</span>`
-      ).join('');
+      compHtml = p.companions.map(c => {
+        const compMaybe = c.confirmed === false;
+        return `<span class="who-companion${compMaybe ? ' who-companion--maybe' : ''}">${esc(c.name)}</span>`;
+      }).join('');
     }
 
     // Kids
@@ -210,10 +211,11 @@ function renderWhoTable(container) {
 
     const car = p.isDriving ? '<svg class="who-car-icon" viewBox="0 0 32 18" fill="none"><path d="M5 13h22c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-3l-2-4H10L8 6H5C3.9 6 3 6.9 3 8v3c0 1.1.9 2 2 2z" fill="currentColor" opacity="0.25" stroke="currentColor" stroke-width="1.2"/><circle cx="8.5" cy="13.5" r="2.5" fill="currentColor" opacity="0.4" stroke="currentColor" stroke-width="1"/><circle cx="23.5" cy="13.5" r="2.5" fill="currentColor" opacity="0.4" stroke="currentColor" stroke-width="1"/><path d="M12 6l1.5-3h5L20 6" stroke="currentColor" stroke-width="1" opacity="0.5"/></svg>' : '';
 
+    const isMaybe = p.confirmed === false;
     html += `
-      <div class="who-row">
+      <div class="who-row${isMaybe ? ' who-row--maybe' : ''}">
         <div class="who-row__header">
-          <span class="who-row__name">${esc(p.name)}${car}</span>
+          <span class="who-row__name${isMaybe ? ' who-row__name--maybe' : ''}">${esc(p.name)}${car}</span>
           ${p.city ? `<span class="who-row__city">${esc(p.city)}</span>` : ''}
         </div>
         ${compHtml || kidsHtml ? `<div class="who-row__companions">${compHtml}${kidsHtml}</div>` : ''}
