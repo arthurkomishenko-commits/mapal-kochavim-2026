@@ -48,15 +48,25 @@ export function initNav() {
   langBtn.textContent = i18n.t('lang.switchTo');
   navInner.appendChild(langBtn);
 
-  // Show/hide buttons based on auth state
+  // Show/hide buttons based on auth state + current route
+  let currentRoute = '';
   function updateNav() {
     const user = JSON.parse(localStorage.getItem('mapal-user') || 'null');
     const loggedIn = !!user;
+    const onRsvp = currentRoute === 'rsvp';
     meBtn.style.display = loggedIn ? '' : 'none';
-    rsvpBtn.style.display = loggedIn ? 'none' : '';
+    rsvpBtn.style.display = (loggedIn || onRsvp) ? 'none' : '';
+
+    // Hide bottom bar on RSVP/Me pages
+    const bar = document.getElementById('bottom-bar');
+    if (bar) bar.classList.toggle('bottom-bar--hidden', loggedIn || onRsvp);
   }
   updateNav();
   window.addEventListener('authchange', updateNav);
+  window.addEventListener('routechange', (e) => {
+    currentRoute = e.detail.route;
+    updateNav();
+  });
 
   // Language toggle
   langBtn.addEventListener('click', () => i18n.toggle());
