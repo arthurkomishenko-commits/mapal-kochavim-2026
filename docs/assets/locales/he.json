@@ -9,7 +9,7 @@
     "place": "המקום",
     "program": "תוכנייה",
     "pack": "מה לקחת",
-    "rsvp": "הרשמה",
+    "rsvp": "הצטרפות",
     "people": "מי מגיע",
     "rides": "שיתוף נסיעות",
     "sky": "אסטרונומיה",
@@ -29,7 +29,7 @@
   "home": {
     "heroTitle": "מפל כוכבים 2026",
     "heroSubtitle": "הנגב. פרסאידים. לילה.",
-    "cta": "להירשם",
+    "cta": "להצטרף",
     "countdown": {
       "days": "ימים",
       "hours": "שעות",
@@ -59,7 +59,7 @@
     "bringingTitle": "מה כבר לקחו?",
     "whoBtn": "מי מגיע",
     "whoBtnClose": "הסתר",
-    "ctaBottomText": "הירשמו — ונתראה מתחת לכוכבים."
+    "ctaBottomText": "הצטרפו — ונתראה מתחת לכוכבים."
   },
   "place": {
     "title": "המקום",
@@ -173,7 +173,7 @@
     "evgenyRole": "ארגון"
   },
   "rsvp": {
-    "title": "הרשמה",
+    "title": "הצטרפות",
     "subtitle": "מלאו את הטופס ונדע שאתם מגיעים",
     "phoneLabel": "מספר טלפון",
     "phonePlaceholder": "050-123-4567",
@@ -251,25 +251,25 @@
   "rides": {
     "title": "שיתוף נסיעות",
     "subtitle": "מי עם רכב",
-    "emptyText": "עוד אף אחד לא נרשם עם רכב."
+    "emptyText": "עוד אף אחד לא הצטרף עם רכב."
   },
   "me": {
     "title": "האזור שלי",
-    "phonePrompt": "הזינו מספר טלפון כדי למצוא את הרישום שלכם",
-    "notFound": "לא נמצא רישום. להירשם?",
-    "goToRsvp": "לעבור להרשמה",
-    "cancelRegistration": "ביטול רישום",
-    "cancelled": "הרישום בוטל",
+    "phonePrompt": "הזינו מספר טלפון כדי למצוא את הנתונים שלכם",
+    "notFound": "לא נמצאו נתונים. להצטרף?",
+    "goToRsvp": "להצטרף",
+    "cancelRegistration": "ביטול השתתפות",
+    "cancelled": "ההשתתפות בוטלה",
     "status": "סטטוס",
     "statusActive": "אתם בפנים!",
     "statusCancelled": "בוטל",
     "edit": "עריכה",
     "adminTitle": "פאנל מנהלים",
-    "adminRegistered": "רשומים",
+    "adminRegistered": "משתתפים",
     "adminCancelled": "מבוטלים",
     "adminExport": "העתק רשימה",
     "adminClearAll": "מחק הכל",
-    "adminClearConfirm": "הקלידו DELETE כדי למחוק את כל הרישומים:",
+    "adminClearConfirm": "הקלידו DELETE כדי למחוק את כל הנתונים:",
     "copyRecoveryLink": "העתק קישור כניסה",
     "recoveryLinkCopied": "הקישור הועתק — שמרו אותו",
     "lastUpdated": "עודכן לאחרונה"
@@ -284,7 +284,7 @@
   "common": {
     "loading": "סופרים כוכבים...",
     "error": "הקשר אבד בחלל. נסו שוב.",
-    "empty": "אף אחד עוד לא נרשם. היו הראשונים.",
+    "empty": "אף אחד עוד לא הצטרף. היו הראשונים.",
     "saved": "מוכן. מחכים לך במדבר.",
     "confirmDelete": "בטוח לא מגיע? יחסר לנו.",
     "offline": "אין קשר. נתונים מ-",
