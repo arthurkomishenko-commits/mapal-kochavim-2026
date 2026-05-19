@@ -7,7 +7,7 @@
  * - API/Firestore: network-only (Firestore handles its own offline)
  */
 
-const CACHE_NAME = 'mapal-v5';
+const CACHE_NAME = 'mapal-v6';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
