@@ -74,6 +74,18 @@
   max-width: 280px;
 }
 
+/* Honest disabled state: dimmed, no hover lift, not-allowed cursor.
+   Without this the orange "primary" style screams "click me" while
+   the button is inert — the worst UX possible. */
+.gallery__link--locked,
+.gallery__link--locked:hover,
+.gallery__link--locked:focus {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: saturate(0.6);
+  pointer-events: none;
+}
+
 .gallery__hint {
   font-size: var(--text-sm);
 }

@@ -132,7 +132,10 @@ function createLightbox() {
 // ═══════════════════════════════════════════════════
 
 export function renderGallery(container) {
-  if (siteMode.is('past')) return renderGalleryPast(container);
+  // The user-uploaded album opens early (2026-08-11) so people can drop
+  // arrival photos before the camp. From that moment, gallery looks just like
+  // post-event mode: upload UI + live Firestore lentа.
+  if (siteMode.isAlbumUnlocked()) return renderGalleryPast(container);
 
   container.innerHTML = `
     <section class="page-section" aria-labelledby="gallery-title">
@@ -204,10 +207,12 @@ export function renderGallery(container) {
             </svg>
           </div>
           <p class="gallery__text" data-i18n="gallery.text">${i18n.t('gallery.text')}</p>
-          <a href="${GOOGLE_PHOTOS_URL}" target="_blank" rel="noopener" class="btn btn--primary gallery__link">
+          <button type="button" class="btn btn--primary gallery__link gallery__link--locked"
+                  disabled aria-disabled="true" data-i18n-title="gallery.hintDate"
+                  title="${i18n.t('gallery.hintDate') || ''}">
             <span data-i18n="gallery.openAlbum">${i18n.t('gallery.openAlbum')}</span>
-          </a>
-          <p class="gallery__hint text-tertiary" data-i18n="gallery.hint">${i18n.t('gallery.hint')}</p>
+          </button>
+          <p class="gallery__hint text-tertiary" data-i18n="gallery.hintDate">${i18n.t('gallery.hintDate') || i18n.t('gallery.hint')}</p>
         </div>
       </div>
     </section>
