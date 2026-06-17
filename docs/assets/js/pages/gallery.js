@@ -479,17 +479,30 @@ function buildTile(rec) {
     tile.querySelector('img').src = rec.url;
   }
   const me = auth.getUser?.()?.phone;
-  if (me && rec.uploaderPhone === me) {
+  const isOwn = !!(me && rec.uploaderPhone === me);
+  const asAdmin = !isOwn && auth.isAdmin?.();
+  if (isOwn || asAdmin) {
     const del = document.createElement('span');                  // span inside button to avoid nested-button DOM
-    del.className = 'gp-tile__del';
+    del.className = 'gp-tile__del' + (asAdmin ? ' gp-tile__del--admin' : '');
     del.setAttribute('role', 'button');
     del.setAttribute('tabindex', '0');
-    del.setAttribute('aria-label', i18n.t('past.gallery.deleteMine') || 'Delete');
+    del.setAttribute('aria-label', i18n.t(asAdmin ? 'past.gallery.deleteAsAdmin' : 'past.gallery.deleteMine') || 'Delete');
     del.textContent = '×';
     const doDelete = async (e) => {
       e.stopPropagation();
       e.preventDefault();
-      if (!confirm(i18n.t('past.gallery.deleteConfirm') || 'Удалить это фото?')) return;
+      const confirmKey = asAdmin ? 'past.gallery.deleteAdminConfirm' : 'past.gallery.deleteConfirm';
+      const fallback = asAdmin
+        ? `Удалить фото от «${rec.uploaderName || rec.uploaderPhone}»?`
+        : 'Удалить это фото?';
+      const confirmMsg = (() => {
+        const v = i18n.t(confirmKey);
+        if (!v || v === confirmKey) return fallback;
+        return asAdmin
+          ? v.replace('{name}', rec.uploaderName || rec.uploaderPhone || '')
+          : v;
+      })();
+      if (!confirm(confirmMsg)) return;
       try {
         const { db } = await import('../core/db.js');
         await db.deletePhoto(rec.id);

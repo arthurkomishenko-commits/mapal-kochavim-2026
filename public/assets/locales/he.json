@@ -433,6 +433,8 @@
       "counter": "{n} תמונות · {a} משתתפים",
       "deleteMine": "מחק",
       "deleteConfirm": "למחוק את התמונה?",
+      "deleteAsAdmin": "מחק (אדמין)",
+      "deleteAdminConfirm": "למחוק את התמונה של «{name}»? פעולה בלתי הפיכה.",
       "loginText": "כדי להעלות תמונות ולראות את אלו של אחרים — הירשם.",
       "loginBtn": "הרשמה",
       "heicError": "HEIC לא נתמך — שמור כ־JPG",
