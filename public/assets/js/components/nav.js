@@ -5,12 +5,25 @@
  */
 
 import { i18n } from '../core/i18n.js';
+import { siteMode } from '../core/site-mode.js';
 
 export function initNav() {
   const header = document.querySelector('.nav');
   if (!header) return;
 
   const navInner = header.querySelector('.nav__inner');
+
+  // Past-mode badge under the logo
+  if (siteMode.is('past')) {
+    const existing = header.querySelector('.nav__archive');
+    if (!existing) {
+      const badge = document.createElement('span');
+      badge.className = 'nav__archive';
+      badge.setAttribute('data-i18n', 'past.archiveBadge');
+      badge.textContent = i18n.t('past.archiveBadge') || 'Archive · 2026';
+      navInner.appendChild(badge);
+    }
+  }
 
   // Clean up any existing controls
   header.querySelectorAll('.nav__lang-btn, .nav__menu-btn, .nav__me-btn, .nav__rsvp-btn').forEach(el => el.remove());
@@ -57,9 +70,15 @@ export function initNav() {
     meBtn.style.display = loggedIn ? '' : 'none';
     rsvpBtn.style.display = (loggedIn || onRsvp) ? 'none' : '';
 
-    // Hide bottom bar on RSVP/Me pages
+    // Past mode: relabel RSVP CTA and hide the WhatsApp/RSVP bottom bar.
     const bar = document.getElementById('bottom-bar');
-    if (bar) bar.classList.toggle('bottom-bar--hidden', loggedIn || onRsvp);
+    const past = siteMode.is('past');
+    if (past) {
+      rsvpBtn.textContent = i18n.t('past.rsvpCta') || rsvpBtn.textContent;
+      if (bar) bar.classList.add('bottom-bar--hidden');
+    } else if (bar) {
+      bar.classList.toggle('bottom-bar--hidden', loggedIn || onRsvp);
+    }
   }
   updateNav();
   window.addEventListener('authchange', updateNav);
@@ -74,7 +93,11 @@ export function initNav() {
     langBtn.textContent = i18n.t('lang.switchTo');
     const meLabel = meBtn.querySelector('[data-i18n]');
     if (meLabel) meLabel.textContent = i18n.t('nav.me');
+    // Past-mode CTA label has priority over home.cta — re-derive via updateNav.
     rsvpBtn.textContent = i18n.t('home.cta');
+    const badge = header.querySelector('.nav__archive');
+    if (badge) badge.textContent = i18n.t('past.archiveBadge') || badge.textContent;
+    updateNav();
   });
 
   return langBtn;

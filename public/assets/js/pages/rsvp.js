@@ -11,6 +11,7 @@
 
 import { i18n } from '../core/i18n.js';
 import { auth } from '../core/auth.js';
+import { siteMode } from '../core/site-mode.js';
 let db = null;
 async function getDb() {
   if (!db) {
@@ -813,6 +814,8 @@ async function handleSave() {
 // ═══════════════════════════════════════════════════
 
 export function renderRsvp(container) {
+  if (siteMode.is('past')) return renderRsvpPast(container);
+
   containerEl = container;
   resetState();
 
@@ -830,4 +833,86 @@ export function renderRsvp(container) {
   } else {
     renderPhoneEntry();
   }
+}
+
+// ─── Past-mode RSVP: short form for late comers (attendance archive) ──
+
+function renderRsvpPast(container) {
+  container.innerHTML = `
+    <section class="page-section">
+      <div class="page-section__inner">
+        <div class="rsvp-past">
+          <h1 data-i18n="past.rsvp.title">${i18n.t('past.rsvp.title')}</h1>
+          <p class="rsvp-past__hint" data-i18n="past.rsvp.subtitle">${i18n.t('past.rsvp.subtitle')}</p>
+
+          <form class="rsvp-past__form" id="rsvp-past-form" autocomplete="off">
+            <div class="rsvp-past__field">
+              <label for="rp-name" data-i18n="rsvp.name">${i18n.t('rsvp.name') || 'Имя'}</label>
+              <input id="rp-name" type="text" required maxlength="60">
+            </div>
+            <div class="rsvp-past__field">
+              <label for="rp-phone" data-i18n="rsvp.phone">${i18n.t('rsvp.phone') || 'Телефон'}</label>
+              <input id="rp-phone" type="tel" inputmode="tel" required maxlength="20" pattern="[\\+0-9\\-\\s]+">
+            </div>
+
+            <p class="rsvp-past__hint" data-i18n="past.rsvp.simpleHint">${i18n.t('past.rsvp.simpleHint')}</p>
+
+            <div class="rsvp-past__choices">
+              <button type="button" class="rsvp-past__choice rsvp-past__choice--primary" data-attended="true">
+                <span data-i18n="past.rsvp.wasThere">${i18n.t('past.rsvp.wasThere')}</span>
+              </button>
+              <button type="button" class="rsvp-past__choice" data-attended="false">
+                <span data-i18n="past.rsvp.wasntThere">${i18n.t('past.rsvp.wasntThere')}</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const form = container.querySelector('#rsvp-past-form');
+  form.addEventListener('submit', e => e.preventDefault());
+  container.querySelectorAll('.rsvp-past__choice').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const name = container.querySelector('#rp-name').value.trim();
+      const phone = container.querySelector('#rp-phone').value.trim();
+      if (!name || !phone) {
+        form.reportValidity();
+        return;
+      }
+      const attended = btn.dataset.attended === 'true';
+      await saveLateRegistration({ name, phone, attended });
+      // After save, send to gallery — main payoff for these users.
+      window.location.hash = 'gallery';
+    });
+  });
+}
+
+async function saveLateRegistration({ name, phone, attended }) {
+  // Use the crypto token generator (same as the main flow) — not Math.random.
+  const token = auth.generateToken ? auth.generateToken() : (
+    [...crypto.getRandomValues(new Uint8Array(24))]
+      .map(b => b.toString(36)).join('').slice(0, 32)
+  );
+  const record = {
+    name, phone, token,
+    confirmed: attended,           // attended → goes into "Кто был"
+    lateRegistration: true,
+    cancelled: false,
+    bringing: {},
+    companions: [],
+    kids: 0,
+    isDriving: false,
+    createdAt: new Date().toISOString(),
+  };
+  try {
+    localStorage.setItem('mapal-rsvp-' + phone, JSON.stringify(record));
+    // Only log in attendees — "Жаль не смог" stays anonymous (no gallery upload right).
+    if (attended) auth.login(phone, name, token);
+  } catch {}
+  try {
+    const mod = await import('../core/db.js');
+    await mod.db.saveParticipant(record);
+  } catch {}
 }

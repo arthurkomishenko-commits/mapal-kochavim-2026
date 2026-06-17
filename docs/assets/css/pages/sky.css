@@ -115,14 +115,29 @@
 }
 
 .sky-tips li {
-  padding: var(--space-3) 0;
+  padding: var(--space-4) 0;
   color: var(--color-text-secondary);
   line-height: var(--leading-relaxed);
   border-block-end: 1px solid rgba(245, 239, 224, 0.04);
 }
 
-.sky-tips li:last-child {
-  border: none;
+.sky-tips li:last-child { border: none; }
+.sky-tips li:first-child { padding-block-start: 0; }
+
+.sky-tip__title {
+  display: block;
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: var(--text-base);
+  margin-block-end: 6px;
+  letter-spacing: 0.01em;
+}
+
+.sky-tip__body {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-secondary);
 }
 
 /* ── Tonight's sky schedule ── */
@@ -159,3 +174,98 @@
   direction: ltr;
   display: inline-block;
 }
+
+/* ── Calendar strip preview inside Sky page ── */
+
+.sky-strip {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-2);
+  margin-block-start: var(--space-5);
+  padding-block-start: var(--space-5);
+  border-block-start: 1px solid var(--color-border-subtle);
+}
+
+.sky-strip__cell {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  text-decoration: none;
+  color: var(--color-text-primary);
+  transition: border-color var(--duration-fast), background var(--duration-fast);
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+
+.sky-strip__cell:hover {
+  border-color: var(--color-border-accent);
+  background: rgba(212, 146, 63, 0.06);
+}
+
+.sky-strip__cell--today {
+  border-color: var(--color-ember);
+  background: rgba(212, 146, 63, 0.08);
+}
+
+.sky-strip__cell--event {
+  background: rgba(212, 146, 63, 0.12);
+  border-color: var(--color-ember-bright);
+}
+
+.sky-strip__cell--perseids::after {
+  content: '✦';
+  position: absolute;
+  top: 2px;
+  inset-inline-end: 4px;
+  font-size: 9px;
+  color: var(--color-meteor);
+}
+
+.sky-strip__cell--empty {
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.sky-strip__wd {
+  font-size: 9px;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sky-strip__num {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--color-text-primary);
+}
+
+.sky-strip__moon {
+  width: 28px;
+  height: 28px;
+}
+
+.sky-strip__moon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: drop-shadow(0 0 4px rgba(245, 239, 224, 0.10));
+}
+
+@media (max-width: 380px) {
+  .sky-strip { gap: 4px; }
+  .sky-strip__cell { padding: 6px 2px; }
+  .sky-strip__moon { width: 22px; height: 22px; }
+}
+
+
+/* Centered compact card (Sun / Moon / Planets) */
+.sky-card--center { text-align: center; }
+.sky-card--center h3 { margin-inline: auto; }
+.sky-card--center p { margin-inline: auto; max-width: 28ch; }

@@ -104,11 +104,17 @@
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
   padding: var(--space-6);
+  text-align: center;
 }
 
 .place-info__item h3 {
   color: var(--color-ember-bright);
   margin-block-end: var(--space-3);
+}
+
+.place-info__item p {
+  margin-inline: auto;
+  max-width: 30ch;
 }
 
 /* ── Very small screens: single column ── */

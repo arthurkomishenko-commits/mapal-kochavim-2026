@@ -4,6 +4,7 @@
 
 import { i18n } from '../core/i18n.js';
 import { auth } from '../core/auth.js';
+import { siteMode } from '../core/site-mode.js';
 import { initCountdown } from '../components/countdown.js';
 import { initShootingStar } from '../components/shooting-star.js';
 import SkyRenderer from '../components/sky-renderer.js';
@@ -44,8 +45,10 @@ function renderHomeBringing() {
   let totalPeople = 0;
   let totalCars = 0;
   let totalMaybe = 0;
+  let totalKids = 0;
 
   participants.forEach(data => {
+    if (data.cancelled) return;
     const isConfirmed = data.confirmed !== false;
     if (isConfirmed) {
       totalPeople++;
@@ -58,7 +61,8 @@ function renderHomeBringing() {
         else totalMaybe++;
       });
     }
-    if (data.kids) totalPeople += data.kids;
+    // Kids tracked separately so the headline "точно едут" matches the list of names.
+    if (data.kids) totalKids += Number(data.kids) || 0;
     if (data.isDriving) totalCars++;
     if (!data.bringing) return;
     for (const [id, val] of Object.entries(data.bringing)) {
@@ -76,7 +80,7 @@ function renderHomeBringing() {
       countSection.style.display = '';
       countGrid.innerHTML = `
         <div class="home-bring-item home-bring-item--highlight">
-          <span class="home-bring-item__count">${totalPeople}</span>
+          <span class="home-bring-item__count">${totalPeople}${totalKids > 0 ? `<span class="home-bring-item__kids">+${totalKids}</span>` : ''}</span>
           <span class="home-bring-item__label">${i18n.t('people.confirmed')}</span>
         </div>
         <div class="home-bring-item home-bring-item--highlight">
@@ -229,6 +233,7 @@ function renderWhoTable(container) {
 }
 
 export function renderHome(container) {
+  if (siteMode.is('past')) return renderHomePast(container);
   cachedParticipants = null; // fresh load each time
   homeContainerRef = container;
   container.innerHTML = `
@@ -363,7 +368,7 @@ export function renderHome(container) {
             <h3 data-i18n="home.card2Title">${i18n.t('home.card2Title')}</h3>
             <p data-i18n="home.card2Text">${i18n.t('home.card2Text')}</p>
           </a>
-          <a href="#pack" class="highlight-card">
+          <a href="#calendar" class="highlight-card">
             <div class="highlight-card__icon" aria-hidden="true">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <circle cx="12" cy="12" r="10"/>
@@ -529,4 +534,183 @@ export function renderHome(container) {
       if (scrollHint) scrollHint.style.opacity = dimmed ? '0' : '';
     });
   }
+}
+
+// ─── Past mode home: archive hero + stats + gallery preview + achievement ──
+
+function renderHomePast(container) {
+  const user = auth.getUser?.() || null;
+  const greetingName = user?.name?.split(/\s+/)[0] || '';
+
+  // Stats start as placeholders, get filled async from participants DB.
+  const placeholder = '—';
+  container.innerHTML = `
+    <section class="hero hero--past" aria-labelledby="hero-title-past">
+      <canvas class="sky-canvas" aria-hidden="true"></canvas>
+      <div class="hero__stars" aria-hidden="true"></div>
+      <div class="hero__content">
+        <div class="hero-past__check" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M8 12.5 11 15.5 16 9.5"/>
+          </svg>
+        </div>
+        <h1 id="hero-title-past" class="hero__title" data-i18n="past.home.title">
+          ${i18n.t('past.home.title')}
+        </h1>
+        <p class="hero__subtitle" data-i18n="past.home.subtitle">
+          ${i18n.t('past.home.subtitle')}
+        </p>
+        <div class="hero-past__actions">
+          <a class="hero__cta" href="#gallery" data-i18n="past.home.openGallery">${i18n.t('past.home.openGallery')}</a>
+        </div>
+      </div>
+    </section>
+
+    ${user ? `
+    <section class="home-section">
+      <div class="home-section__inner">
+        <div class="home-past__token">
+          <div class="home-past__token-check" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M8 12.5 11 15.5 16 9.5"/>
+            </svg>
+          </div>
+          <div class="home-past__token-body">
+            <h3 class="home-past__token-title">${greetingName ? `${greetingName}, ` : ''}<span data-i18n="past.home.tokenTitle">${i18n.t('past.home.tokenTitle')}</span></h3>
+            <p class="home-past__token-text" data-i18n="past.home.tokenText">${i18n.t('past.home.tokenText')}</p>
+          </div>
+        </div>
+      </div>
+    </section>` : ''}
+
+    <section class="home-section">
+      <div class="home-section__inner">
+        <h2 class="home-section__title" data-i18n="past.people.title">${i18n.t('past.people.title')}</h2>
+        <div class="home-past__was" id="home-past-was">
+          <p class="home-past__was-empty" data-i18n="past.people.empty">${i18n.t('past.people.empty') || ''}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-section">
+      <div class="home-section__inner">
+        <h2 class="home-section__title" data-i18n="past.home.galleryHint">${i18n.t('past.home.galleryHint')}</h2>
+        <div class="home-past__gallery" id="home-past-gallery">
+          <p class="home-past__gallery-empty" data-i18n="past.home.galleryEmpty">${i18n.t('past.home.galleryEmpty') || ''}</p>
+        </div>
+        <a class="home-past__gallery-cta" href="#gallery" data-i18n="past.home.openGallery">${i18n.t('past.home.openGallery')}</a>
+      </div>
+    </section>
+  `;
+
+  // Initialize the starry hero — keeps the canvas alive in past mode so the
+  // archive feels like memory rather than a flat report. Slightly fewer stars
+  // and slower motion gives the "looking back" tone.
+  initPastHero(container);
+
+  // Async-fill who-was and gallery preview from real data sources.
+  hydratePastWasList(container);
+  hydratePastGalleryPreview(container);
+}
+
+function initPastHero(container) {
+  const skyCanvas = container.querySelector('.sky-canvas');
+  const starsContainer = container.querySelector('.hero__stars');
+
+  // Small star catalog for the archive hero — quieter than the live one.
+  const ARCHIVE_CATALOG = [
+    {n:"Vega",      mag:0.0,cl:"A",az:60, alt:65},
+    {n:"Altair",    mag:0.8,cl:"A",az:110,alt:55},
+    {n:"Deneb",     mag:1.3,cl:"A",az:35, alt:75},
+    {n:"Arcturus",  mag:0.0,cl:"K",az:260,alt:40},
+    {n:"Antares",   mag:1.0,cl:"M",az:200,alt:28},
+    {n:"Spica",     mag:1.0,cl:"B",az:240,alt:35},
+    {n:"Capella",   mag:0.1,cl:"G",az:330,alt:30},
+    {n:"Rigel",     mag:0.1,cl:"B",az:155,alt:18},
+    {n:"Procyon",   mag:0.4,cl:"F",az:140,alt:32},
+    {n:"Aldebaran", mag:0.9,cl:"K",az:170,alt:38},
+  ];
+
+  if (skyCanvas && window.innerWidth >= 768) {
+    if (window._skyRenderer) window._skyRenderer.destroy();
+    window._skyRenderer = new SkyRenderer(skyCanvas, ARCHIVE_CATALOG);
+    window._skyRenderer.render();
+  } else if (window._skyRenderer) {
+    window._skyRenderer.destroy();
+    window._skyRenderer = null;
+  }
+
+  // Occasional meteor — keeps the sky alive but rarely, so it reads as
+  // memory rather than active broadcast.
+  if (starsContainer) initShootingStar(starsContainer);
+}
+
+async function hydratePastWasList(container) {
+  const root = container.querySelector('#home-past-was');
+  if (!root) return;
+  try {
+    const all = await loadParticipants();
+    // Build GROUPS so people who registered together stay adjacent in the list.
+    // Each group = one registration: primary first, then their companions in
+    // the order they were added. Groups are then sorted alphabetically by
+    // the primary's name (or the first companion's name if no primary name).
+    const groups = []; // [{sortKey, members:[{name, kids}]}]
+    all.forEach(p => {
+      if (!p || p.cancelled) return;
+      if (p.confirmed === false) return;       // primary is "maybe" → skip
+      const members = [];
+      if (p.name && p.name.trim()) {
+        members.push({ name: p.name.trim(), kids: Number(p.kids) || 0 });
+      }
+      (p.companions || []).forEach(c => {
+        if (c && c.name && c.name.trim() && c.cancelled !== true) {
+          members.push({ name: c.name.trim(), kids: 0 });
+        }
+      });
+      if (members.length > 0) {
+        groups.push({ sortKey: members[0].name, members });
+      }
+    });
+    if (groups.length === 0) return;
+    groups.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+    const items = groups.flatMap(g => g.members);
+    root.classList.add('home-past__was--filled');
+    root.innerHTML = items.map(it => `
+      <div class="home-past__was-item">
+        <svg class="home-past__was-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M8 12.5 11 15.5 16 9.5"/>
+        </svg>
+        <span class="home-past__was-name">${escapeHtml(it.name)}</span>
+        ${it.kids > 0 ? `<span class="home-past__was-kids" aria-label="+${it.kids}">+${it.kids}</span>` : ''}
+      </div>
+    `).join('');
+  } catch {}
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+async function hydratePastGalleryPreview(container) {
+  // Load first page of uploaded photos from Firestore (chronological).
+  const root = container.querySelector('#home-past-gallery');
+  if (!root) return;
+  try {
+    const mod = await import('../core/db.js').catch(() => null);
+    if (!mod?.db?.getPhotos) return;
+    const { items = [] } = await mod.db.getPhotos({ limit: 6 });
+    const photos = items.filter(p => p.kind !== 'video');
+    if (photos.length === 0) return;
+    root.innerHTML = photos.map(p => `
+      <a class="home-past__gallery-tile" href="#gallery">
+        <img src="${p.url}" alt="" loading="lazy">
+      </a>
+    `).join('');
+    root.classList.add('home-past__gallery--filled');
+  } catch {}
 }

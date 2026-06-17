@@ -1279,3 +1279,15 @@
   vertical-align: middle;
   flex-shrink: 0;
 }
+/* Kids "+N" badge inline with the "точно едут" count */
+.home-bring-item__kids {
+  font-size: 0.55em;
+  font-weight: 600;
+  color: var(--color-ember-bright);
+  background: rgba(212, 146, 63, 0.12);
+  padding: 2px 6px;
+  border-radius: 999px;
+  vertical-align: middle;
+  margin-inline-start: 6px;
+  font-variant-numeric: tabular-nums;
+}

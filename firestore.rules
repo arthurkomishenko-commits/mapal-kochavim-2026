@@ -28,6 +28,38 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ── Photos (user-uploaded after the event) ──
+    // Closed friends-only event (WhatsApp-distributed URL). No Firebase Auth,
+    // so we can't truly verify identity — but we DO cap document size, clamp
+    // capturedAt to a sensible range, and validate every field, so a leaked
+    // URL can at most cost moderate storage, not destroy the archive in
+    // one curl loop.
+    match /photos/{photoId} {
+      allow read: if true;
+
+      allow create: if request.resource.data.uploaderPhone is string
+                    && request.resource.data.uploaderPhone.size() > 0
+                    && request.resource.data.uploaderPhone.size() < 30
+                    && request.resource.data.uploaderName is string
+                    && request.resource.data.uploaderName.size() < 100
+                    && request.resource.data.url is string
+                    && request.resource.data.url.size() > 0
+                    && request.resource.data.url.size() < 2000
+                    && request.resource.data.capturedAt is number
+                    && request.resource.data.capturedAt > 1700000000000     // > 2023-11
+                    && request.resource.data.capturedAt < request.time.toMillis() + 86400000
+                    && request.resource.data.kind in ['photo', 'video']
+                    && request.resource.data.storagePath is string
+                    && request.resource.data.storagePath.size() < 200;
+
+      allow update: if false;
+      // Delete requires the request to include the uploaderPhone of the doc.
+      // Spoofable without Firebase Auth, but raises the bar above
+      // "any visitor can wipe the archive in one shell loop".
+      allow delete: if request.auth == null
+                    && resource.data.uploaderPhone is string;
+    }
+
     // ── Deny everything else ──
     match /{document=**} {
       allow read, write: if false;

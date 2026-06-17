@@ -8,11 +8,19 @@
  *   router.init(); // starts listening to hashchange
  */
 
+import { siteMode } from './site-mode.js';
+
 const routes = new Map();
 let currentRoute = null;
 let containerEl = null;
 
 const DEFAULT_ROUTE = 'home';
+
+// Routes that don't make sense after the event. They redirect to gallery
+// in past mode (still reachable directly via ?archive=1 for the curious).
+const PAST_REDIRECT_TO_GALLERY = new Set([
+  'calendar', 'pack', 'safety', 'rides',
+]);
 
 function getRouteFromHash() {
   const hash = window.location.hash.slice(1); // remove #
@@ -39,6 +47,15 @@ function checkRecoveryLink() {
 }
 
 async function navigate(routeName) {
+  // Past-mode redirects: hide obsolete pages unless explicitly archived.
+  if (siteMode.is('past') && PAST_REDIRECT_TO_GALLERY.has(routeName)) {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('archive') !== '1') {
+      window.location.hash = 'gallery';
+      return;
+    }
+  }
+
   const handler = routes.get(routeName);
   if (!handler) {
     // Try 404 handler or fall back to home

@@ -277,3 +277,11 @@
     max-height: 80vh;
   }
 }
+
+/* Notice line under subtitle: "after the event, photos will go here" */
+.gallery__notice {
+  margin-block-start: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}

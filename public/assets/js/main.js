@@ -5,6 +5,7 @@
 import { i18n } from './core/i18n.js';
 import { router } from './core/router.js';
 import { auth } from './core/auth.js';
+import { siteMode } from './core/site-mode.js';
 import { initNav } from './components/nav.js';
 import { initWelcomeOverlay } from './components/welcome-overlay.js';
 import { initStarsBg, setSkySensity, SKY_LEVELS } from './components/stars-bg.js';
@@ -14,6 +15,7 @@ import { renderPlace } from './pages/place.js';
 import { renderProgram } from './pages/program.js';
 import { renderPack } from './pages/pack.js';
 import { renderSky } from './pages/sky.js';
+import { renderCalendar } from './pages/calendar.js';
 import { renderSafety } from './pages/safety.js';
 import { renderContacts } from './pages/contacts.js';
 import { renderGallery } from './pages/gallery.js';
@@ -24,6 +26,8 @@ import { renderMe } from './pages/me.js';
 import { renderNotFound } from './pages/not-found.js';
 
 async function boot() {
+  siteMode.init();                  // must run before any rendering
+  if (typeof window !== 'undefined') window.siteMode = siteMode; // dev console
   await i18n.init();
   auth.initAuth();
   initNav();
@@ -38,6 +42,7 @@ async function boot() {
   router.register('people', renderPeople);
   router.register('rides', renderRides);
   router.register('sky', renderSky);
+  router.register('calendar', renderCalendar);
   router.register('safety', renderSafety);
   router.register('contacts', renderContacts);
   router.register('gallery', renderGallery);

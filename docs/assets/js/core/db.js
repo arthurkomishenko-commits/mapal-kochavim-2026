@@ -9,9 +9,12 @@ import { firebaseConfig } from './firebase-config.js';
 
 let app = null;
 let dbInstance = null;
+let storageInstance = null;
 let fsModule = null;
+let stModule = null;
 let sdkLoaded = false;
 let sdkPromise = null;
+let storagePromise = null;
 
 async function loadSDK() {
   if (sdkLoaded) return;
@@ -29,9 +32,25 @@ async function loadSDK() {
   return sdkPromise;
 }
 
+async function loadStorage() {
+  await loadSDK();
+  if (stModule) return;
+  if (storagePromise) return storagePromise;
+  storagePromise = (async () => {
+    stModule = await import('https://www.gstatic.com/firebasejs/11.7.1/firebase-storage.js');
+    storageInstance = stModule.getStorage(app);
+  })();
+  return storagePromise;
+}
+
 function getFS() {
   if (!fsModule) throw new Error('Firebase SDK not loaded');
   return fsModule;
+}
+
+function getST() {
+  if (!stModule) throw new Error('Firebase Storage SDK not loaded');
+  return stModule;
 }
 
 // ═══════════════════════════════════════════════════
@@ -87,9 +106,123 @@ async function findCompanionLink(phone) {
   };
 }
 
+// ═══════════════════════════════════════════════════
+// PHOTOS / VIDEOS — user uploads after the event
+// ═══════════════════════════════════════════════════
+
+/**
+ * Upload a processed media blob and create the Firestore doc.
+ *
+ * @param {Object} args
+ * @param {Blob}   args.blob          — processed (EXIF-stripped) media
+ * @param {number} args.capturedAt    — ms since epoch
+ * @param {'photo'|'video'} args.kind
+ * @param {string} args.uploaderPhone — current user phone (from auth)
+ * @param {string} args.uploaderName  — current user name (from auth)
+ * @param {(p:number)=>void} [args.onProgress] — 0..1
+ * @returns {Promise<{id:string, url:string, capturedAt:number, kind:string,
+ *                    uploaderPhone:string, uploaderName:string,
+ *                    width:number, height:number}>}
+ */
+async function addPhoto({ blob, capturedAt, kind, uploaderPhone, uploaderName,
+                          width = 0, height = 0, onProgress }) {
+  await loadStorage();
+  const fs = getFS();
+  const st = getST();
+
+  const id = crypto.randomUUID();
+  const ext = kind === 'video' ? guessVideoExt(blob.type) : 'webp';
+  const path = `${kind === 'video' ? 'videos' : 'photos'}/${id}.${ext}`;
+  const storageRef = st.ref(storageInstance, path);
+  const task = st.uploadBytesResumable(storageRef, blob, {
+    contentType: blob.type,
+    customMetadata: {
+      uploaderPhone, capturedAt: String(capturedAt),
+    },
+  });
+
+  await new Promise((resolve, reject) => {
+    task.on('state_changed',
+      snap => onProgress?.(snap.bytesTransferred / snap.totalBytes),
+      err  => reject(err),
+      ()   => resolve(),
+    );
+  });
+
+  const url = await st.getDownloadURL(storageRef);
+
+  const doc = {
+    id, url, kind, capturedAt, uploaderPhone, uploaderName,
+    width, height,
+    storagePath: path,
+    createdAt: fs.serverTimestamp(),
+  };
+  try {
+    await fs.setDoc(fs.doc(dbInstance, 'photos', id), doc);
+  } catch (firestoreErr) {
+    // Roll back the Storage object so we don't leave orphans.
+    try { await st.deleteObject(storageRef); } catch {}
+    throw firestoreErr;
+  }
+  return { ...doc, createdAt: Date.now() };
+}
+
+function guessVideoExt(mime) {
+  if (mime?.includes('webm')) return 'webm';
+  if (mime?.includes('quicktime')) return 'mov';
+  return 'mp4';
+}
+
+/**
+ * Fetch photos page, cursor-based.
+ *
+ * @param {Object} opts
+ * @param {number} [opts.limit]            default 10
+ * @param {*}      [opts.cursor]           opaque cursor from previous page (Firestore DocumentSnapshot)
+ * @returns {Promise<{ items: Array, cursor: any, done: boolean }>}
+ */
+async function getPhotos({ limit = 10, cursor = null } = {}) {
+  await loadSDK();
+  const fs = getFS();
+  const colRef = fs.collection(dbInstance, 'photos');
+  const constraints = [
+    fs.orderBy('capturedAt', 'asc'),
+    fs.limit(limit + 1),                           // +1 to know if there's more
+  ];
+  if (cursor) constraints.push(fs.startAfter(cursor));
+  const q = fs.query(colRef, ...constraints);
+  const snap = await fs.getDocs(q);
+  const docs = snap.docs;
+  const hasMore = docs.length > limit;
+  const pageDocs = hasMore ? docs.slice(0, limit) : docs;
+  const items = pageDocs.map(d => d.data());
+  return {
+    items,
+    cursor: pageDocs.length ? pageDocs[pageDocs.length - 1] : null,
+    done: !hasMore,
+  };
+}
+
+/**
+ * Delete a photo. Client checks ownership before calling.
+ * Storage delete is best-effort — Firestore delete is the source of truth.
+ */
+async function deletePhoto(id, storagePath) {
+  await loadStorage();
+  const fs = getFS();
+  const st = getST();
+  await fs.deleteDoc(fs.doc(dbInstance, 'photos', id));
+  if (storagePath) {
+    try { await st.deleteObject(st.ref(storageInstance, storagePath)); } catch {}
+  }
+}
+
 export const db = {
   getParticipant,
   saveParticipant,
   getAllParticipants,
   findCompanionLink,
+  addPhoto,
+  getPhotos,
+  deletePhoto,
 };

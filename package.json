@@ -1,0 +1,12 @@
+{
+  "name": "mapal-kochavim-2026",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:moon": "node scripts/build-moon-data.js"
+  },
+  "devDependencies": {
+    "suncalc": "^1.9.0"
+  }
+}
