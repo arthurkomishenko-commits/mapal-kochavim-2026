@@ -208,11 +208,11 @@ export function renderGallery(container) {
           </div>
           <p class="gallery__text" data-i18n="gallery.text">${i18n.t('gallery.text')}</p>
           <button type="button" class="btn btn--primary gallery__link gallery__link--locked"
-                  disabled aria-disabled="true" data-i18n-title="gallery.hintDate"
-                  title="${i18n.t('gallery.hintDate') || ''}">
+                  disabled aria-disabled="true" data-i18n-title="gallery.hint"
+                  title="${i18n.t('gallery.hint') || ''}">
             <span data-i18n="gallery.openAlbum">${i18n.t('gallery.openAlbum')}</span>
           </button>
-          <p class="gallery__hint text-tertiary" data-i18n="gallery.hintDate">${i18n.t('gallery.hintDate') || i18n.t('gallery.hint')}</p>
+          <p class="gallery__hint text-tertiary" data-i18n="gallery.hint">${i18n.t('gallery.hint')}</p>
         </div>
       </div>
     </section>
