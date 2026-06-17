@@ -5,6 +5,7 @@
 
 import { i18n } from '../core/i18n.js';
 import { auth } from '../core/auth.js';
+import { siteMode } from '../core/site-mode.js';
 let db = null;
 async function getDb() {
   if (!db) {
@@ -120,6 +121,7 @@ function renderNotFound() {
 }
 
 function renderProfile(data) {
+  if (siteMode.is('past')) return renderProfilePast(data);
   const isCancelled = data.cancelled === true;
 
   let companionsHtml = '';
@@ -268,6 +270,206 @@ function renderProfile(data) {
   // Admin panel
   if (auth.isAdmin()) {
     renderAdminPanel().catch(() => {});
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// PAST MODE — archive cabinet
+//
+// Pre-event "cabinet" is about *intent*: are you going, what are you
+// bringing, which day are you arriving. None of that survives the camp.
+// Past mode keeps only what's still true after Aug 15: who you are,
+// who came with you, and a quick path to the gallery.
+// ═══════════════════════════════════════════════════
+
+function renderProfilePast(data) {
+  const attended = data.confirmed !== false && !data.cancelled;
+  // If THE primary didn't come, listing "companions who came with you" is
+  // visually contradictory ("вы не были, но вот ваши спутники"). Hide.
+  const goingCompanions = attended
+    ? (data.companions || []).filter(c => c && c.name && c.cancelled !== true)
+    : [];
+  const isAdmin = auth.isAdmin();
+
+  containerEl.innerHTML = `
+    <section class="page-section" aria-labelledby="me-title">
+      <div class="page-section__inner me-past">
+        <h1 id="me-title" class="page-section__title" data-i18n="me.title">${i18n.t('me.title')}</h1>
+
+        <div class="me-past__status ${attended ? 'me-past__status--ok' : 'me-past__status--soft'}">
+          ${attended ? `
+            <svg class="me-past__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M8 12.5 11 15.5 16 9.5"/>
+            </svg>
+          ` : ''}
+          <div class="me-past__status-text">
+            <div class="me-past__status-title">${i18n.t(attended ? 'past.me.attendedTitle' : 'past.me.notAttendedTitle')}</div>
+            <div class="me-past__status-sub">${i18n.t(attended ? 'past.me.attendedText' : 'past.me.notAttendedText')}</div>
+          </div>
+        </div>
+
+        <div class="me-past__card">
+          <div class="me-past__field">
+            <span class="me-past__field-label" data-i18n="rsvp.name">${i18n.t('rsvp.name') !== 'rsvp.name' ? i18n.t('rsvp.name') : (i18n.lang === 'he' ? 'שם' : 'Имя')}</span>
+            <span class="me-past__field-value">${esc(data.name)}</span>
+          </div>
+          <div class="me-past__field">
+            <span class="me-past__field-label" data-i18n="rsvp.phone">${i18n.t('rsvp.phone') !== 'rsvp.phone' ? i18n.t('rsvp.phone') : (i18n.lang === 'he' ? 'טלפון' : 'Телефон')}</span>
+            <span class="me-past__field-value" dir="ltr">${esc(data.phone)}</span>
+          </div>
+        </div>
+
+        ${goingCompanions.length > 0 ? `
+          <div class="me-past__companions">
+            <h3 class="me-past__section-title" data-i18n="past.me.companionsWere">${i18n.t('past.me.companionsWere')}</h3>
+            <ul class="me-past__companions-list">
+              ${goingCompanions.map(c => `<li><span class="me-past__comp-name">${esc(c.name)}</span></li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+
+        <div class="me-past__actions">
+          <a href="#gallery" class="me-past__cta">
+            <span>${i18n.t(attended ? 'past.me.uploadCta' : 'past.me.viewCta')}</span>
+            <span class="me-past__cta-arrow" aria-hidden="true"></span>
+          </a>
+        </div>
+
+        ${isAdmin ? `
+          <div class="admin-panel admin-panel--past">
+            <div class="admin-panel__title">${i18n.t('me.adminTitle')}</div>
+            <div class="admin-panel__stats" id="admin-stats-past"></div>
+            <div class="admin-panel__actions">
+              <button type="button" class="home-who-btn" id="admin-export-past">${i18n.t('past.me.adminExport')}</button>
+            </div>
+            <div id="admin-list-past" class="admin-list"></div>
+          </div>
+        ` : ''}
+
+        <div class="me-past__footer">
+          <button type="button" class="me-past__link" id="me-recovery">
+            ${i18n.t('me.copyRecoveryLink')}
+          </button>
+          <button type="button" class="me-past__link me-past__link--dim" id="me-logout">
+            ${i18n.t('common.logout')}
+          </button>
+        </div>
+      </div>
+    </section>
+  `;
+
+  // Recovery link
+  const recoveryBtn = document.getElementById('me-recovery');
+  recoveryBtn?.addEventListener('click', () => {
+    const user = auth.getUser();
+    if (!user) return;
+    const url = `${location.origin}${location.pathname}#recover/${user.phone}/${user.token}`;
+    navigator.clipboard.writeText(url)
+      .then(() => showToast(i18n.t('me.recoveryLinkCopied')))
+      .catch(() => prompt(i18n.t('me.copyRecoveryLink'), url));
+  });
+
+  // Logout
+  document.getElementById('me-logout')?.addEventListener('click', () => {
+    auth.logout();
+    renderPhoneEntry();
+  });
+
+  if (isAdmin) renderAdminPanelPast().catch(err => console.warn('admin past panel failed', err));
+}
+
+// ─── Admin panel — past mode variant ──────────────────────────────────
+//
+// Different stats and no "Clear all" — in past mode the dataset IS the
+// archive, wiping it would destroy event history. Export remains useful;
+// it copies the attendee list to clipboard for offline reference.
+
+async function renderAdminPanelPast() {
+  const statsEl  = document.getElementById('admin-stats-past');
+  const listEl   = document.getElementById('admin-list-past');
+  const exportBtn = document.getElementById('admin-export-past');
+  if (!statsEl && !listEl) return;
+
+  let all = [];
+  try {
+    const d3 = await getDb();
+    all = await d3.getAllParticipants();
+  } catch {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith('mapal-rsvp-')) continue;
+      try { all.push(JSON.parse(localStorage.getItem(key))); } catch {}
+    }
+  }
+
+  // Classify each record:
+  //   attended    — confirmed !== false && !cancelled (went to camp)
+  //   notArrived  — confirmed === false || cancelled  (was registered but didn't make it)
+  const attended   = all.filter(p => p && p.confirmed !== false && !p.cancelled);
+  const notArrived = all.filter(p => p && (p.confirmed === false || p.cancelled));
+
+  // Headcount: primary + companions who weren't cancelled + kids.
+  let totalBodies = 0;
+  let totalKids   = 0;
+  let totalLate   = 0;
+  attended.forEach(p => {
+    totalBodies += 1;
+    totalBodies += (p.companions || []).filter(c => c && c.cancelled !== true).length;
+    totalKids   += Number(p.kids) || 0;
+    if (p.lateRegistration) totalLate += 1;
+  });
+  totalBodies += totalKids;
+
+  if (statsEl) {
+    statsEl.innerHTML = `
+      <span class="admin-stat">${attended.length} ${i18n.t('past.me.adminAttended')}</span>
+      <span class="admin-stat">${totalBodies} ${i18n.t('past.me.adminTotalBodies')}</span>
+      ${totalKids > 0 ? `<span class="admin-stat">${totalKids} ${i18n.t('past.me.adminKids')}</span>` : ''}
+      ${notArrived.length > 0 ? `<span class="admin-stat admin-stat--warn">${notArrived.length} ${i18n.t('past.me.adminNotArrived')}</span>` : ''}
+      ${totalLate > 0 ? `<span class="admin-stat admin-stat--warn">${totalLate} ${i18n.t('past.me.adminLate')}</span>` : ''}
+    `;
+  }
+
+  if (listEl) {
+    listEl.innerHTML = attended
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+      .map(p => {
+        const comps = (p.companions || [])
+          .filter(c => c && c.cancelled !== true)
+          .map(c => `<span class="admin-row__comp">${esc(c.name)} ${esc(c.phone || '')}</span>`)
+          .join('');
+        const kids = Number(p.kids) > 0 ? `<span class="admin-row__kids">+${p.kids}</span>` : '';
+        const late = p.lateRegistration ? `<span class="admin-row__late">${i18n.t('past.me.adminLateMark')}</span>` : '';
+        return `
+          <div class="admin-row">
+            <span class="admin-row__name">${esc(p.name)}</span>
+            <span class="admin-row__phone" dir="ltr">${esc(p.phone)}</span>
+            ${kids}${late}${comps}
+          </div>
+        `;
+      }).join('');
+  }
+
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      const lines = attended.map(p => {
+        let line = `${p.name} | ${p.phone}`;
+        if (p.kids)             line += ` | kids:${p.kids}`;
+        if (p.lateRegistration) line += ' | late';
+        if (p.companions && p.companions.length) {
+          line += ' | +' + p.companions
+            .filter(c => c && c.cancelled !== true)
+            .map(c => `${c.name}(${c.phone || ''})`)
+            .join(', ');
+        }
+        return line;
+      });
+      const text = lines.join('\n');
+      navigator.clipboard.writeText(text)
+        .then(() => showToast(i18n.t('common.saved')))
+        .catch(() => prompt('Copy:', text));
+    });
   }
 }
 

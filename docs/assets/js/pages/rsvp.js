@@ -837,35 +837,49 @@ export function renderRsvp(container) {
 
 // ─── Past-mode RSVP: short form for late comers (attendance archive) ──
 
+// Render-time fallback: if i18n.t echoes the key (= missing translation),
+// pick the localized fallback so we never show "PAST.RSVP.NAMELABEL" to users.
+function pickLabel(key, ru, he) {
+  const v = i18n.t(key);
+  if (v && v !== key) return v;
+  return (i18n.lang === 'he') ? he : ru;
+}
+
 function renderRsvpPast(container) {
   container.innerHTML = `
     <section class="page-section">
       <div class="page-section__inner">
         <div class="rsvp-past">
-          <h1 data-i18n="past.rsvp.title">${i18n.t('past.rsvp.title')}</h1>
-          <p class="rsvp-past__hint" data-i18n="past.rsvp.subtitle">${i18n.t('past.rsvp.subtitle')}</p>
+          <div class="rsvp-past__card">
+            <h1 class="rsvp-past__title" data-i18n="past.rsvp.title">${i18n.t('past.rsvp.title')}</h1>
+            <p class="rsvp-past__sub" data-i18n="past.rsvp.subtitle">${i18n.t('past.rsvp.subtitle')}</p>
 
-          <form class="rsvp-past__form" id="rsvp-past-form" autocomplete="off">
-            <div class="rsvp-past__field">
-              <label for="rp-name" data-i18n="rsvp.name">${i18n.t('rsvp.name') || 'Имя'}</label>
-              <input id="rp-name" type="text" required maxlength="60">
-            </div>
-            <div class="rsvp-past__field">
-              <label for="rp-phone" data-i18n="rsvp.phone">${i18n.t('rsvp.phone') || 'Телефон'}</label>
-              <input id="rp-phone" type="tel" inputmode="tel" required maxlength="20" pattern="[\\+0-9\\-\\s]+">
-            </div>
+            <form class="rsvp-past__form" id="rsvp-past-form" autocomplete="off">
+              <div class="rsvp-past__field">
+                <label for="rp-name" data-i18n="past.rsvp.nameLabel">${pickLabel('past.rsvp.nameLabel', 'Имя', 'שם')}</label>
+                <input id="rp-name" type="text" required maxlength="60" autocomplete="given-name">
+              </div>
+              <div class="rsvp-past__field">
+                <label for="rp-phone" data-i18n="past.rsvp.phoneLabel">${pickLabel('past.rsvp.phoneLabel', 'Телефон', 'טלפון')}</label>
+                <input id="rp-phone" type="tel" inputmode="tel" required maxlength="20" pattern="[\\+0-9\\-\\s]+" autocomplete="tel" dir="ltr">
+              </div>
 
-            <p class="rsvp-past__hint" data-i18n="past.rsvp.simpleHint">${i18n.t('past.rsvp.simpleHint')}</p>
+              <div class="rsvp-past__choices">
+                <button type="button" class="rsvp-past__choice rsvp-past__choice--primary" data-attended="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M8 12.5 11 15.5 16 9.5"/>
+                  </svg>
+                  <span data-i18n="past.rsvp.wasThere">${i18n.t('past.rsvp.wasThere')}</span>
+                </button>
+                <button type="button" class="rsvp-past__choice" data-attended="false">
+                  <span data-i18n="past.rsvp.wasntThere">${i18n.t('past.rsvp.wasntThere')}</span>
+                </button>
+              </div>
 
-            <div class="rsvp-past__choices">
-              <button type="button" class="rsvp-past__choice rsvp-past__choice--primary" data-attended="true">
-                <span data-i18n="past.rsvp.wasThere">${i18n.t('past.rsvp.wasThere')}</span>
-              </button>
-              <button type="button" class="rsvp-past__choice" data-attended="false">
-                <span data-i18n="past.rsvp.wasntThere">${i18n.t('past.rsvp.wasntThere')}</span>
-              </button>
-            </div>
-          </form>
+              <p class="rsvp-past__hint" data-i18n="past.rsvp.simpleHint">${i18n.t('past.rsvp.simpleHint')}</p>
+            </form>
+          </div>
         </div>
       </div>
     </section>
@@ -873,7 +887,8 @@ function renderRsvpPast(container) {
 
   const form = container.querySelector('#rsvp-past-form');
   form.addEventListener('submit', e => e.preventDefault());
-  container.querySelectorAll('.rsvp-past__choice').forEach(btn => {
+  const choices = [...container.querySelectorAll('.rsvp-past__choice')];
+  choices.forEach(btn => {
     btn.addEventListener('click', async () => {
       const name = container.querySelector('#rp-name').value.trim();
       const phone = container.querySelector('#rp-phone').value.trim();
@@ -882,37 +897,74 @@ function renderRsvpPast(container) {
         return;
       }
       const attended = btn.dataset.attended === 'true';
-      await saveLateRegistration({ name, phone, attended });
-      // After save, send to gallery — main payoff for these users.
-      window.location.hash = 'gallery';
+
+      // Disable all buttons while we save — prevents double-clicks and shows progress.
+      choices.forEach(b => b.disabled = true);
+      btn.classList.add('rsvp-past__choice--busy');
+      const label = btn.querySelector('span');
+      const savedLabel = label ? label.textContent : '';
+      if (label) label.textContent = (i18n.lang === 'he' ? 'שומר…' : 'Сохраняю…');
+
+      try {
+        await saveLateRegistration({ name, phone, attended });
+        btn.classList.remove('rsvp-past__choice--busy');
+        btn.classList.add('rsvp-past__choice--done');
+        if (label) label.textContent = (i18n.lang === 'he' ? 'נשמר ✓' : 'Готово ✓');
+        // Short success pause, then redirect.
+        setTimeout(() => { window.location.hash = 'gallery'; }, 600);
+      } catch (err) {
+        console.error('late RSVP save failed', err);
+        btn.classList.remove('rsvp-past__choice--busy');
+        choices.forEach(b => b.disabled = false);
+        if (label) label.textContent = savedLabel;
+        alert(i18n.lang === 'he'
+          ? 'שמירה נכשלה. נסה שוב או רענן את הדף.'
+          : 'Сохранить не удалось. Попробуй ещё раз или обнови страницу.');
+      }
     });
   });
 }
 
 async function saveLateRegistration({ name, phone, attended }) {
+  // Read any prior record for this phone — pre-event RSVP may have stored
+  // companions / bringing / kids / driving info that we MUST NOT wipe.
+  let prior = {};
+  try {
+    const raw = localStorage.getItem('mapal-rsvp-' + phone);
+    if (raw) prior = JSON.parse(raw) || {};
+  } catch {}
+
   // Use the crypto token generator (same as the main flow) — not Math.random.
-  const token = auth.generateToken ? auth.generateToken() : (
-    [...crypto.getRandomValues(new Uint8Array(24))]
-      .map(b => b.toString(36)).join('').slice(0, 32)
-  );
+  // Keep the existing token if any so the user can still log in cleanly.
+  const token = prior.token || (auth.generateToken
+    ? auth.generateToken()
+    : [...crypto.getRandomValues(new Uint8Array(24))]
+        .map(b => b.toString(36)).join('').slice(0, 32));
+
+  // Merge: keep all pre-existing fields, overwrite ONLY what late RSVP knows.
   const record = {
-    name, phone, token,
-    confirmed: attended,           // attended → goes into "Кто был"
+    ...prior,
+    name,
+    phone,
+    token,
+    confirmed:        attended,    // attended → goes into "Кто был"
+    cancelled:        false,
     lateRegistration: true,
-    cancelled: false,
-    bringing: {},
-    companions: [],
-    kids: 0,
-    isDriving: false,
-    createdAt: new Date().toISOString(),
+    createdAt:        prior.createdAt || new Date().toISOString(),
+    updatedAt:        new Date().toISOString(),
   };
+
   try {
     localStorage.setItem('mapal-rsvp-' + phone, JSON.stringify(record));
     // Only log in attendees — "Жаль не смог" stays anonymous (no gallery upload right).
     if (attended) auth.login(phone, name, token);
   } catch {}
+  // Tell the rest of the UI to refresh participant-derived widgets.
+  window.dispatchEvent(new CustomEvent('participantschange', { detail: { record } }));
   try {
     const mod = await import('../core/db.js');
     await mod.db.saveParticipant(record);
-  } catch {}
+  } catch (err) {
+    console.warn('Firestore save failed, local-only', err);
+  }
 }

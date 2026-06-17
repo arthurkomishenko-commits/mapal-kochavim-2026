@@ -18,6 +18,30 @@
 
 const MAX_DIMENSION = 2400;
 const WEBP_QUALITY  = 0.85;
+const JPEG_QUALITY  = 0.9;
+// Files older than this are almost certainly bogus lastModified (epoch noise).
+const CAPTURED_AT_FLOOR = 1700000000000;     // 2023-11-14
+
+// Defensive blob encoder. Tries WebP first (better compression), falls back to
+// JPEG when WebP encode returns null/throws — covers Safari ≤ 16 which has
+// patchy WebP encode support on Canvas/OffscreenCanvas.
+async function encodeBlob(canvasOrOC, isOffscreen) {
+  const tryEncode = async (type, quality) => {
+    try {
+      if (isOffscreen) {
+        return await canvasOrOC.convertToBlob({ type, quality });
+      }
+      return await new Promise(resolve =>
+        canvasOrOC.toBlob(resolve, type, quality)
+      );
+    } catch {
+      return null;
+    }
+  };
+  let blob = await tryEncode('image/webp', WEBP_QUALITY);
+  if (!blob) blob = await tryEncode('image/jpeg', JPEG_QUALITY);
+  return blob;
+}
 
 /**
  * @param {File} file - image file from <input type="file">
@@ -27,12 +51,21 @@ export async function processImage(file) {
   if (!file.type.startsWith('image/')) {
     throw new Error('Not an image file');
   }
+  // SVG is a script execution surface; reject early.
+  if (file.type === 'image/svg+xml') {
+    throw new Error('SVG not supported');
+  }
 
   // createImageBitmap auto-rotates from EXIF orientation on most browsers
-  // (we pass imageOrientation: 'from-image' explicitly to be sure).
+  // (we pass imageOrientation: 'from-image' explicitly to be sure). Safari ≤ 16
+  // ignores this hint; on those devices portrait photos may end up sideways.
   const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
 
   let { width, height } = bitmap;
+  if (!width || !height) {
+    bitmap.close?.();
+    throw new Error('Invalid image dimensions');
+  }
   if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
     const scale = MAX_DIMENSION / Math.max(width, height);
     width  = Math.round(width  * scale);
@@ -44,23 +77,29 @@ export async function processImage(file) {
   if (typeof OffscreenCanvas !== 'undefined') {
     const c = new OffscreenCanvas(width, height);
     c.getContext('2d').drawImage(bitmap, 0, 0, width, height);
-    blob = await c.convertToBlob({ type: 'image/webp', quality: WEBP_QUALITY });
+    blob = await encodeBlob(c, true);
   } else {
     const c = document.createElement('canvas');
-    c.width = width;
+    c.width  = width;
     c.height = height;
     c.getContext('2d').drawImage(bitmap, 0, 0, width, height);
-    blob = await new Promise(resolve =>
-      c.toBlob(resolve, 'image/webp', WEBP_QUALITY)
-    );
+    blob = await encodeBlob(c, false);
   }
   bitmap.close?.();
+
+  if (!blob) throw new Error('Image encoding failed');
+
+  // capturedAt: prefer file.lastModified, fall back to now. Reject garbage
+  // values below the floor (Firestore rule rejects them too, but failing here
+  // saves the orphan-blob round-trip).
+  const lm = file.lastModified;
+  const capturedAt = (lm && lm > CAPTURED_AT_FLOOR) ? lm : Date.now();
 
   return {
     blob,
     width,
     height,
-    capturedAt: file.lastModified || Date.now(),
+    capturedAt,
     kind: 'photo',
   };
 }
@@ -74,11 +113,13 @@ export async function processVideo(file) {
   if (!file.type.startsWith('video/')) {
     throw new Error('Not a video file');
   }
+  const lm = file.lastModified;
+  const capturedAt = (lm && lm > CAPTURED_AT_FLOOR) ? lm : Date.now();
   return {
     blob: file,
     width: 0,
     height: 0,
-    capturedAt: file.lastModified || Date.now(),
+    capturedAt,
     kind: 'video',
   };
 }

@@ -22,8 +22,10 @@ let lightboxCounter = null;
 let allImages = [];
 let currentIndex = 0;
 let keydownHandler = null;
+let lightboxRemoveTimer = null;            // tracked so rapid reopen can cancel it
 
 function openLightbox(index) {
+  if (lightboxRemoveTimer) { clearTimeout(lightboxRemoveTimer); lightboxRemoveTimer = null; }
   currentIndex = index;
   if (!lightboxEl) createLightbox();
   lightboxImg.src = allImages[currentIndex];
@@ -31,7 +33,9 @@ function openLightbox(index) {
   document.body.appendChild(lightboxEl);
   document.documentElement.style.overflow = 'hidden';
   requestAnimationFrame(() => lightboxEl.classList.add('lightbox--visible'));
-  window.addEventListener('routechange', closeLightbox);   // close if user navigates away
+  // De-duplicate the routechange handler so rapid re-opens don't stack listeners.
+  window.removeEventListener('routechange', closeLightbox);
+  window.addEventListener('routechange', closeLightbox);
 }
 
 function closeLightbox() {
@@ -43,9 +47,15 @@ function closeLightbox() {
     keydownHandler = null;
   }
   window.removeEventListener('routechange', closeLightbox);
-  setTimeout(() => {
-    if (lightboxEl?.parentElement) lightboxEl.remove();
-    lightboxEl = null;
+  if (lightboxRemoveTimer) clearTimeout(lightboxRemoveTimer);
+  lightboxRemoveTimer = setTimeout(() => {
+    // Only finalize removal if the lightbox is still hidden — a rapid reopen
+    // within 300ms cancels this timer in openLightbox.
+    if (lightboxEl && !lightboxEl.classList.contains('lightbox--visible')) {
+      if (lightboxEl.parentElement) lightboxEl.remove();
+      lightboxEl = null;
+    }
+    lightboxRemoveTimer = null;
   }, 300);
 }
 
@@ -331,6 +341,7 @@ async function enqueueUpload(file, user, queueEl, container) {
     row.dataset.status = 'error';
     status.textContent = i18n.t('past.gallery.heicError') || 'HEIC →JPG';
     row.classList.add('gp-row--error');
+    URL.revokeObjectURL(thumbUrl);                       // would leak otherwise
     return;
   }
 
@@ -429,8 +440,19 @@ function insertRecordIntoGrid(container, record) {
   const empty = container.querySelector('#gp-empty');
   if (empty) empty.remove();
   gridState.seen.add(record.id);
-  grid.appendChild(buildTile(record));
-  gridState.items.push(record);
+
+  // Insert at the correct chronological position so the optimistic preview
+  // matches what pagination will eventually fetch — otherwise the new photo
+  // sticks to the end forever even when its capturedAt belongs elsewhere.
+  const idx = gridState.items.findIndex(x => x.capturedAt > record.capturedAt);
+  if (idx === -1) {
+    gridState.items.push(record);
+    grid.appendChild(buildTile(record));
+  } else {
+    gridState.items.splice(idx, 0, record);
+    const refNode = grid.querySelector(`.gp-tile[data-id="${gridState.items[idx + 1]?.id}"]`);
+    grid.insertBefore(buildTile(record), refNode || null);
+  }
   updateCounter(container);
 }
 
@@ -473,7 +495,13 @@ function buildTile(rec) {
         gridState.items = gridState.items.filter(x => x.id !== rec.id);
         gridState.seen.delete(rec.id);
         const root = document.querySelector('.page-section__inner');
-        if (root) updateCounter(root);
+        if (root) {
+          updateCounter(root);
+          maybeRestoreEmptyState(root);                     // grid empty? restore placeholder
+        }
+        // If the lightbox happens to be open on this photo, close it — the URL
+        // is gone and stale navigation would 404.
+        if (lightboxEl && lightboxEl.classList.contains('lightbox--visible')) closeLightbox();
       } catch (err) { console.error('delete failed', err); }
     };
     del.addEventListener('click', doDelete);
@@ -484,6 +512,21 @@ function buildTile(rec) {
   }
   tile.addEventListener('click', () => openGalleryTile(rec));
   return tile;
+}
+
+// Restore the empty-state placeholder when the grid becomes empty (e.g. user
+// deletes the only photo).
+function maybeRestoreEmptyState(container) {
+  const grid = container.querySelector('#gp-grid');
+  if (!grid) return;
+  if (grid.children.length === 0) {
+    const p = document.createElement('p');
+    p.className = 'gp-grid__empty';
+    p.id = 'gp-empty';
+    p.setAttribute('data-i18n', 'past.gallery.empty');
+    p.textContent = i18n.t('past.gallery.empty');
+    grid.appendChild(p);
+  }
 }
 
 function updateCounter(container) {
@@ -525,7 +568,7 @@ function openGalleryTile(rec) {
 
 let videoModalEl = null;
 function openVideoModal(rec) {
-  if (videoModalEl) videoModalEl.remove();
+  if (videoModalEl) closeVideoModal();                      // clean prior state
   videoModalEl = document.createElement('div');
   videoModalEl.className = 'lightbox lightbox--visible';
   videoModalEl.innerHTML = `
@@ -535,14 +578,20 @@ function openVideoModal(rec) {
   videoModalEl.querySelector('.lightbox__close').addEventListener('click', closeVideoModal);
   videoModalEl.addEventListener('click', (e) => { if (e.target === videoModalEl) closeVideoModal(); });
   document.addEventListener('keydown', videoEsc);
+  // Auto-close on route navigation so the modal + keydown listener don't leak.
+  window.removeEventListener('routechange', closeVideoModal);
+  window.addEventListener('routechange', closeVideoModal);
   document.body.appendChild(videoModalEl);
   document.documentElement.style.overflow = 'hidden';
 }
 function closeVideoModal() {
   if (!videoModalEl) return;
+  // Stop video playback before removing — avoids audio leak if browser keeps the element alive briefly.
+  try { videoModalEl.querySelector('video')?.pause(); } catch {}
   videoModalEl.remove();
   videoModalEl = null;
   document.removeEventListener('keydown', videoEsc);
+  window.removeEventListener('routechange', closeVideoModal);
   document.documentElement.style.overflow = '';
 }
 function videoEsc(e) { if (e.key === 'Escape') closeVideoModal(); }

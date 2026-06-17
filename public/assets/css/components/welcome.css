@@ -21,9 +21,7 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  background:
-    radial-gradient(ellipse 80% 60% at 50% 40%, rgba(20, 25, 60, 0.5), transparent),
-    linear-gradient(to bottom, #050815 0%, #070B1F 40%, #0C1028 100%);
+  background: var(--color-sky-deepest, #070B1F);  /* fallback solid; stars layer rides on top */
   opacity: 0;
   transition: opacity 0.6s ease;
 }
@@ -81,20 +79,28 @@
 .welcome--visible .welcome__dates    { opacity: 1; transform: translateY(0); transition-delay: 1.15s; }
 .welcome--visible .welcome__enter    { opacity: 1; transform: translateY(0); transition-delay: 1.35s; }
 
-/* ── Decorative star ── */
-
-.welcome__star {
-  color: rgba(232, 175, 100, 0.35);
-  margin-bottom: 24px;
+/* ── Background stars layer (same pattern as page-wide #stars-bg) ── */
+.welcome__bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
 }
+.welcome__bg .stars-bg__layer { position: absolute; inset: 0; }
+.welcome__content { position: relative; z-index: 1; }
+.welcome__lang { z-index: 3; }
 
-.welcome--visible .welcome__star {
-  animation: star-rotate 20s linear infinite;
-}
-
-@keyframes star-rotate {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+/* Soft center darken so text stays readable over the stars. */
+.welcome__bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 50% at 50% 45%,
+                              rgba(7, 11, 31, 0.55),
+                              rgba(7, 11, 31, 0.12) 70%,
+                              transparent 100%);
+  pointer-events: none;
 }
 
 /* ── Title ── */
@@ -244,4 +250,41 @@
   .welcome--visible .welcome__star {
     animation: none;
   }
+}
+
+/* ── Language switcher (inside overlay) ── */
+.welcome__lang {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top, 16px));
+  inset-inline-end: 16px;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(7, 11, 31, 0.55);
+  border: 1px solid rgba(245, 239, 224, 0.10);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2;
+}
+
+.welcome__lang-btn {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 6px 12px;
+  font: 600 12px/1 'Inter', system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  color: rgba(245, 239, 224, 0.55);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast);
+  min-width: 36px;
+}
+
+.welcome__lang-btn:hover { color: rgba(245, 239, 224, 0.85); }
+
+.welcome__lang-btn--active {
+  background: rgba(212, 146, 63, 0.18);
+  color: var(--color-ember-bright);
 }

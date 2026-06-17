@@ -7,6 +7,7 @@
  */
 
 import { i18n } from '../core/i18n.js';
+import { initStarsBg } from './stars-bg.js';
 
 const STORAGE_KEY = 'mapal-welcome-dismissed';
 const DISMISS_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
@@ -51,7 +52,11 @@ function dismiss() {
 
   unlockScroll();
   overlay.classList.add('welcome--leaving');
+  // transitionend may never fire under prefers-reduced-motion (no transition).
+  // Safety timeout guarantees the overlay leaves the DOM.
+  const safetyTimer = setTimeout(() => { overlay.remove(); }, 800);
   overlay.addEventListener('transitionend', () => {
+    clearTimeout(safetyTimer);
     overlay.remove();
   }, { once: true });
 }
@@ -67,17 +72,17 @@ export function initWelcomeOverlay() {
   overlay.setAttribute('aria-label', i18n.t('welcome.title'));
 
   overlay.innerHTML = `
+    <div class="welcome__bg" aria-hidden="true">
+      <div class="stars-bg__layer stars-bg__faint"></div>
+      <div class="stars-bg__layer stars-bg__medium"></div>
+      <div class="stars-bg__layer stars-bg__bright"></div>
+    </div>
+    <div class="welcome__lang" role="group" aria-label="Language">
+      <button type="button" class="welcome__lang-btn" data-lang="ru">RU</button>
+      <button type="button" class="welcome__lang-btn" data-lang="he">עב</button>
+    </div>
     <div class="welcome__content">
       <div class="welcome__wrap">
-
-        <div class="welcome__star" aria-hidden="true">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="2" x2="12" y2="22"/>
-            <line x1="2" y1="12" x2="22" y2="12"/>
-            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-            <line x1="19.07" y1="4.93" x2="4.93" y2="19.07"/>
-          </svg>
-        </div>
 
         <h1 class="welcome__title" data-i18n="welcome.title">${i18n.t('welcome.title')}</h1>
 
@@ -99,6 +104,11 @@ export function initWelcomeOverlay() {
   lockScroll();
   document.body.prepend(overlay);
 
+  // Generate box-shadow stars on the welcome's own layers — the global
+  // #stars-bg is z-index:0 underneath the welcome's solid background, so
+  // we paint the same look directly inside the overlay.
+  initStarsBg(overlay.querySelector('.welcome__bg'));
+
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       overlay.classList.add('welcome--visible');
@@ -107,6 +117,29 @@ export function initWelcomeOverlay() {
 
   overlay.querySelector('.welcome__enter').addEventListener('click', dismiss);
   document.addEventListener('keydown', handleEsc);
+
+  // Language switcher inside the overlay — single in-flight switch only,
+  // so a fast double-click can't race two parallel `switchTo` calls.
+  const langBtns = overlay.querySelectorAll('.welcome__lang-btn');
+  const markActive = () => {
+    langBtns.forEach(b => {
+      b.classList.toggle('welcome__lang-btn--active', b.dataset.lang === i18n.lang);
+    });
+  };
+  markActive();
+  let switching = false;
+  langBtns.forEach(btn => btn.addEventListener('click', async () => {
+    if (switching || btn.dataset.lang === i18n.lang) return;
+    switching = true;
+    langBtns.forEach(b => b.disabled = true);
+    try {
+      await i18n.switchTo(btn.dataset.lang);
+      markActive();
+    } finally {
+      switching = false;
+      langBtns.forEach(b => b.disabled = false);
+    }
+  }));
 
   overlay.querySelector('.welcome__enter').focus();
 }

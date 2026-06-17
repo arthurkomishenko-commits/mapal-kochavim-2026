@@ -142,13 +142,42 @@ function getAllParticipantsLocal() {
   return list;
 }
 
+function parseTime(t) {
+  if (!t) return -Infinity;                                         // missing → loses tie
+  if (typeof t === 'object' && typeof t.toMillis === 'function') return t.toMillis();
+  if (typeof t === 'string') { const n = new Date(t).getTime(); return Number.isFinite(n) ? n : -Infinity; }
+  if (typeof t === 'number' && Number.isFinite(t)) return t;
+  return -Infinity;
+}
+
 async function loadParticipants() {
+  // Merge Firestore + localStorage. The merge protects against the race
+  // window between "user clicks 'Был там'" and "Firestore replica catches up":
+  // the user's own fresh record always lives in their localStorage right after
+  // saveLateRegistration writes it, so even if Firestore returns stale data
+  // (no record yet) the local copy fills the gap.
+  const local = getAllParticipantsLocal();
+  let remote = [];
   try {
     const d = await getDb();
-    cachedParticipants = await d.getAllParticipants();
-  } catch {
-    cachedParticipants = getAllParticipantsLocal();
-  }
+    remote = await d.getAllParticipants();
+  } catch {}
+
+  const map = new Map();
+  // Seed with remote first; only replace with local if local is STRICTLY newer.
+  // A tie (both missing timestamps, or equal timestamps) keeps remote — that
+  // way a stale localStorage from months ago can't overwrite a fresh Firestore
+  // doc with the same `createdAt` and no `updatedAt`.
+  [...remote, ...local].forEach(p => {
+    if (!p || !p.phone) return;
+    const existing = map.get(p.phone);
+    if (!existing) { map.set(p.phone, p); return; }
+    const tNew = Math.max(parseTime(p.updatedAt),     parseTime(p.createdAt));
+    const tOld = Math.max(parseTime(existing.updatedAt), parseTime(existing.createdAt));
+    if (tNew > tOld) map.set(p.phone, p);                            // strict > avoids tie-win
+  });
+
+  cachedParticipants = [...map.values()];
   return cachedParticipants;
 }
 
@@ -233,8 +262,8 @@ function renderWhoTable(container) {
 }
 
 export function renderHome(container) {
+  cachedParticipants = null;           // fresh load each visit, both modes
   if (siteMode.is('past')) return renderHomePast(container);
-  cachedParticipants = null; // fresh load each time
   homeContainerRef = container;
   container.innerHTML = `
     <section class="hero" aria-labelledby="hero-title">
@@ -567,6 +596,12 @@ function renderHomePast(container) {
       </div>
     </section>
 
+    <section class="home-section">
+      <div class="home-section__inner">
+        <div class="home-past__afterword" id="home-past-afterword"></div>
+      </div>
+    </section>
+
     ${user ? `
     <section class="home-section">
       <div class="home-section__inner">
@@ -610,16 +645,69 @@ function renderHomePast(container) {
   // and slower motion gives the "looking back" tone.
   initPastHero(container);
 
+  // Five time-agnostic afterword variants, soft auto-rotate with pause on hover.
+  initPastAfterword(container);
+
   // Async-fill who-was and gallery preview from real data sources.
   hydratePastWasList(container);
   hydratePastGalleryPreview(container);
 }
 
+// Time-aware afterword. Eight messages, one shown at a time based on the
+// number of days since the event ended (Aug 15 2026, 10:00 Asia/Jerusalem).
+// Each message lives in `past.home.afterword.m1..m8`.
+const EVENT_END_MS = new Date('2026-08-15T10:00:00+03:00').getTime();
+const AFTERWORD_THRESHOLDS = [
+  // [strictly less than X days since event end → message index]
+  [3,   0],   // 0-2 days  : "только что"          (m1)
+  [7,   1],   // 3-6 days  : "несколько дней"      (m2)
+  [21,  2],   // 1-3 weeks : "неделя"              (m3)
+  [42,  3],   // 3-6 weeks : "почти месяц"         (m4)
+  [112, 4],   // 6-16 weeks: "лето уходит"         (m5)
+  [182, 5],   // 16-26 wks : "зимний город"        (m6)
+  [364, 6],   // 26-52 wks : "полгода"             (m7)
+];
+// Anything ≥ 364 days → m8 ("год").
+
+function pickAfterwordIndex() {
+  // ?msg=1..8 forces a specific message for QA. Useful before the event
+  // when days-since-event is negative (we'd otherwise always show m1).
+  try {
+    const url = new URLSearchParams(window.location.search);
+    const forced = parseInt(url.get('msg'), 10);
+    if (forced >= 1 && forced <= 8) return forced - 1;
+  } catch {}
+  const days = Math.floor((Date.now() - EVENT_END_MS) / 86400000);
+  if (days < 0) return 0;                            // pre-event (e.g. ?mode=past override) → first
+  for (const [limit, idx] of AFTERWORD_THRESHOLDS) {
+    if (days < limit) return idx;
+  }
+  return 7;                                          // 1 year+
+}
+
+function initPastAfterword(container) {
+  const root = container.querySelector('#home-past-afterword');
+  if (!root) return;
+  const idx = pickAfterwordIndex();
+  const text = safeT('past.home.afterword.m' + (idx + 1), '');
+  if (!text) { root.innerHTML = ''; return; }
+  const paras = text.split(/\n{2,}/).map(p => `<p>${escapeHtml(p)}</p>`).join('');
+  root.innerHTML = `<div class="afterword-message">${paras}</div>`;
+}
+
+// Returns the translation if it differs from the key; falls back otherwise.
+// Used everywhere we previously wrote `i18n.t(k) || fallback` (which silently
+// stayed the key because i18n.t echoes missing keys).
+function safeT(key, fallback) {
+  const v = i18n.t(key);
+  return (v && v !== key) ? v : fallback;
+}
+
 function initPastHero(container) {
   const skyCanvas = container.querySelector('.sky-canvas');
-  const starsContainer = container.querySelector('.hero__stars');
 
   // Small star catalog for the archive hero — quieter than the live one.
+  // No shooting stars in past mode: the event is over, the sky stays still.
   const ARCHIVE_CATALOG = [
     {n:"Vega",      mag:0.0,cl:"A",az:60, alt:65},
     {n:"Altair",    mag:0.8,cl:"A",az:110,alt:55},
@@ -641,10 +729,6 @@ function initPastHero(container) {
     window._skyRenderer.destroy();
     window._skyRenderer = null;
   }
-
-  // Occasional meteor — keeps the sky alive but rarely, so it reads as
-  // memory rather than active broadcast.
-  if (starsContainer) initShootingStar(starsContainer);
 }
 
 async function hydratePastWasList(container) {

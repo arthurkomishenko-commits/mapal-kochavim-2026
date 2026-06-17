@@ -149,22 +149,28 @@ async function addPhoto({ blob, capturedAt, kind, uploaderPhone, uploaderName,
     );
   });
 
-  const url = await st.getDownloadURL(storageRef);
-
-  const doc = {
-    id, url, kind, capturedAt, uploaderPhone, uploaderName,
-    width, height,
-    storagePath: path,
-    createdAt: fs.serverTimestamp(),
-  };
+  // getDownloadURL and setDoc both produce orphan blobs on transient failure —
+  // wrap the entire post-upload phase and roll back the Storage object on any
+  // error path so we never leak a blob without a matching Firestore doc.
   try {
+    const url = await st.getDownloadURL(storageRef);
+    const doc = {
+      id, url, kind, capturedAt, uploaderPhone, uploaderName,
+      width, height,
+      storagePath: path,
+      createdAt: fs.serverTimestamp(),
+    };
     await fs.setDoc(fs.doc(dbInstance, 'photos', id), doc);
-  } catch (firestoreErr) {
-    // Roll back the Storage object so we don't leave orphans.
+    return {
+      id, url, kind, capturedAt, uploaderPhone, uploaderName,
+      width, height,
+      storagePath: path,
+      createdAt: Date.now(),
+    };
+  } catch (err) {
     try { await st.deleteObject(storageRef); } catch {}
-    throw firestoreErr;
+    throw err;
   }
-  return { ...doc, createdAt: Date.now() };
 }
 
 function guessVideoExt(mime) {

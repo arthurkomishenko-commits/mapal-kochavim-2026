@@ -168,10 +168,21 @@ function initTimelineLive(container) {
   // In past mode every event is already done — no need to re-tick.
   import('../core/site-mode.js').then(({ siteMode }) => {
     if (siteMode.is('past')) return;
-    timelineTick = setInterval(update, 30 * 1000);
-    window.addEventListener('routechange', () => {
+    // Self-clean if the container left the DOM between dynamic-import resolve
+    // and now (user navigated away while siteMode was loading).
+    if (!container.isConnected) return;
+    timelineTick = setInterval(() => {
+      if (!container.isConnected) {
+        if (timelineTick) { clearInterval(timelineTick); timelineTick = null; }
+        return;
+      }
+      update();
+    }, 30 * 1000);
+    const cleanup = () => {
       if (timelineTick) { clearInterval(timelineTick); timelineTick = null; }
-    }, { once: true });
+      window.removeEventListener('routechange', cleanup);
+    };
+    window.addEventListener('routechange', cleanup);
   });
 }
 
