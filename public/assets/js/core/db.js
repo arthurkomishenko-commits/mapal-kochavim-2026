@@ -1,20 +1,22 @@
 /**
- * Database layer — Firestore with lazy SDK loading
+ * Database layer — Firestore (metadata) + Cloudinary (media blobs).
  *
- * Firebase SDK loaded from CDN only when first DB operation is called.
- * Keeps initial bundle at zero — no impact on pages that don't need DB.
+ * Firestore stores participants and photo metadata; the actual photo/video
+ * binaries live in Cloudinary because Firebase Storage now requires the
+ * Blaze paid plan. Cloudinary's free tier covers our closed-event scale.
+ *
+ * Firestore SDK is lazy-loaded from CDN on first DB call to keep the
+ * initial bundle at zero.
  */
 
 import { firebaseConfig } from './firebase-config.js';
+import { cloudinaryConfig } from './cloudinary-config.js';
 
 let app = null;
 let dbInstance = null;
-let storageInstance = null;
 let fsModule = null;
-let stModule = null;
 let sdkLoaded = false;
 let sdkPromise = null;
-let storagePromise = null;
 
 async function loadSDK() {
   if (sdkLoaded) return;
@@ -32,25 +34,9 @@ async function loadSDK() {
   return sdkPromise;
 }
 
-async function loadStorage() {
-  await loadSDK();
-  if (stModule) return;
-  if (storagePromise) return storagePromise;
-  storagePromise = (async () => {
-    stModule = await import('https://www.gstatic.com/firebasejs/11.7.1/firebase-storage.js');
-    storageInstance = stModule.getStorage(app);
-  })();
-  return storagePromise;
-}
-
 function getFS() {
   if (!fsModule) throw new Error('Firebase SDK not loaded');
   return fsModule;
-}
-
-function getST() {
-  if (!stModule) throw new Error('Firebase Storage SDK not loaded');
-  return stModule;
 }
 
 // ═══════════════════════════════════════════════════
@@ -107,11 +93,11 @@ async function findCompanionLink(phone) {
 }
 
 // ═══════════════════════════════════════════════════
-// PHOTOS / VIDEOS — user uploads after the event
+// PHOTOS / VIDEOS — Cloudinary upload + Firestore doc
 // ═══════════════════════════════════════════════════
 
 /**
- * Upload a processed media blob and create the Firestore doc.
+ * Upload a processed media blob to Cloudinary and create the Firestore doc.
  *
  * @param {Object} args
  * @param {Blob}   args.blob          — processed (EXIF-stripped) media
@@ -122,61 +108,115 @@ async function findCompanionLink(phone) {
  * @param {(p:number)=>void} [args.onProgress] — 0..1
  * @returns {Promise<{id:string, url:string, capturedAt:number, kind:string,
  *                    uploaderPhone:string, uploaderName:string,
- *                    width:number, height:number}>}
+ *                    width:number, height:number, cloudinaryPublicId:string}>}
  */
 async function addPhoto({ blob, capturedAt, kind, uploaderPhone, uploaderName,
                           width = 0, height = 0, onProgress }) {
-  await loadStorage();
+  // Cloudinary free unsigned upload tops out around 100 MB. Images are already
+  // shrunk to <=2400px WebP (<<1 MB), so the cap only bites video pass-through.
+  if (kind === 'video' && blob.size > cloudinaryConfig.maxVideoBytes) {
+    const mb = Math.round(blob.size / 1024 / 1024);
+    throw new Error(`Video too large: ${mb} MB (max ${Math.round(cloudinaryConfig.maxVideoBytes / 1024 / 1024)} MB)`);
+  }
+
+  await loadSDK();
   const fs = getFS();
-  const st = getST();
 
   const id = crypto.randomUUID();
-  const ext = kind === 'video' ? guessVideoExt(blob.type) : 'webp';
-  const path = `${kind === 'video' ? 'videos' : 'photos'}/${id}.${ext}`;
-  const storageRef = st.ref(storageInstance, path);
-  const task = st.uploadBytesResumable(storageRef, blob, {
-    contentType: blob.type,
-    customMetadata: {
-      uploaderPhone, capturedAt: String(capturedAt),
-    },
+
+  // Cloudinary upload via XHR (fetch lacks upload progress).
+  const uploaded = await uploadToCloudinary(blob, id, {
+    uploaderPhone, capturedAt, onProgress,
   });
 
-  await new Promise((resolve, reject) => {
-    task.on('state_changed',
-      snap => onProgress?.(snap.bytesTransferred / snap.totalBytes),
-      err  => reject(err),
-      ()   => resolve(),
-    );
-  });
+  // Cloudinary returns authoritative dimensions for images; for videos width
+  // is reported too. Prefer Cloudinary's numbers, fall back to client values.
+  const finalWidth = uploaded.width || width;
+  const finalHeight = uploaded.height || height;
 
-  // getDownloadURL and setDoc both produce orphan blobs on transient failure —
-  // wrap the entire post-upload phase and roll back the Storage object on any
-  // error path so we never leak a blob without a matching Firestore doc.
-  try {
-    const url = await st.getDownloadURL(storageRef);
-    const doc = {
-      id, url, kind, capturedAt, uploaderPhone, uploaderName,
-      width, height,
-      storagePath: path,
-      createdAt: fs.serverTimestamp(),
-    };
-    await fs.setDoc(fs.doc(dbInstance, 'photos', id), doc);
-    return {
-      id, url, kind, capturedAt, uploaderPhone, uploaderName,
-      width, height,
-      storagePath: path,
-      createdAt: Date.now(),
-    };
-  } catch (err) {
-    try { await st.deleteObject(storageRef); } catch {}
-    throw err;
-  }
+  // If Firestore write fails we'd orphan the Cloudinary blob. Unsigned uploads
+  // can only be deleted in the first ~10 min via a delete_token (preset feature
+  // currently off). Acceptable: failure rate is low and the leaked blob costs
+  // ~500 KB at most. If this becomes a problem, flip "Return delete token"
+  // on the preset and call DELETE /v1_1/{cloud}/delete_by_token here.
+  const doc = {
+    id,
+    url: uploaded.secureUrl,
+    kind, capturedAt, uploaderPhone, uploaderName,
+    width: finalWidth,
+    height: finalHeight,
+    cloudinaryPublicId: uploaded.publicId,
+    createdAt: fs.serverTimestamp(),
+  };
+  await fs.setDoc(fs.doc(dbInstance, 'photos', id), doc);
+
+  return {
+    id,
+    url: uploaded.secureUrl,
+    kind, capturedAt, uploaderPhone, uploaderName,
+    width: finalWidth,
+    height: finalHeight,
+    cloudinaryPublicId: uploaded.publicId,
+    createdAt: Date.now(),
+  };
 }
 
-function guessVideoExt(mime) {
-  if (mime?.includes('webm')) return 'webm';
-  if (mime?.includes('quicktime')) return 'mov';
-  return 'mp4';
+/**
+ * POST a blob to Cloudinary unsigned upload endpoint.
+ * Uses XMLHttpRequest because fetch() lacks upload progress events.
+ *
+ * @returns {Promise<{secureUrl:string, publicId:string, width:number, height:number}>}
+ */
+function uploadToCloudinary(blob, publicId, { uploaderPhone, capturedAt, onProgress }) {
+  return new Promise((resolve, reject) => {
+    const form = new FormData();
+    form.append('file', blob);
+    form.append('upload_preset', cloudinaryConfig.uploadPreset);
+    form.append('public_id', publicId);
+    // Context metadata — survives the upload, viewable in Cloudinary Media Library.
+    // Pipe-separated key=value pairs; values must not contain `|` or `=`.
+    form.append('context', `uploader=${sanitizeContext(uploaderPhone)}|captured_at=${capturedAt}`);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', cloudinaryConfig.uploadEndpoint);
+
+    if (onProgress) {
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) onProgress(e.loaded / e.total);
+      });
+    }
+
+    xhr.addEventListener('load', () => {
+      if (xhr.status < 200 || xhr.status >= 300) {
+        let msg = `Cloudinary upload failed: HTTP ${xhr.status}`;
+        try {
+          const err = JSON.parse(xhr.responseText);
+          if (err?.error?.message) msg += ` — ${err.error.message}`;
+        } catch {}
+        return reject(new Error(msg));
+      }
+      try {
+        const res = JSON.parse(xhr.responseText);
+        resolve({
+          secureUrl: res.secure_url,
+          publicId: res.public_id,
+          width: res.width || 0,
+          height: res.height || 0,
+        });
+      } catch (e) {
+        reject(new Error('Cloudinary returned invalid JSON'));
+      }
+    });
+
+    xhr.addEventListener('error', () => reject(new Error('Network error uploading to Cloudinary')));
+    xhr.addEventListener('abort', () => reject(new Error('Upload aborted')));
+
+    xhr.send(form);
+  });
+}
+
+function sanitizeContext(s) {
+  return String(s || '').replace(/[|=]/g, '_');
 }
 
 /**
@@ -210,17 +250,15 @@ async function getPhotos({ limit = 10, cursor = null } = {}) {
 }
 
 /**
- * Delete a photo. Client checks ownership before calling.
- * Storage delete is best-effort — Firestore delete is the source of truth.
+ * Soft-delete a photo: remove the Firestore doc, leave the Cloudinary blob.
+ * Client checks ownership before calling. The blob keeps occupying storage
+ * but is unreachable through the app — acceptable given free-tier headroom
+ * and the closed-event scope.
  */
-async function deletePhoto(id, storagePath) {
-  await loadStorage();
+async function deletePhoto(id) {
+  await loadSDK();
   const fs = getFS();
-  const st = getST();
   await fs.deleteDoc(fs.doc(dbInstance, 'photos', id));
-  if (storagePath) {
-    try { await st.deleteObject(st.ref(storageInstance, storagePath)); } catch {}
-  }
 }
 
 export const db = {

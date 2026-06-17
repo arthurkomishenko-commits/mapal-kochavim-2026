@@ -7,6 +7,7 @@
     "build:moon": "node scripts/build-moon-data.js"
   },
   "devDependencies": {
+    "firebase-tools": "^15.20.0",
     "suncalc": "^1.9.0"
   }
 }

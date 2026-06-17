@@ -49,8 +49,9 @@ service cloud.firestore {
                     && request.resource.data.capturedAt > 1700000000000     // > 2023-11
                     && request.resource.data.capturedAt < request.time.toMillis() + 86400000
                     && request.resource.data.kind in ['photo', 'video']
-                    && request.resource.data.storagePath is string
-                    && request.resource.data.storagePath.size() < 200;
+                    && request.resource.data.cloudinaryPublicId is string
+                    && request.resource.data.cloudinaryPublicId.size() > 0
+                    && request.resource.data.cloudinaryPublicId.size() < 200;
 
       allow update: if false;
       // Delete requires the request to include the uploaderPhone of the doc.

@@ -385,6 +385,8 @@ async function enqueueUpload(file, user, queueEl, container) {
     console.error('upload failed', err);
     row.dataset.status = 'error';
     status.textContent = '!';
+    status.title = err?.message || 'Upload failed';
+    row.title = err?.message || 'Upload failed';
     row.classList.add('gp-row--error');
     URL.revokeObjectURL(thumbUrl);            // ok to revoke now — error row stays
   }
@@ -490,7 +492,7 @@ function buildTile(rec) {
       if (!confirm(i18n.t('past.gallery.deleteConfirm') || 'Удалить это фото?')) return;
       try {
         const { db } = await import('../core/db.js');
-        await db.deletePhoto(rec.id, rec.storagePath);
+        await db.deletePhoto(rec.id);
         tile.remove();
         gridState.items = gridState.items.filter(x => x.id !== rec.id);
         gridState.seen.delete(rec.id);
