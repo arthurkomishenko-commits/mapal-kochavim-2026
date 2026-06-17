@@ -29,13 +29,17 @@
 ## REMAINING
 
 ### Before sending to people:
-- [ ] **Deploy Firestore rules** — go to Firebase Console → Firestore → Rules → paste firestore.rules → Publish
+- [x] **Deploy Firestore rules** — done via `firebase deploy --only firestore:rules,firestore:indexes` (2026-06-17)
+- [x] **Migrate uploads off Firebase Storage** — done, moved to Cloudinary (Blaze plan avoided). cloud_name `dqznby5hm`, preset `mapal_unsigned`.
 - [ ] **Test full flow** on mobile: register → edit → me → who's coming
 - [ ] **Test on Hebrew** — verify all i18n renders correctly
 - [ ] **Clear test data** from Firestore before launch
+- [ ] **Cloudinary smoke test** — local browser test of past-mode upload from real phone (?mode=past#gallery)
 
 ### Nice to have (not blocking):
 - [ ] Service worker: remove or make network-first before event
 - [ ] Admin: check-in mode for arrival night
 - [ ] Admin: server-side token validation (currently client-side phone check)
 - [ ] Tonight's Sky: auto-calculate times instead of hardcoded
+- [ ] Cloudinary "Return delete token" — enable on preset for 10-min undo-upload window
+- [ ] Cloudinary periodic orphan cleanup — soft-deleted blobs accumulate; admin script could compare Cloudinary public_ids vs Firestore docs

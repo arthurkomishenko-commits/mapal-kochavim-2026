@@ -72,3 +72,32 @@
 - [ ] Telegram bot integration
 - [ ] Restore welcome overlay localStorage (show once per 7 days)
 - [ ] Re-enable service worker with proper caching strategy
+
+## Sprint — Storage Migration (2026-06-17)
+
+### Cloudinary swap-in
+- Firebase Storage now requires the Blaze paid plan; chose Cloudinary
+  free tier instead (25 GB storage, 25 GB bandwidth/mo) — plenty for a
+  closed 45-person event.
+- New module `core/cloudinary-config.js` with public cloud name +
+  unsigned upload preset (no API secret on client).
+- `addPhoto` rewritten to use `XMLHttpRequest` (fetch lacks upload
+  progress) hitting `https://api.cloudinary.com/v1_1/{cloud}/auto/upload`.
+  Same `onProgress(0..1)` contract preserved.
+- `deletePhoto` is now soft-delete: removes the Firestore doc, leaves
+  the Cloudinary blob. Unsigned uploads have no client-side delete
+  capability beyond the optional 10-min delete_token (off for now).
+- `firestore.rules` photos/create: `storagePath` → `cloudinaryPublicId`.
+  Redeployed live via `firebase deploy --only firestore:rules`.
+- Removed `storage.rules`, removed `storage` block from `firebase.json`,
+  added `.firebaserc` (default `mapal-kochavim`), added `firebase-tools`
+  as devDep.
+- 100 MB client-side video cap (Cloudinary free unsigned upload limit).
+- Errors during upload now expose `error.message` on the row's `title`
+  attribute for hover diagnostics; rows still render a generic `!`.
+- Cache bump v43 → v44, rsync public→docs, commit `b494ff4`.
+
+### Open follow-ups
+- Cloudinary preset's "Return delete token" — flip ON for undo-upload.
+- Periodic orphan cleanup script (Cloudinary public_ids missing from
+  Firestore) once we have actual usage.
