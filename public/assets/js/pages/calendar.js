@@ -9,7 +9,7 @@
 import { i18n } from '../core/i18n.js';
 import { moonSvg } from '../components/moon-svg.js';
 
-const DATA_URL = './assets/data/moon-2026.json?v=70';
+const DATA_URL = './assets/data/moon-2026.json?v=71';
 
 let DATA = null;
 let dialog = null;

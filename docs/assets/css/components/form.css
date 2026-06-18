@@ -431,8 +431,12 @@
 .toast {
   position: fixed;
   bottom: 24px;
-  left: 16px;
-  right: 16px;
+  /* Logical properties so the toast is symmetric/centred in both LTR and
+     RTL. With physical left/right the layout already rendered symmetrically
+     here (both sides 16px), but logical-* future-proofs us against any
+     downstream change to text-direction. */
+  inset-inline-start: 16px;
+  inset-inline-end: 16px;
   padding: 14px 20px;
   font-size: 0.9rem;
   font-weight: 500;
@@ -857,8 +861,10 @@
   }
 
   .toast {
-    left: 50%;
-    right: auto;
+    /* Centred horizontally — direction-agnostic but logical-* keeps it
+       consistent with the mobile rule above. */
+    inset-inline-start: 50%;
+    inset-inline-end: auto;
     transform: translateX(-50%) translateY(20px);
     max-width: 360px;
   }
