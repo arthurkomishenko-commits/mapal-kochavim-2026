@@ -27,7 +27,7 @@ const OBJECTS = [
   { key: 'saturn',    photo: 'images/observe/saturn.jpg',    photoCredit: '', photoPosition: '50% 50%', photoZoom: 1, photoBrightness: 0.9 },
   { key: 'm13',       photo: 'images/observe/m13.jpg',       photoCredit: '', photoPosition: '50% 50%', photoZoom: 1, photoBrightness: 0.84 },
   { key: 'andromeda', photo: 'images/observe/andromeda.jpg', photoCredit: '', photoPosition: '50% 50%', photoZoom: 1, photoBrightness: 1 },
-  { key: 'albireo',   photo: 'images/observe/albireo.jpg',   photoCredit: '', photoPosition: '50% 50%', photoZoom: 2, photoBrightness: 0.9 },
+  { key: 'albireo',   photo: 'images/observe/albireo.jpg',   photoCredit: '', photoPosition: '50% 50%', photoZoom: 2, photoBrightness: 0.84 },
 ];
 
 // Translation helper: i18n.t returns the key itself on miss (truthy), so the
