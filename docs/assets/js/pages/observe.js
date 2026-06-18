@@ -20,14 +20,14 @@ import { i18n } from '../core/i18n.js';
 // `key` maps to i18n keys: observe.objects.{key}.{name,type,see,when,where,find,tip}
 // Photos are locally hosted in public/images/observe/ — small JPGs (12-93 KB).
 // `photoPosition` shifts the object-fit:cover crop window (default 50% 50%).
-// `photoZoom` scales the cropped image up (default 1.0). Together they let
-// us frame subjects that are small or off-centre in the source frame
-// without re-cropping the JPG itself.
+// `photoZoom` scales the cropped image up (default 1.0).
+// `photoBrightness` runs the image through CSS filter: brightness() (default 1.0).
+// Together they let us frame and tune subjects without re-cropping the JPG itself.
 const OBJECTS = [
-  { key: 'saturn',    photo: 'images/observe/saturn.jpg',    photoCredit: '', photoPosition: '50% 50%', photoZoom: 1 },
-  { key: 'm13',       photo: 'images/observe/m13.jpg',       photoCredit: '', photoPosition: '50% 50%', photoZoom: 1 },
-  { key: 'andromeda', photo: 'images/observe/andromeda.jpg', photoCredit: '', photoPosition: '50% 50%', photoZoom: 1 },
-  { key: 'albireo',   photo: 'images/observe/albireo.jpg',   photoCredit: '', photoPosition: '50% 50%', photoZoom: 2 },
+  { key: 'saturn',    photo: 'images/observe/saturn.jpg',    photoCredit: '', photoPosition: '50% 50%', photoZoom: 1, photoBrightness: 1 },
+  { key: 'm13',       photo: 'images/observe/m13.jpg',       photoCredit: '', photoPosition: '50% 50%', photoZoom: 1, photoBrightness: 0.9 },
+  { key: 'andromeda', photo: 'images/observe/andromeda.jpg', photoCredit: '', photoPosition: '50% 50%', photoZoom: 1, photoBrightness: 1 },
+  { key: 'albireo',   photo: 'images/observe/albireo.jpg',   photoCredit: '', photoPosition: '50% 50%', photoZoom: 2, photoBrightness: 1 },
 ];
 
 // Translation helper: i18n.t returns the key itself on miss (truthy), so the
@@ -86,7 +86,7 @@ function renderCard(obj) {
     <article class="obs-card">
       <div class="obs-card__photo">
         <img src="${attr(obj.photo)}" alt="${attr(t(`${base}.name`, obj.key))}" loading="lazy"
-             style="object-position:${attr(obj.photoPosition || '50% 50%')};transform:scale(${attr(obj.photoZoom || 1)});transform-origin:${attr(obj.photoPosition || '50% 50%')}"
+             style="object-position:${attr(obj.photoPosition || '50% 50%')};transform:scale(${attr(obj.photoZoom || 1)});transform-origin:${attr(obj.photoPosition || '50% 50%')};filter:brightness(${attr(obj.photoBrightness ?? 1)})"
              onerror="this.onerror=null;this.src='${fallback}';this.classList.add('obs-card__photo--fallback')">
         <span class="obs-card__credit">${obj.photoCredit}</span>
       </div>
