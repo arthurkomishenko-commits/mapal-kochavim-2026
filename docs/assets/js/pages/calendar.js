@@ -9,7 +9,7 @@
 import { i18n } from '../core/i18n.js';
 import { moonSvg } from '../components/moon-svg.js';
 
-const DATA_URL = './assets/data/moon-2026.json?v=47';
+const DATA_URL = './assets/data/moon-2026.json?v=48';
 
 let DATA = null;
 let dialog = null;
@@ -126,6 +126,7 @@ export async function renderCalendar(container) {
         ${renderWeekdayHeader(lang)}
         <div class="cal-grid" role="grid" aria-label="${i18n.t('calendar.gridLabel') || 'Moon calendar'}" id="cal-grid"></div>
         ${renderPerseids(data, lang)}
+        ${renderObserveCta(lang)}
         ${renderGlossary(lang)}
         ${renderMeta(data, lang)}
       </div>
@@ -503,6 +504,31 @@ function perseidsSection(hKey, pKey) {
     <h3 data-i18n="calendar.${hKey}">${heading}</h3>
     ${body}
   </section>`;
+}
+
+// ─── Observe CTA (link to telescope-target page) ──────────────────────
+
+function renderObserveCta(lang) {
+  // Local fallback resolution — i18n.t returns the key string on miss.
+  const safeT = (k, fb) => {
+    const v = i18n.t(k);
+    return (v && v !== k) ? v : fb;
+  };
+  const title = safeT('calendar.observeCta.title', 'Через окуляр');
+  const text  = safeT('calendar.observeCta.text',  'Что точно покажет телескоп в эти ночи: четыре объекта с временами, направлениями и подсказкой как найти.');
+  const btn   = safeT('calendar.observeCta.btn',   'Посмотреть');
+  return `
+    <div class="cal-observe-cta">
+      <h2 class="cal-observe-cta__title">${title}</h2>
+      <p class="cal-observe-cta__text">${text}</p>
+      <a href="#observe" class="btn btn--primary cal-observe-cta__btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 12l9-9 9 9-9 9z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span>${btn}</span>
+      </a>
+    </div>
+  `;
 }
 
 // ─── Glossary ─────────────────────────────────────────────────────────

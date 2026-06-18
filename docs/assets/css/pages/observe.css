@@ -1,0 +1,224 @@
+/* ═══ Observe page ═══════════════════════════════════════════════════
+   Card grid for telescope-target catalog: photo + body, stacked on
+   mobile, side-by-side from tablet up. Reuses page-section tokens.
+   ─────────────────────────────────────────────────────────────────── */
+
+.observe__intro {
+  max-width: 60ch;
+  margin: var(--space-4) auto var(--space-8);
+  color: var(--color-text-secondary);
+  line-height: var(--leading-relaxed);
+  text-align: center;
+}
+
+.observe__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ─── Card ────────────────────────────────────────────────────────── */
+
+.obs-card {
+  display: grid;
+  grid-template-columns: 1fr;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 640px) {
+  .obs-card {
+    grid-template-columns: minmax(220px, 38%) 1fr;
+  }
+}
+
+.obs-card__photo {
+  position: relative;
+  background: #0b1024;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+@media (min-width: 640px) {
+  .obs-card__photo { aspect-ratio: auto; }
+}
+
+.obs-card__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* SVG placeholder (data: URL) — keep it small and centred when the real
+   thumb 404s or the network is dead. */
+.obs-card__photo--fallback {
+  object-fit: contain !important;
+  padding: 20% !important;
+  opacity: 0.55;
+}
+
+.obs-card__credit {
+  position: absolute;
+  bottom: 4px;
+  inset-inline-end: 6px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+.obs-card__body {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.obs-card__name {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.obs-card__type {
+  font-size: var(--text-sm);
+  margin: 0;
+  margin-top: calc(-1 * var(--space-2));
+}
+
+.obs-card__see {
+  margin: 0;
+  color: var(--color-text-primary);
+  line-height: var(--leading-relaxed);
+}
+
+.obs-card__meta {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+
+.obs-card__meta > div {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: var(--space-3);
+  align-items: baseline;
+}
+
+@media (max-width: 480px) {
+  .obs-card__meta > div {
+    grid-template-columns: 80px 1fr;
+    gap: var(--space-2);
+  }
+}
+
+.obs-card__meta dt {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+  margin: 0;
+}
+
+.obs-card__meta dd {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: var(--leading-normal);
+}
+
+.obs-card__tip {
+  margin: 0;
+  padding-top: var(--space-2);
+  font-size: var(--text-sm);
+  font-style: italic;
+  opacity: 0.85;
+}
+
+/* ─── Tips block ─────────────────────────────────────────────────── */
+
+.observe__tips {
+  margin-top: var(--space-10);
+  padding: var(--space-5) var(--space-5) var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.observe__tips-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin: 0 0 var(--space-4);
+  color: var(--color-text-primary);
+}
+
+.observe__tips-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.observe__tips-list li {
+  padding-inline-start: var(--space-4);
+  position: relative;
+  color: var(--color-text-secondary);
+  line-height: var(--leading-relaxed);
+}
+
+.observe__tips-list li::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.65em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent, #f5b94e);
+  opacity: 0.7;
+}
+
+/* ─── Calendar → Observe CTA card ─────────────────────────────────── */
+/* Lives on the calendar page; styled here to keep observe-related
+   visuals in one file. */
+
+.cal-observe-cta {
+  margin: var(--space-8) auto var(--space-4);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.cal-observe-cta__title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.cal-observe-cta__text {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: var(--leading-relaxed);
+  max-width: 50ch;
+}
+
+.cal-observe-cta__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}

@@ -16,6 +16,7 @@ import { renderProgram } from './pages/program.js';
 import { renderPack } from './pages/pack.js';
 import { renderSky } from './pages/sky.js';
 import { renderCalendar } from './pages/calendar.js';
+import { renderObserve } from './pages/observe.js';
 import { renderSafety } from './pages/safety.js';
 import { renderContacts } from './pages/contacts.js';
 import { renderGallery } from './pages/gallery.js';
@@ -43,6 +44,7 @@ async function boot() {
   router.register('rides', renderRides);
   router.register('sky', renderSky);
   router.register('calendar', renderCalendar);
+  router.register('observe', renderObserve);
   router.register('safety', renderSafety);
   router.register('contacts', renderContacts);
   router.register('gallery', renderGallery);
