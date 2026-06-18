@@ -17,6 +17,48 @@ async function getDb() {
 
 let containerEl = null;
 
+/**
+ * Styled confirm dialog — replaces window.confirm() which is RTL-broken
+ * on Hebrew (browser-native, can't be styled or i18n'd properly).
+ * Returns Promise<boolean>. Esc / overlay-click / Cancel → false.
+ */
+function confirmDialog(message, { okLabel, cancelLabel, danger = true } = {}) {
+  return new Promise(resolve => {
+    const ok     = okLabel     ?? i18n.tf('common.confirmDelete', 'Удалить');
+    const cancel = cancelLabel ?? i18n.tf('common.cancel',        'Отмена');
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+    overlay.setAttribute('role', 'alertdialog');
+    overlay.setAttribute('aria-modal', 'true');
+    const safeMsg = (() => { const d = document.createElement('div'); d.textContent = message || ''; return d.innerHTML; })();
+    overlay.innerHTML = `
+      <div class="confirm-dialog">
+        <p class="confirm-dialog__text">${safeMsg}</p>
+        <div class="confirm-dialog__actions">
+          <button type="button" class="confirm-dialog__btn confirm-dialog__btn--cancel">${cancel}</button>
+          <button type="button" class="confirm-dialog__btn confirm-dialog__btn--ok${danger ? ' confirm-dialog__btn--danger' : ''}">${ok}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const close = (val) => {
+      document.removeEventListener('keydown', onKey);
+      overlay.remove();
+      resolve(val);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') close(false);
+      if (e.key === 'Enter')  close(true);
+    };
+    overlay.querySelector('.confirm-dialog__btn--cancel').addEventListener('click', () => close(false));
+    overlay.querySelector('.confirm-dialog__btn--ok').addEventListener('click', () => close(true));
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(false); });
+    document.addEventListener('keydown', onKey);
+    // Focus the cancel button so Enter doesn't auto-destroy by default.
+    setTimeout(() => overlay.querySelector('.confirm-dialog__btn--cancel')?.focus(), 0);
+  });
+}
+
 function showToast(msg, isError = false) {
   const existing = document.querySelector('.toast');
   if (existing) existing.remove();
@@ -236,9 +278,20 @@ function renderProfile(data) {
     cancelBtn.addEventListener('click', async () => {
       data.cancelled = true;
       data.updatedAt = new Date().toISOString();
-      try { const d2 = await getDb(); await d2.saveParticipant(data); } catch {}
+      let remoteOk = true;
+      try {
+        const d2 = await getDb();
+        await d2.saveParticipant(data);
+      } catch (err) {
+        remoteOk = false;
+        console.warn('Firestore cancel-save failed', err);
+      }
       localStorage.setItem('mapal-rsvp-' + data.phone, JSON.stringify(data));
-      showToast(i18n.t('me.cancelled'));
+      showToast(remoteOk
+        ? i18n.t('me.cancelled')
+        : i18n.tf('rsvp.saveOfflineWarn',
+            'Сохранено локально — связь с сервером не прошла. Открой страницу позже, когда будет интернет.'),
+        !remoteOk);
       renderProfile(data);
     });
   }
@@ -311,11 +364,11 @@ function renderProfilePast(data) {
 
         <div class="me-past__card">
           <div class="me-past__field">
-            <span class="me-past__field-label" data-i18n="rsvp.name">${i18n.t('rsvp.name') !== 'rsvp.name' ? i18n.t('rsvp.name') : (i18n.lang === 'he' ? 'שם' : 'Имя')}</span>
+            <span class="me-past__field-label" data-i18n="rsvp.name">${i18n.tf('rsvp.name', 'Имя')}</span>
             <span class="me-past__field-value">${esc(data.name)}</span>
           </div>
           <div class="me-past__field">
-            <span class="me-past__field-label" data-i18n="rsvp.phone">${i18n.t('rsvp.phone') !== 'rsvp.phone' ? i18n.t('rsvp.phone') : (i18n.lang === 'he' ? 'טלפון' : 'Телефон')}</span>
+            <span class="me-past__field-label" data-i18n="rsvp.phone">${i18n.tf('rsvp.phone', 'Телефон')}</span>
             <span class="me-past__field-value" dir="ltr">${esc(data.phone)}</span>
           </div>
         </div>
@@ -439,7 +492,7 @@ async function renderAdminPanelPast() {
       .map(p => {
         const comps = (p.companions || [])
           .filter(c => c && c.cancelled !== true)
-          .map(c => `<span class="admin-row__comp">${esc(c.name)} ${esc(c.phone || '')}</span>`)
+          .map(c => `<span class="admin-row__comp">${esc(c.name)} <span dir="ltr">${esc(c.phone || '')}</span></span>`)
           .join('');
         const kids = Number(p.kids) > 0 ? `<span class="admin-row__kids">+${p.kids}</span>` : '';
         const late = p.lateRegistration ? `<span class="admin-row__late">${i18n.t('past.me.adminLateMark')}</span>` : '';
@@ -460,8 +513,8 @@ async function renderAdminPanelPast() {
       btn.addEventListener('click', async () => {
         const phone = btn.dataset.phone;
         const name  = btn.dataset.name || phone;
-        const tpl   = i18n.tf('me.adminDeleteConfirm', 'Удалить «{name}» ({phone})? Это действие необратимо.');
-        const ok = window.confirm(tpl.replace('{name}', name).replace('{phone}', phone));
+        const tpl = i18n.tf('me.adminDeleteConfirm', 'Удалить «{name}» ({phone})? Это действие необратимо.');
+        const ok  = await confirmDialog(tpl.replace('{name}', name).replace('{phone}', phone));
         if (!ok) return;
         try {
           const d = await getDb();
@@ -578,7 +631,7 @@ async function renderAdminPanel() {
         <span class="admin-row__name">${esc(p.name)}</span>
         <span class="admin-row__phone" dir="ltr">${esc(p.phone)}</span>
         ${badges}
-        ${p.companions ? p.companions.map(c => `<span class="admin-row__comp">${esc(c.name)} ${esc(c.phone || '')}</span>`).join('') : ''}
+        ${p.companions ? p.companions.map(c => `<span class="admin-row__comp">${esc(c.name)} <span dir="ltr">${esc(c.phone || '')}</span></span>`).join('') : ''}
         ${canDelete ? `<button type="button" class="admin-row__delete" data-phone="${esc(p.phone)}" data-name="${esc(p.name)}" aria-label="${i18n.tf('me.adminDelete', 'Удалить')}" title="${i18n.tf('me.adminDelete', 'Удалить')}">×</button>` : ''}
       </div>
     `;
@@ -588,8 +641,8 @@ async function renderAdminPanel() {
       btn.addEventListener('click', async () => {
         const phone = btn.dataset.phone;
         const name  = btn.dataset.name || phone;
-        const tpl   = i18n.tf('me.adminDeleteConfirm', 'Удалить «{name}» ({phone})? Это действие необратимо.');
-        const ok = window.confirm(tpl.replace('{name}', name).replace('{phone}', phone));
+        const tpl = i18n.tf('me.adminDeleteConfirm', 'Удалить «{name}» ({phone})? Это действие необратимо.');
+        const ok  = await confirmDialog(tpl.replace('{name}', name).replace('{phone}', phone));
         if (!ok) return;
         try {
           const d = await getDb();
@@ -667,13 +720,16 @@ export async function renderMe(container) {
         return;
       }
 
-      // Try to refresh from Firestore in background (non-blocking)
+      // Try to refresh from Firestore in background (non-blocking). Errors
+      // are non-fatal — the localStorage copy already rendered — but they
+      // get logged so a real outage shows up in DevTools instead of
+      // silently rotting.
       getDb().then(d => d.getParticipant(user.phone)).then(data => {
         if (data) {
           localStorage.setItem('mapal-rsvp-' + user.phone, JSON.stringify(data));
           renderProfile(data);
         }
-      }).catch(() => {});
+      }).catch(err => console.warn('me.js background refresh failed', err));
       return;
     }
 

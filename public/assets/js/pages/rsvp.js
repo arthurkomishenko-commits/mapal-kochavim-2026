@@ -737,19 +737,49 @@ async function handleSave() {
     return;
   }
 
-  // Companions
+  // Companions — same gate as primary phone (rsvp.js handlePhoneSubmit +
+  // past-mode click handler): normalize, require >=9 digits. A 3-digit
+  // junk phone here used to push a malformed entry into companions[] and
+  // companionPhones[] that no sweep could reach (companions live inside
+  // primary docs, not as top-level mapal-rsvp-* keys). Partial rows
+  // (name without phone or vice versa) get an inline error and abort the
+  // save so the user can fix the row instead of silently losing it.
   const companions = [];
   const companionPhones = [];
+  let companionsValid = true;
+  let firstBadCompanionEl = null;
   document.querySelectorAll('.companion-row').forEach(row => {
-    const n = row.querySelector('.companion-name')?.value.trim() || '';
-    const p = row.querySelector('.companion-phone')?.value.trim() || '';
+    const nEl = row.querySelector('.companion-name');
+    const pEl = row.querySelector('.companion-phone');
+    const n = nEl?.value.trim() || '';
+    const p = pEl?.value.trim() || '';
     const conf = row.querySelector('.companion-confirmed')?.classList.contains('chip--active') ?? true;
-    if (n && p) {
-      const normalizedP = auth.normalizePhone(p);
-      companions.push({ name: n, phone: normalizedP, confirmed: conf });
-      companionPhones.push(normalizedP);
+    // Clear prior error markers on each pass so fixed rows clean up.
+    nEl?.classList.remove('form-input--error');
+    pEl?.classList.remove('form-input--error');
+
+    if (!n && !p) return;                            // genuinely empty row, ignore
+    if (!n || !p) {                                  // half-filled — flag both fields
+      if (!n) { nEl?.classList.add('form-input--error'); firstBadCompanionEl ||= nEl; }
+      if (!p) { pEl?.classList.add('form-input--error'); firstBadCompanionEl ||= pEl; }
+      companionsValid = false;
+      return;
     }
+    const normalizedP = auth.normalizePhone(p);
+    if (normalizedP.length < 9) {
+      pEl?.classList.add('form-input--error');
+      firstBadCompanionEl ||= pEl;
+      companionsValid = false;
+      return;
+    }
+    companions.push({ name: n, phone: normalizedP, confirmed: conf });
+    companionPhones.push(normalizedP);
   });
+  if (!companionsValid) {
+    showToast(i18n.tf('rsvp.companionPhoneInvalid', 'Телефон спутника слишком короткий — проверь номер'), true);
+    firstBadCompanionEl?.focus();
+    return;
+  }
 
   // Bringing — toggles + quantities
   const bringing = {};
@@ -795,12 +825,25 @@ async function handleSave() {
   localStorage.setItem('mapal-rsvp-' + data.phone, JSON.stringify(data));
   auth.login(data.phone, data.name, data.token);
 
-  // Firestore sync — fire-and-forget, never blocks the user
-  getDb().then(d => d.saveParticipant(data)).catch(() => {});
+  // Firestore sync — non-blocking but no longer silent. If the remote write
+  // fails (rules, offline, transient outage) the user sees a soft warning
+  // toast so they know to come back later when there's a connection; the
+  // localStorage copy keeps the form-flow usable in the meantime.
+  getDb()
+    .then(d => d.saveParticipant(data))
+    .catch(err => {
+      console.warn('Firestore saveParticipant failed', err);
+      showToast(i18n.tf('rsvp.saveOfflineWarn',
+        'Сохранено локально — связь с сервером не прошла. Открой страницу позже, когда будет интернет.'), true);
+    });
 
   // Copy recovery link to clipboard (silent)
   const recoveryUrl = `${location.origin}${location.pathname}#recover/${data.phone}/${data.token}`;
   try { await navigator.clipboard.writeText(recoveryUrl); } catch {}
+
+  // Tell home + any other listeners to invalidate participant caches so
+  // a second tab sees this fresh record without a full reload.
+  window.dispatchEvent(new CustomEvent('participantschange', { detail: { record: data } }));
 
   showToast(i18n.t('rsvp.saved'));
 
@@ -925,13 +968,13 @@ function renderRsvpPast(container) {
       btn.classList.add('rsvp-past__choice--busy');
       const label = btn.querySelector('span');
       const savedLabel = label ? label.textContent : '';
-      if (label) label.textContent = (i18n.lang === 'he' ? 'שומר…' : 'Сохраняю…');
+      if (label) label.textContent = i18n.tf('past.rsvp.saving', 'Сохраняю…');
 
       try {
         await saveLateRegistration({ name, phone, attended });
         btn.classList.remove('rsvp-past__choice--busy');
         btn.classList.add('rsvp-past__choice--done');
-        if (label) label.textContent = (i18n.lang === 'he' ? 'נשמר ✓' : 'Готово ✓');
+        if (label) label.textContent = i18n.tf('past.rsvp.saved', 'Готово ✓');
         // Short success pause, then redirect.
         setTimeout(() => { window.location.hash = 'gallery'; }, 600);
       } catch (err) {
@@ -939,9 +982,8 @@ function renderRsvpPast(container) {
         btn.classList.remove('rsvp-past__choice--busy');
         choices.forEach(b => b.disabled = false);
         if (label) label.textContent = savedLabel;
-        alert(i18n.lang === 'he'
-          ? 'שמירה נכשלה. נסה שוב או רענן את הדף.'
-          : 'Сохранить не удалось. Попробуй ещё раз или обнови страницу.');
+        showToast(i18n.tf('past.rsvp.saveError',
+          'Сохранить не удалось. Попробуй ещё раз или обнови страницу.'), true);
       }
     });
   });

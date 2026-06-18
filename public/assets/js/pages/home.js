@@ -129,6 +129,11 @@ function esc(str) {
 let cachedParticipants = null;
 let homeContainerRef = null; // track if home page still mounted
 
+// rsvp.js / past-rsvp dispatch 'participantschange' after any save. The home
+// cache must invalidate so a second tab's registration shows up here instead
+// of stale data. The dom-derived widgets re-fetch on next interaction.
+window.addEventListener('participantschange', () => { cachedParticipants = null; });
+
 function getAllParticipantsLocal() {
   const list = [];
   for (let i = 0; i < localStorage.length; i++) {
@@ -239,7 +244,7 @@ function renderWhoTable(container) {
   const participants = getAllParticipants();
 
   if (participants.length === 0) {
-    container.innerHTML = `<p class="home-who-empty">${i18n.t('common.empty')}</p>`;
+    container.innerHTML = `<p class="home-who-empty" data-i18n="common.empty">${i18n.t('common.empty')}</p>`;
     return;
   }
 

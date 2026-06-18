@@ -10,6 +10,7 @@
 
 import { siteMode } from './site-mode.js';
 import { i18n } from './i18n.js';
+import { auth } from './auth.js';
 
 const routes = new Map();
 let currentRoute = null;
@@ -36,15 +37,22 @@ function checkRecoveryLink() {
   const hash = window.location.hash;
   if (!hash.startsWith('#recover/')) return false;
   const parts = hash.slice(9).split('/'); // remove #recover/
-  if (parts.length >= 2) {
-    const phone = parts[0];
-    const token = parts[1];
-    // Store in localStorage — auth module will pick it up
-    localStorage.setItem('mapal-user', JSON.stringify({ phone, name: '', token }));
-    window.location.hash = 'me';
-    return true;
-  }
-  return false;
+  if (parts.length < 2) return false;
+
+  // Normalise phone so the resulting localStorage key matches the canonical
+  // form everything else uses. Without this, a recovery link with the phone
+  // typed as "+972 50 ..." would store an unnormalised key like
+  // "mapal-rsvp-+97250..." that no other code path can find, and the user
+  // would appear logged out from /me's perspective until they re-entered
+  // the phone manually. We also gate on minimum length to refuse junk
+  // recovery URLs that no real flow would emit.
+  const phone = auth.normalizePhone(parts[0]);
+  const token = parts[1];
+  if (phone.length < 9 || !token) return false;
+
+  localStorage.setItem('mapal-user', JSON.stringify({ phone, name: '', token }));
+  window.location.hash = 'me';
+  return true;
 }
 
 async function navigate(routeName) {
