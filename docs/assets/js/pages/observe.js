@@ -19,11 +19,14 @@ import { i18n } from '../core/i18n.js';
 // ─── Object catalog ──────────────────────────────────────────────────
 // `key` maps to i18n keys: observe.objects.{key}.{name,type,see,when,where,find,tip}
 // Photos are locally hosted in public/images/observe/ — small JPGs (12-93 KB).
+// `photoPosition` shifts the object-fit:cover crop window. Default 50% 50%
+// (center). M31's bright nucleus sits right-of-centre in the source frame,
+// so we nudge the crop right to keep the galaxy in the visible middle.
 const OBJECTS = [
-  { key: 'saturn',    photo: 'images/observe/saturn.jpg',    photoCredit: '' },
-  { key: 'm13',       photo: 'images/observe/m13.jpg',       photoCredit: '' },
-  { key: 'andromeda', photo: 'images/observe/andromeda.jpg', photoCredit: '' },
-  { key: 'albireo',   photo: 'images/observe/albireo.jpg',   photoCredit: '' },
+  { key: 'saturn',    photo: 'images/observe/saturn.jpg',    photoCredit: '', photoPosition: '50% 50%' },
+  { key: 'm13',       photo: 'images/observe/m13.jpg',       photoCredit: '', photoPosition: '50% 50%' },
+  { key: 'andromeda', photo: 'images/observe/andromeda.jpg', photoCredit: '', photoPosition: '62% 48%' },
+  { key: 'albireo',   photo: 'images/observe/albireo.jpg',   photoCredit: '', photoPosition: '50% 50%' },
 ];
 
 // Translation helper: i18n.t returns the key itself on miss (truthy), so the
@@ -82,6 +85,7 @@ function renderCard(obj) {
     <article class="obs-card">
       <div class="obs-card__photo">
         <img src="${attr(obj.photo)}" alt="${attr(t(`${base}.name`, obj.key))}" loading="lazy"
+             style="object-position:${attr(obj.photoPosition || '50% 50%')}"
              onerror="this.onerror=null;this.src='${fallback}';this.classList.add('obs-card__photo--fallback')">
         <span class="obs-card__credit">${obj.photoCredit}</span>
       </div>
