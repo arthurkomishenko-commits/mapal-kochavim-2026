@@ -431,6 +431,8 @@ async function renderAdminPanelPast() {
     `;
   }
 
+  const meUserPast = auth.getUser();
+  const mePhonePast = meUserPast ? meUserPast.phone : '';
   if (listEl) {
     listEl.innerHTML = attended
       .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
@@ -441,14 +443,37 @@ async function renderAdminPanelPast() {
           .join('');
         const kids = Number(p.kids) > 0 ? `<span class="admin-row__kids">+${p.kids}</span>` : '';
         const late = p.lateRegistration ? `<span class="admin-row__late">${i18n.t('past.me.adminLateMark')}</span>` : '';
+        const canDelete = p.phone !== mePhonePast;
+        const trash = canDelete
+          ? `<button type="button" class="admin-row__delete" data-phone="${esc(p.phone)}" data-name="${esc(p.name)}" aria-label="${i18n.tf('me.adminDelete', 'Удалить')}" title="${i18n.tf('me.adminDelete', 'Удалить')}">×</button>`
+          : '';
         return `
-          <div class="admin-row">
+          <div class="admin-row" data-phone="${esc(p.phone)}">
             <span class="admin-row__name">${esc(p.name)}</span>
             <span class="admin-row__phone" dir="ltr">${esc(p.phone)}</span>
-            ${kids}${late}${comps}
+            ${kids}${late}${comps}${trash}
           </div>
         `;
       }).join('');
+
+    listEl.querySelectorAll('.admin-row__delete').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const phone = btn.dataset.phone;
+        const name  = btn.dataset.name || phone;
+        const tpl   = i18n.tf('me.adminDeleteConfirm', 'Удалить «{name}» ({phone})? Это действие необратимо.');
+        const ok = window.confirm(tpl.replace('{name}', name).replace('{phone}', phone));
+        if (!ok) return;
+        try {
+          const d = await getDb();
+          await d.deleteParticipant(phone);
+          showToast(i18n.tf('me.adminDeleted', 'Удалено'));
+          renderAdminPanelPast();
+        } catch (err) {
+          console.warn('delete participant failed', err);
+          showToast(i18n.tf('me.adminDeleteFailed', 'Не удалось удалить'), true);
+        }
+      });
+    });
   }
 
   if (exportBtn) {
@@ -512,15 +537,42 @@ async function renderAdminPanel() {
     `;
   }
 
-  // List all with phone numbers (admin only)
+  // List all with phone numbers (admin only). Trash button per row — used
+  // for clearing junk/test rows. We refuse to delete the current admin to
+  // protect against an accidental click on your own row.
+  const meUser = auth.getUser();
+  const mePhone = meUser ? meUser.phone : '';
   if (listEl) {
-    listEl.innerHTML = active.map(p => `
-      <div class="admin-row">
+    listEl.innerHTML = active.map(p => {
+      const canDelete = p.phone !== mePhone;
+      return `
+      <div class="admin-row" data-phone="${esc(p.phone)}">
         <span class="admin-row__name">${esc(p.name)}</span>
-        <span class="admin-row__phone" dir="ltr">${p.phone}</span>
-        ${p.companions ? p.companions.map(c => `<span class="admin-row__comp">${esc(c.name)} ${c.phone}</span>`).join('') : ''}
+        <span class="admin-row__phone" dir="ltr">${esc(p.phone)}</span>
+        ${p.companions ? p.companions.map(c => `<span class="admin-row__comp">${esc(c.name)} ${esc(c.phone || '')}</span>`).join('') : ''}
+        ${canDelete ? `<button type="button" class="admin-row__delete" data-phone="${esc(p.phone)}" data-name="${esc(p.name)}" aria-label="${i18n.tf('me.adminDelete', 'Удалить')}" title="${i18n.tf('me.adminDelete', 'Удалить')}">×</button>` : ''}
       </div>
-    `).join('');
+    `;
+    }).join('');
+
+    listEl.querySelectorAll('.admin-row__delete').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const phone = btn.dataset.phone;
+        const name  = btn.dataset.name || phone;
+        const tpl   = i18n.tf('me.adminDeleteConfirm', 'Удалить «{name}» ({phone})? Это действие необратимо.');
+        const ok = window.confirm(tpl.replace('{name}', name).replace('{phone}', phone));
+        if (!ok) return;
+        try {
+          const d = await getDb();
+          await d.deleteParticipant(phone);
+          showToast(i18n.tf('me.adminDeleted', 'Удалено'));
+          renderAdminPanel();
+        } catch (err) {
+          console.warn('delete participant failed', err);
+          showToast(i18n.tf('me.adminDeleteFailed', 'Не удалось удалить'), true);
+        }
+      });
+    });
   }
 
   // Export to clipboard

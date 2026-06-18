@@ -76,6 +76,19 @@ async function getAllParticipants() {
   return list;
 }
 
+/**
+ * Hard-delete a participant — used by admin UI to wipe junk/test rows.
+ * Removes the Firestore doc AND the local cache. Companions live inside
+ * the primary doc's array, so they go with it; we do NOT chase any
+ * companion-as-primary records — that's an explicit second click.
+ */
+async function deleteParticipant(phone) {
+  await loadSDK();
+  const fs = getFS();
+  await fs.deleteDoc(fs.doc(dbInstance, 'participants', phone));
+  try { localStorage.removeItem('mapal-rsvp-' + phone); } catch {}
+}
+
 async function findCompanionLink(phone) {
   await loadSDK();
   const fs = getFS();
@@ -333,6 +346,7 @@ async function deletePhoto(id) {
 export const db = {
   getParticipant,
   saveParticipant,
+  deleteParticipant,
   getAllParticipants,
   findCompanionLink,
   addPhoto,

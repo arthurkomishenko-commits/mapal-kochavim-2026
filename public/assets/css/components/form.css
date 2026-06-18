@@ -681,6 +681,33 @@
   border-radius: 8px;
 }
 
+.admin-row__delete {
+  margin-inline-start: auto;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(220, 80, 80, 0.18);
+  color: rgba(220, 80, 80, 0.55);
+  border-radius: 50%;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  font-family: inherit;
+  padding: 0;
+}
+
+.admin-row__delete:hover,
+.admin-row__delete:focus-visible {
+  background: rgba(220, 80, 80, 0.12);
+  border-color: rgba(220, 80, 80, 0.45);
+  color: #DC5050;
+  outline: none;
+}
+
 /* ── Desktop enhancements ── */
 
 @media (min-width: 768px) {
