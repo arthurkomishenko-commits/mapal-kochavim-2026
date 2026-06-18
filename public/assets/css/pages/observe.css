@@ -22,11 +22,11 @@
 .obs-card {
   display: grid;
   grid-template-columns: 1fr;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-card);
 }
 
 @media (min-width: 640px) {
@@ -101,7 +101,7 @@
   gap: var(--space-3);
   margin: 0;
   padding-top: var(--space-2);
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .obs-card__meta > div {
@@ -112,9 +112,12 @@
 }
 
 @media (max-width: 480px) {
+  /* Hebrew labels ("מתי", "איפה", "איך למצוא") + uppercase + letter-spacing
+     no longer fit in a fixed 80px column. Stack labels above values on
+     narrow viewports. */
   .obs-card__meta > div {
-    grid-template-columns: 80px 1fr;
-    gap: var(--space-2);
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
   }
 }
 
@@ -146,8 +149,8 @@
 .observe__tips {
   margin-top: var(--space-10);
   padding: var(--space-5) var(--space-5) var(--space-6);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
 }
 
@@ -193,8 +196,8 @@
 .cal-observe-cta {
   margin: var(--space-8) auto var(--space-4);
   padding: var(--space-5);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
   text-align: center;
   display: flex;

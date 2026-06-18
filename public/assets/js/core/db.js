@@ -119,14 +119,36 @@ async function addPhoto({ blob, capturedAt, kind, uploaderPhone, uploaderName,
     throw new Error(`Video too large: ${mb} MB (max ${Math.round(cloudinaryConfig.maxVideoBytes / 1024 / 1024)} MB)`);
   }
 
+  // Mirror Firestore-rule caps client-side so we never burn a Cloudinary
+  // upload on a doc that will be rejected on persistence. A long display
+  // name or a non-normalised phone would otherwise succeed at Cloudinary,
+  // fail Firestore on every retry, and leak one blob per attempt.
+  const phoneStr = String(uploaderPhone || '');
+  const nameStr  = String(uploaderName || '');
+  if (phoneStr.length === 0 || phoneStr.length >= 30) {
+    throw new Error(`Invalid uploaderPhone (length ${phoneStr.length})`);
+  }
+  if (nameStr.length >= 100) {
+    throw new Error(`Display name too long (${nameStr.length} chars, max 99)`);
+  }
+
   await loadSDK();
   const fs = getFS();
 
   const id = crypto.randomUUID();
 
   // Cloudinary upload via XHR (fetch lacks upload progress).
+  // Cap onProgress at 0.95 during XHR so the bar doesn't sit at 100% for
+  // the Cloudinary response + Firestore round-trip; we drive it to 1.0
+  // only after the doc actually persists.
+  const wrappedProgress = onProgress
+    ? (p) => onProgress(Math.min(p, 0.95))
+    : undefined;
   const uploaded = await uploadToCloudinary(blob, id, {
-    uploaderPhone, capturedAt, onProgress,
+    uploaderPhone: phoneStr,
+    capturedAt,
+    kind,
+    onProgress: wrappedProgress,
   });
 
   // Cloudinary returns authoritative dimensions for images; for videos width
@@ -142,7 +164,9 @@ async function addPhoto({ blob, capturedAt, kind, uploaderPhone, uploaderName,
   const doc = {
     id,
     url: uploaded.secureUrl,
-    kind, capturedAt, uploaderPhone, uploaderName,
+    kind, capturedAt,
+    uploaderPhone: phoneStr,
+    uploaderName: nameStr,
     width: finalWidth,
     height: finalHeight,
     cloudinaryPublicId: uploaded.publicId,
@@ -150,10 +174,15 @@ async function addPhoto({ blob, capturedAt, kind, uploaderPhone, uploaderName,
   };
   await fs.setDoc(fs.doc(dbInstance, 'photos', id), doc);
 
+  // Now drive progress to 1.0 — XHR was capped at 0.95.
+  onProgress?.(1);
+
   return {
     id,
     url: uploaded.secureUrl,
-    kind, capturedAt, uploaderPhone, uploaderName,
+    kind, capturedAt,
+    uploaderPhone: phoneStr,
+    uploaderName: nameStr,
     width: finalWidth,
     height: finalHeight,
     cloudinaryPublicId: uploaded.publicId,
@@ -167,10 +196,19 @@ async function addPhoto({ blob, capturedAt, kind, uploaderPhone, uploaderName,
  *
  * @returns {Promise<{secureUrl:string, publicId:string, width:number, height:number}>}
  */
-function uploadToCloudinary(blob, publicId, { uploaderPhone, capturedAt, onProgress }) {
+// 5-minute hard ceiling. Without this the camp's desert 3G can stall an XHR
+// mid-upload forever (TCP-level timeout on iOS Safari can take many minutes,
+// sometimes never fires) — meanwhile the row sits at e.g. 37% and the queue
+// pool slot is permanently held.
+const UPLOAD_TIMEOUT_MS = 5 * 60 * 1000;
+
+function uploadToCloudinary(blob, publicId, { uploaderPhone, capturedAt, kind, onProgress }) {
   return new Promise((resolve, reject) => {
     const form = new FormData();
-    form.append('file', blob);
+    // Pass an explicit filename so the asset's display_name in the Cloudinary
+    // Media Library is the publicId, not the literal string "blob".
+    const ext = kind === 'video' ? guessVideoExt(blob.type) : 'webp';
+    form.append('file', blob, `${publicId}.${ext}`);
     form.append('upload_preset', cloudinaryConfig.uploadPreset);
     form.append('public_id', publicId);
     // Context metadata — survives the upload, viewable in Cloudinary Media Library.
@@ -179,6 +217,7 @@ function uploadToCloudinary(blob, publicId, { uploaderPhone, capturedAt, onProgr
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', cloudinaryConfig.uploadEndpoint);
+    xhr.timeout = UPLOAD_TIMEOUT_MS;
 
     if (onProgress) {
       xhr.upload.addEventListener('progress', (e) => {
@@ -208,11 +247,18 @@ function uploadToCloudinary(blob, publicId, { uploaderPhone, capturedAt, onProgr
       }
     });
 
-    xhr.addEventListener('error', () => reject(new Error('Network error uploading to Cloudinary')));
-    xhr.addEventListener('abort', () => reject(new Error('Upload aborted')));
+    xhr.addEventListener('error',   () => reject(new Error('Network error uploading to Cloudinary')));
+    xhr.addEventListener('abort',   () => reject(new Error('Upload aborted')));
+    xhr.addEventListener('timeout', () => reject(new Error(`Upload timed out after ${Math.round(UPLOAD_TIMEOUT_MS/1000)}s`)));
 
     xhr.send(form);
   });
+}
+
+function guessVideoExt(mime) {
+  if (mime?.includes('webm'))     return 'webm';
+  if (mime?.includes('quicktime'))return 'mov';
+  return 'mp4';
 }
 
 function sanitizeContext(s) {

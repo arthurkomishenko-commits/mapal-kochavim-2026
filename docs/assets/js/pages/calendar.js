@@ -9,7 +9,7 @@
 import { i18n } from '../core/i18n.js';
 import { moonSvg } from '../components/moon-svg.js';
 
-const DATA_URL = './assets/data/moon-2026.json?v=48';
+const DATA_URL = './assets/data/moon-2026.json?v=49';
 
 let DATA = null;
 let dialog = null;
@@ -612,6 +612,7 @@ function renderEventEnded(lang) {
           <p data-i18n="calendar.endedText">${i18n.t('calendar.endedText')}</p>
           <div class="cal-error__actions">
             <a class="cal-error__btn" href="#gallery" data-i18n="nav.gallery">${i18n.t('nav.gallery')}</a>
+            <a class="cal-error__btn" href="#observe" data-i18n="calendar.observeCta.btn">${i18n.t('calendar.observeCta.btn')}</a>
           </div>
         </div>
       </div>

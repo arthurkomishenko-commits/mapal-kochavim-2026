@@ -39,7 +39,7 @@ function detectBrowserLang() {
  */
 async function loadTranslations(lang) {
   const basePath = document.documentElement.dataset.basePath || '.';
-  const response = await fetch(`${basePath}/assets/locales/${lang}.json?v=48`);
+  const response = await fetch(`${basePath}/assets/locales/${lang}.json?v=49`);
   if (!response.ok) {
     console.error(`Failed to load translations for "${lang}"`);
     return {};
@@ -79,6 +79,14 @@ function applyToDOM() {
       el.setAttribute('aria-label', value);
     }
   });
+
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    const value = t(key);
+    if (value && value !== key) {
+      el.setAttribute('title', value);
+    }
+  });
 }
 
 /**
@@ -94,6 +102,20 @@ function t(key) {
     result = result[part];
   }
   return (result !== undefined && result !== null) ? result : key;
+}
+
+/**
+ * Translate with explicit fallback. Use this instead of `i18n.t(k) || fb` —
+ * t() returns the KEY STRING on miss (truthy!), so the OR-fallback never fires.
+ * tf() returns the fallback only when the key is genuinely missing.
+ *
+ * @param {string} key
+ * @param {string} fallback
+ * @returns {string}
+ */
+function tf(key, fallback) {
+  const v = t(key);
+  return (v && v !== key) ? v : fallback;
 }
 
 /**
@@ -133,6 +155,7 @@ async function init() {
 export const i18n = {
   init,
   t,
+  tf,
   switchTo,
   toggle,
   get lang() { return currentLang; },

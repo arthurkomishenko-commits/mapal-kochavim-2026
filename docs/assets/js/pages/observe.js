@@ -51,6 +51,13 @@ function t(key, fallback = '') {
   return (v && v !== key) ? v : fallback;
 }
 
+// Minimal HTML-attribute escape — locale files are author-controlled today,
+// but if anyone ever wires in user-translated content this stops " or & from
+// breaking out of an attribute or a closing tag.
+function attr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 // ─── Render ──────────────────────────────────────────────────────────
 
 export function renderObserve(container) {
@@ -62,11 +69,11 @@ export function renderObserve(container) {
           ${t('observe.title', 'Через окуляр')}
         </h1>
         <p class="page-section__subtitle" data-i18n="observe.subtitle">
-          ${t('observe.subtitle', 'Что точно видно в любительский телескоп в ночь 12→13 августа из Borot Lotz')}
+          ${t('observe.subtitle', 'Что точно видно в любительский телескоп в ночи 13→14 и 14→15 августа из Borot Lotz')}
         </p>
 
         <p class="observe__intro" data-i18n="observe.intro">${t('observe.intro',
-          'Подборка короткая — четыре объекта, у которых небо в этот раз действительно складывается. По каждому: что увидишь, куда повернуть и как не промахнуться без навыка.')}</p>
+          'Подборка короткая — четыре объекта, у которых небо в эти ночи действительно складывается. По каждому: что увидишь, куда повернуть и как не промахнуться без навыка.')}</p>
 
         <div class="observe__list">
           ${OBJECTS.map(renderCard).join('')}
@@ -91,7 +98,7 @@ function renderCard(obj) {
   return `
     <article class="obs-card">
       <div class="obs-card__photo">
-        <img src="${obj.photo}" alt="${t(`${base}.name`, obj.key)}" loading="lazy"
+        <img src="${attr(obj.photo)}" alt="${attr(t(`${base}.name`, obj.key))}" loading="lazy"
              onerror="this.onerror=null;this.src='${fallback}';this.classList.add('obs-card__photo--fallback')">
         <span class="obs-card__credit">${obj.photoCredit}</span>
       </div>

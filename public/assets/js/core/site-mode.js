@@ -29,6 +29,9 @@ const PAST_START   = new Date('2026-08-15T10:00:00+03:00').getTime();
 const ALBUM_UNLOCK   = new Date('2026-08-11T00:00:00+03:00').getTime();
 const ALBUM_STORAGE  = 'mapal-album-override';
 const ALBUM_VALID    = ['open', 'lock'];
+// `?album=auto` clears any persisted override so a stale dev-test link
+// can't lock a real participant out of the unlock logic forever.
+const ALBUM_RESET    = 'auto';
 
 function computeFromClock() {
   const now = Date.now();
@@ -56,6 +59,10 @@ function readAlbumOverride() {
   try {
     const url = new URLSearchParams(window.location.search);
     const fromUrl = url.get('album');
+    if (fromUrl === ALBUM_RESET) {
+      localStorage.removeItem(ALBUM_STORAGE);
+      return null;
+    }
     if (fromUrl && ALBUM_VALID.includes(fromUrl)) {
       localStorage.setItem(ALBUM_STORAGE, fromUrl);
       return fromUrl;
@@ -64,6 +71,25 @@ function readAlbumOverride() {
     if (stored && ALBUM_VALID.includes(stored)) return stored;
   } catch {}
   return null;
+}
+
+/**
+ * Schedule a one-shot callback when the album unlock boundary is crossed.
+ * If the override is set, or we're already past the unlock instant, this
+ * is a no-op. Otherwise sets a timer (capped at 24h to avoid setTimeout
+ * 32-bit overflow on tabs left open for weeks).
+ */
+function scheduleAlbumUnlock(callback) {
+  if (typeof callback !== 'function') return () => {};
+  // Already unlocked (real clock or override) → nothing to schedule.
+  if (Date.now() >= ALBUM_UNLOCK) return () => {};
+  // Any persisted/url override means the user has manually fixed state →
+  // don't surprise them with an auto-refresh on the wall-clock boundary.
+  const ov = readAlbumOverride();
+  if (ov === 'open' || ov === 'lock') return () => {};
+  const delta = Math.min(ALBUM_UNLOCK - Date.now(), 24 * 3600 * 1000);
+  const id = setTimeout(callback, delta);
+  return () => clearTimeout(id);
 }
 
 let current = 'before';
@@ -91,6 +117,11 @@ export const siteMode = {
   },
   /** Absolute ms timestamp when the album unlocks — for "opens in X" displays. */
   get albumUnlockAt() { return ALBUM_UNLOCK; },
+  /**
+   * Run `callback` once when the wall-clock crosses the unlock instant.
+   * Returns a cancel function. Skip when an override is active.
+   */
+  onAlbumUnlock(callback) { return scheduleAlbumUnlock(callback); },
   /** Clear the override (back to real clock). For dev console. */
   reset() {
     try {

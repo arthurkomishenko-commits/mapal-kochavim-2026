@@ -131,11 +131,23 @@ function createLightbox() {
 // RENDER
 // ═══════════════════════════════════════════════════
 
+// Tracks the pending unlock-boundary timer so re-renders don't stack them.
+let albumUnlockCancel = null;
+
 export function renderGallery(container) {
   // The user-uploaded album opens early (2026-08-11) so people can drop
   // arrival photos before the camp. From that moment, gallery looks just like
   // post-event mode: upload UI + live Firestore lentа.
+  if (albumUnlockCancel) { albumUnlockCancel(); albumUnlockCancel = null; }
   if (siteMode.isAlbumUnlocked()) return renderGalleryPast(container);
+
+  // Locked branch: schedule a one-shot re-render when the wall-clock crosses
+  // the unlock boundary, so a tab left open across midnight 11-Aug doesn't
+  // need a manual refresh. No-op if an override is active or already past.
+  albumUnlockCancel = siteMode.onAlbumUnlock(() => {
+    albumUnlockCancel = null;
+    renderGallery(container);
+  });
 
   container.innerHTML = `
     <section class="page-section" aria-labelledby="gallery-title">
@@ -209,7 +221,7 @@ export function renderGallery(container) {
           <p class="gallery__text" data-i18n="gallery.text">${i18n.t('gallery.text')}</p>
           <button type="button" class="btn btn--primary gallery__link gallery__link--locked"
                   disabled aria-disabled="true" data-i18n-title="gallery.hint"
-                  title="${i18n.t('gallery.hint') || ''}">
+                  title="${i18n.tf('gallery.hint', '')}">
             <span data-i18n="gallery.openAlbum">${i18n.t('gallery.openAlbum')}</span>
           </button>
           <p class="gallery__hint text-tertiary" data-i18n="gallery.hint">${i18n.t('gallery.hint')}</p>
@@ -245,6 +257,10 @@ function renderGalleryPast(container) {
         </h1>
         <p class="page-section__subtitle" data-i18n="past.gallery.subtitle">
           ${i18n.t('past.gallery.subtitle')}
+        </p>
+
+        <p class="gp-observe-link">
+          <a href="#observe" data-i18n="past.gallery.observeLink">${i18n.tf('past.gallery.observeLink', 'Что было видно в телескоп →')}</a>
         </p>
 
         ${user ? `
@@ -344,7 +360,7 @@ async function enqueueUpload(file, user, queueEl, container) {
   // HEIC isn't decodable in many browsers — fail early with a clear message.
   if (/\.(heic|heif)$/i.test(file.name) || /heic|heif/.test(file.type)) {
     row.dataset.status = 'error';
-    status.textContent = i18n.t('past.gallery.heicError') || 'HEIC →JPG';
+    status.textContent = i18n.tf('past.gallery.heicError', 'HEIC →JPG');
     row.classList.add('gp-row--error');
     URL.revokeObjectURL(thumbUrl);                       // would leak otherwise
     return;
@@ -354,7 +370,7 @@ async function enqueueUpload(file, user, queueEl, container) {
     // 1. Process (resize + strip EXIF for images; passthrough for videos).
     const { processMedia } = await import('../core/image-processing.js');
     row.dataset.status = 'processing';
-    status.textContent = i18n.t('past.gallery.processing') || '…';
+    status.textContent = i18n.tf('past.gallery.processing', '…');
     const processed = await processMedia(file);
 
     // 2. Upload to Firebase Storage + create Firestore doc with capturedAt.
@@ -418,6 +434,11 @@ async function loadNextPage(container) {
     const { db } = await import('../core/db.js');
     const page = await db.getPhotos({ limit: 10, cursor: gridState.cursor });
     page.items.forEach(it => gridState.items.push(it));
+    // Keep in-memory items chronological — an optimistic insert from a new
+    // upload could have placed a "future" photo before the cursor's items,
+    // so the page-append above would silently break ordering invariants
+    // that lightbox-navigation and counter rely on. Bounded list, cheap sort.
+    gridState.items.sort((a, b) => (a.capturedAt || 0) - (b.capturedAt || 0));
     gridState.cursor = page.cursor;
     gridState.done = page.done;
     renderGridDelta(container, page.items);
@@ -470,8 +491,8 @@ function buildTile(rec) {
   tile.className = 'gp-tile';
   tile.dataset.id = rec.id;
   tile.setAttribute('aria-label',
-    rec.kind === 'video' ? (i18n.t('past.gallery.openVideo') || 'Open video')
-                         : (i18n.t('past.gallery.openPhoto') || 'Open photo'));
+    rec.kind === 'video' ? i18n.tf('past.gallery.openVideo', 'Open video')
+                         : i18n.tf('past.gallery.openPhoto', 'Open photo'));
   if (rec.kind === 'video') {
     tile.innerHTML = `
       <video preload="none" muted playsinline></video>
@@ -491,7 +512,7 @@ function buildTile(rec) {
     del.className = 'gp-tile__del' + (asAdmin ? ' gp-tile__del--admin' : '');
     del.setAttribute('role', 'button');
     del.setAttribute('tabindex', '0');
-    del.setAttribute('aria-label', i18n.t(asAdmin ? 'past.gallery.deleteAsAdmin' : 'past.gallery.deleteMine') || 'Delete');
+    del.setAttribute('aria-label', i18n.tf(asAdmin ? 'past.gallery.deleteAsAdmin' : 'past.gallery.deleteMine', 'Delete'));
     del.textContent = '×';
     const doDelete = async (e) => {
       e.stopPropagation();
@@ -522,7 +543,11 @@ function buildTile(rec) {
         // If the lightbox happens to be open on this photo, close it — the URL
         // is gone and stale navigation would 404.
         if (lightboxEl && lightboxEl.classList.contains('lightbox--visible')) closeLightbox();
-      } catch (err) { console.error('delete failed', err); }
+      } catch (err) {
+        console.error('delete failed', err);
+        const safeT = (k, fb) => { const v = i18n.t(k); return (v && v !== k) ? v : fb; };
+        alert(safeT('past.gallery.deleteFailed', 'Не удалось удалить фото. Попробуй ещё раз.'));
+      }
     };
     del.addEventListener('click', doDelete);
     del.addEventListener('keydown', (e) => {
@@ -556,7 +581,7 @@ function updateCounter(container) {
   if (n === 0) { el.hidden = true; return; }
   const authors = new Set(gridState.items.map(i => i.uploaderPhone)).size;
   el.hidden = false;
-  el.textContent = (i18n.t('past.gallery.counter') || '{n} фото от {a} участников')
+  el.textContent = i18n.tf('past.gallery.counter', '{n} фото от {a} участников')
     .replace('{n}', n).replace('{a}', authors);
 }
 

@@ -80,18 +80,7 @@ async function navigate(routeName) {
 
   await handler(containerEl);
 
-  // Add back button on inner pages
-  if (routeName !== DEFAULT_ROUTE) {
-    const firstSection = containerEl.querySelector('.page-section__inner');
-    if (firstSection) {
-      const backBtn = document.createElement('a');
-      backBtn.href = '#home';
-      backBtn.className = 'back-btn';
-      backBtn.setAttribute('aria-label', 'Back');
-      backBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
-      firstSection.prepend(backBtn);
-    }
-  }
+  addBackButton(routeName);
 
   // Fade in
   containerEl.classList.add('page--entering');
@@ -114,6 +103,22 @@ function handleHashChange() {
   if (checkRecoveryLink()) return;
   const route = getRouteFromHash();
   navigate(route);
+}
+
+// Inject the back arrow into the first .page-section__inner of an inner page.
+// Idempotent: removes any existing .back-btn first, so re-renders after a
+// language switch don't accumulate or skip the button.
+function addBackButton(routeName) {
+  if (routeName === DEFAULT_ROUTE) return;
+  const firstSection = containerEl.querySelector('.page-section__inner');
+  if (!firstSection) return;
+  firstSection.querySelector(':scope > .back-btn')?.remove();
+  const backBtn = document.createElement('a');
+  backBtn.href = '#home';
+  backBtn.className = 'back-btn';
+  backBtn.setAttribute('aria-label', 'Back');
+  backBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
+  firstSection.prepend(backBtn);
 }
 
 export const router = {
@@ -152,6 +157,7 @@ export const router = {
     if (!handler) return;
     containerEl.innerHTML = '';
     await handler(containerEl);
+    addBackButton(currentRoute);
   },
 
   get current() {

@@ -42,9 +42,17 @@ service cloud.firestore {
                     && request.resource.data.uploaderPhone.size() < 30
                     && request.resource.data.uploaderName is string
                     && request.resource.data.uploaderName.size() < 100
+                    // `id` field must equal the document key — prevents a doc
+                    // at photos/AAA with `id:'BBB'` that would make the UI's
+                    // deletePhoto(rec.id) target a different (or non-existent)
+                    // document while the original stays.
+                    && request.resource.data.id == photoId
+                    // URL must be a Cloudinary HTTPS asset on OUR cloud —
+                    // refuses javascript:/data:/attacker.com tracking URLs.
                     && request.resource.data.url is string
                     && request.resource.data.url.size() > 0
-                    && request.resource.data.url.size() < 2000
+                    && request.resource.data.url.size() < 500
+                    && request.resource.data.url.matches('^https://res\\.cloudinary\\.com/dqznby5hm/.+')
                     && request.resource.data.capturedAt is number
                     && request.resource.data.capturedAt > 1700000000000     // > 2023-11
                     && request.resource.data.capturedAt < request.time.toMillis() + 86400000
@@ -54,9 +62,12 @@ service cloud.firestore {
                     && request.resource.data.cloudinaryPublicId.size() < 200;
 
       allow update: if false;
-      // Delete requires the request to include the uploaderPhone of the doc.
-      // Spoofable without Firebase Auth, but raises the bar above
-      // "any visitor can wipe the archive in one shell loop".
+      // Delete is wide-open by design: no Firebase Auth, closed-event app,
+      // the UI gates own-vs-admin client-side only. ADMIN red ring in
+      // gallery.js is NOT a security boundary — anyone with the site URL
+      // can call db.deletePhoto(id) from DevTools. Risk accepted; if this
+      // ever needs to be a real boundary, move delete behind a Cloud
+      // Function that verifies the participant token.
       allow delete: if request.auth == null
                     && resource.data.uploaderPhone is string;
     }

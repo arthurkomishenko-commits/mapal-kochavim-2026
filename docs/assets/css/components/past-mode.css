@@ -577,6 +577,30 @@ html[data-mode="past"] .footer__thanks { display: block; }
 .gp-tile:hover .gp-tile__del,
 .gp-tile:focus-within .gp-tile__del { opacity: 1; }
 
+/* Touch devices have no :hover, and tapping the tile fires openGalleryTile()
+   before any focus state can register — so the X was effectively unreachable
+   from phones. Keep it visible (but slightly dimmed) on coarse pointers; the
+   span's own click handler already calls stopPropagation. */
+@media (hover: none) {
+  .gp-tile__del { opacity: 0.7; }
+  .gp-tile__del--admin { opacity: 0.85; }
+}
+
+/* Small in-page link from past-gallery hero to #observe so the telescope page
+   isn't orphaned once past-mode redirects (calendar→gallery) kick in. */
+.gp-observe-link {
+  margin: var(--space-2) 0 var(--space-6);
+  text-align: center;
+  font-size: var(--text-sm);
+}
+.gp-observe-link a {
+  color: var(--color-text-tertiary);
+  text-decoration: none;
+  border-bottom: 1px dashed currentColor;
+  padding-bottom: 1px;
+}
+.gp-observe-link a:hover { color: var(--color-text-secondary); }
+
 /* Admin variant: muted red ring to distinguish admin-delete from own-delete. */
 .gp-tile__del--admin {
   background: rgba(140, 30, 30, 0.62);
