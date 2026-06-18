@@ -5,7 +5,7 @@
 import { i18n } from '../core/i18n.js';
 import { moonSvg } from '../components/moon-svg.js';
 
-const DATA_URL = './assets/data/moon-2026.json?v=51';
+const DATA_URL = './assets/data/moon-2026.json?v=52';
 
 export function renderSky(container) {
   container.innerHTML = `
