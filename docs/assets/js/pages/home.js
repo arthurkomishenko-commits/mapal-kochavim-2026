@@ -151,30 +151,61 @@ function parseTime(t) {
 }
 
 async function loadParticipants() {
-  // Merge Firestore + localStorage. The merge protects against the race
-  // window between "user clicks 'Был там'" and "Firestore replica catches up":
-  // the user's own fresh record always lives in their localStorage right after
-  // saveLateRegistration writes it, so even if Firestore returns stale data
-  // (no record yet) the local copy fills the gap.
-  const local = getAllParticipantsLocal();
+  // Merge Firestore + localStorage. The merge exists for ONE reason: cover
+  // the race window between "user clicks 'Был там'" and "Firestore replica
+  // catches up" — the user's own fresh record lives in their localStorage
+  // immediately, so even if Firestore returns stale data the local copy
+  // fills the gap for *self*.
+  //
+  // Anything ELSE in localStorage that isn't in Firestore is a ghost — a
+  // test/junk row left over from a never-synced registration, or a record
+  // that was cancelled/deleted elsewhere. Those used to leak onto the
+  // "Кто едет" list forever. Now we ignore them in the merge AND sweep
+  // them from localStorage so they stop haunting future loads.
+  const localAll = getAllParticipantsLocal();
   let remote = [];
+  let remoteOk = false;
   try {
     const d = await getDb();
     remote = await d.getAllParticipants();
+    remoteOk = true;
   } catch {}
 
+  const remotePhones = new Set(remote.map(p => p && p.phone).filter(Boolean));
+  const me = auth.getUser();
+  const myPhone = me ? me.phone : '';
+
+  if (remoteOk) {
+    // Sweep ghosts from localStorage. Self is always preserved; cancelled
+    // remote records (filtered by getAllParticipants) get swept locally too,
+    // which is the desired behaviour — admin's × is the single canonical
+    // delete path and it should propagate visually everywhere on next load.
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith('mapal-rsvp-')) continue;
+      try {
+        const data = JSON.parse(localStorage.getItem(key));
+        if (!data || !data.phone) { localStorage.removeItem(key); continue; }
+        if (data.phone === myPhone) continue;
+        if (!remotePhones.has(data.phone)) localStorage.removeItem(key);
+      } catch { localStorage.removeItem(key); }
+    }
+  }
+
+  // Filtered local view for the merge — self always allowed, otherwise must
+  // exist in remote to count.
+  const local = localAll.filter(p =>
+    p && p.phone && (p.phone === myPhone || remotePhones.has(p.phone))
+  );
+
   const map = new Map();
-  // Seed with remote first; only replace with local if local is STRICTLY newer.
-  // A tie (both missing timestamps, or equal timestamps) keeps remote — that
-  // way a stale localStorage from months ago can't overwrite a fresh Firestore
-  // doc with the same `createdAt` and no `updatedAt`.
   [...remote, ...local].forEach(p => {
     if (!p || !p.phone) return;
     const existing = map.get(p.phone);
     if (!existing) { map.set(p.phone, p); return; }
     const tNew = Math.max(parseTime(p.updatedAt),     parseTime(p.createdAt));
     const tOld = Math.max(parseTime(existing.updatedAt), parseTime(existing.createdAt));
-    if (tNew > tOld) map.set(p.phone, p);                            // strict > avoids tie-win
+    if (tNew > tOld) map.set(p.phone, p);
   });
 
   cachedParticipants = [...map.values()];
