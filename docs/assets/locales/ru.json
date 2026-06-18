@@ -286,6 +286,7 @@
     "adminDeleteConfirm": "Удалить «{name}» ({phone})? Это действие необратимо.",
     "adminDeleted": "Удалено",
     "adminDeleteFailed": "Не удалось удалить",
+    "adminLocalOnly": "только локально",
     "copyRecoveryLink": "Скопировать ссылку для входа",
     "recoveryLinkCopied": "Ссылка скопирована — сохрани её",
     "lastUpdated": "Обновлено"

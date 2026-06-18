@@ -286,6 +286,7 @@
     "adminDeleteConfirm": "למחוק את «{name}» ({phone})? אי אפשר לבטל את הפעולה.",
     "adminDeleted": "נמחק",
     "adminDeleteFailed": "המחיקה נכשלה",
+    "adminLocalOnly": "רק מקומי",
     "copyRecoveryLink": "העתק קישור כניסה",
     "recoveryLinkCopied": "הקישור הועתק — שמרו אותו",
     "lastUpdated": "עודכן לאחרונה"

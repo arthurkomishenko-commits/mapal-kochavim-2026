@@ -681,6 +681,36 @@
   border-radius: 8px;
 }
 
+.admin-row--cancelled .admin-row__name,
+.admin-row--cancelled .admin-row__phone {
+  opacity: 0.45;
+  text-decoration: line-through;
+  text-decoration-color: rgba(245, 239, 224, 0.25);
+}
+
+.admin-row__badge {
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 239, 224, 0.12);
+  color: rgba(165, 160, 154, 0.7);
+  background: rgba(245, 239, 224, 0.02);
+}
+
+.admin-row__badge--cancelled {
+  color: rgba(220, 80, 80, 0.7);
+  border-color: rgba(220, 80, 80, 0.22);
+  background: rgba(220, 80, 80, 0.05);
+}
+
+.admin-row__badge--local {
+  color: rgba(232, 155, 75, 0.8);
+  border-color: rgba(232, 155, 75, 0.25);
+  background: rgba(232, 155, 75, 0.05);
+}
+
 .admin-row__delete {
   margin-inline-start: auto;
   width: 24px;

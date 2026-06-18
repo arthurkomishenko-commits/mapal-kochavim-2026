@@ -504,21 +504,37 @@ async function renderAdminPanel() {
   const exportBtn = document.getElementById('admin-export');
   const clearBtn = document.getElementById('admin-clear-all');
 
-  // Gather all participants from Firestore
-  let all = [];
+  // Show EVERYTHING admin needs to act on, not just the live "Кто едет"
+  // slice:
+  //  - Firestore raw (includes cancelled rows that the public read filters out)
+  //  - localStorage ghosts that don't exist in Firestore at all
+  // Without this merge, a previously soft-deleted row stays invisible to
+  // admin while still hanging around in other clients' localStorage and
+  // surfacing on home's merged list. The × button needs a way to target
+  // those rows so they can be wiped cleanly from both stores.
+  let remote = [];
   try {
-    const d3 = await getDb(); all = await d3.getAllParticipants();
-  } catch {
-    // Fallback localStorage
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key.startsWith('mapal-rsvp-')) continue;
-      try { all.push(JSON.parse(localStorage.getItem(key))); } catch {}
-    }
+    const d3 = await getDb();
+    remote = await d3.getAllParticipantsRaw();
+  } catch {}
+
+  const local = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key || !key.startsWith('mapal-rsvp-')) continue;
+    try {
+      const data = JSON.parse(localStorage.getItem(key));
+      if (data && data.phone) local.push(data);
+    } catch {}
   }
 
-  const active = all.filter(p => !p.cancelled);
-  const cancelled = all.filter(p => p.cancelled);
+  const remotePhones = new Set(remote.map(p => p && p.phone).filter(Boolean));
+  const localOnly = local.filter(p => !remotePhones.has(p.phone));
+  localOnly.forEach(p => { p._localOnly = true; });
+  const all = [...remote, ...localOnly];
+
+  const active    = all.filter(p => !p.cancelled);
+  const cancelled = all.filter(p =>  p.cancelled);
   let totalPeople = 0;
   let totalCars = 0;
   active.forEach(p => {
@@ -537,18 +553,31 @@ async function renderAdminPanel() {
     `;
   }
 
-  // List all with phone numbers (admin only). Trash button per row — used
-  // for clearing junk/test rows. We refuse to delete the current admin to
-  // protect against an accidental click on your own row.
+  // List EVERYTHING admin can act on (active + cancelled + local-only) with
+  // a × button per row, except your own row (self-delete guard). Cancelled
+  // rows are de-emphasised and tagged; local-only rows get a separate tag.
   const meUser = auth.getUser();
   const mePhone = meUser ? meUser.phone : '';
+  const cancelledLabel = i18n.tf('me.adminCancelled', 'отменено');
+  const localOnlyLabel = i18n.tf('me.adminLocalOnly', 'только локально');
   if (listEl) {
-    listEl.innerHTML = active.map(p => {
+    const sorted = [...all].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    listEl.innerHTML = sorted.map(p => {
       const canDelete = p.phone !== mePhone;
+      const rowClasses = [
+        'admin-row',
+        p.cancelled  ? 'admin-row--cancelled' : '',
+        p._localOnly ? 'admin-row--local-only' : '',
+      ].filter(Boolean).join(' ');
+      const badges = [
+        p.cancelled  ? `<span class="admin-row__badge admin-row__badge--cancelled">${cancelledLabel}</span>` : '',
+        p._localOnly ? `<span class="admin-row__badge admin-row__badge--local">${localOnlyLabel}</span>` : '',
+      ].join('');
       return `
-      <div class="admin-row" data-phone="${esc(p.phone)}">
+      <div class="${rowClasses}" data-phone="${esc(p.phone)}">
         <span class="admin-row__name">${esc(p.name)}</span>
         <span class="admin-row__phone" dir="ltr">${esc(p.phone)}</span>
+        ${badges}
         ${p.companions ? p.companions.map(c => `<span class="admin-row__comp">${esc(c.name)} ${esc(c.phone || '')}</span>`).join('') : ''}
         ${canDelete ? `<button type="button" class="admin-row__delete" data-phone="${esc(p.phone)}" data-name="${esc(p.name)}" aria-label="${i18n.tf('me.adminDelete', 'Удалить')}" title="${i18n.tf('me.adminDelete', 'Удалить')}">×</button>` : ''}
       </div>

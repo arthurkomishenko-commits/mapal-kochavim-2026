@@ -77,6 +77,24 @@ async function getAllParticipants() {
 }
 
 /**
+ * Like getAllParticipants but does NOT filter cancelled records — used by
+ * admin panel so junk/test rows that were previously soft-deleted are
+ * still visible and re-deletable via the × button. Without this, a row
+ * that ended up in Firestore as cancelled:true is invisible to admin but
+ * may still appear in other clients' localStorage and on the home list
+ * via the merge in home.js.
+ */
+async function getAllParticipantsRaw() {
+  await loadSDK();
+  const fs = getFS();
+  const colRef = fs.collection(dbInstance, 'participants');
+  const snap = await fs.getDocs(colRef);
+  const list = [];
+  snap.forEach(doc => list.push(doc.data()));
+  return list;
+}
+
+/**
  * Remove a participant — used by admin UI to clear junk/test rows.
  *
  * Tries a hard Firestore delete first. The rules file in this repo allows
@@ -376,6 +394,7 @@ export const db = {
   saveParticipant,
   deleteParticipant,
   getAllParticipants,
+  getAllParticipantsRaw,
   findCompanionLink,
   addPhoto,
   getPhotos,

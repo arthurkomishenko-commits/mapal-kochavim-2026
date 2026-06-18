@@ -228,10 +228,11 @@ function renderWhoTable(container) {
       }
     }
 
-    // Companions
+    // Companions — drop cancelled ones (admin × on a primary leaves
+    // companions untouched; filtering here matches the rest of the app).
     let compHtml = '';
     if (p.companions && p.companions.length > 0) {
-      compHtml = p.companions.map(c => {
+      compHtml = p.companions.filter(c => c && c.cancelled !== true).map(c => {
         const compMaybe = c.confirmed === false;
         return `<span class="who-companion${compMaybe ? ' who-companion--maybe' : ''}">${esc(c.name)}</span>`;
       }).join('');
