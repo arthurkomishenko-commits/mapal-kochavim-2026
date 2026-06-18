@@ -70,6 +70,24 @@
   pointer-events: none;
 }
 
+/* Small "this is just for reference" note overlaid on the bottom of each
+   photo — gradient background so it stays legible over both dim and bright
+   areas. Italics + tertiary tone keep it from competing with the body copy. */
+.obs-card__photo-note {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  padding: var(--space-4) var(--space-3) var(--space-2);
+  font-size: var(--text-xs, 11px);
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.72);
+  text-align: center;
+  line-height: 1.35;
+  background: linear-gradient(to top, rgba(7, 11, 31, 0.78) 0%, rgba(7, 11, 31, 0.45) 60%, rgba(7, 11, 31, 0) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
 .obs-card__body {
   padding: var(--space-5);
   display: flex;

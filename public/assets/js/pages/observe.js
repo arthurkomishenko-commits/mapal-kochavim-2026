@@ -89,6 +89,7 @@ function renderCard(obj) {
              style="object-position:${attr(obj.photoPosition || '50% 50%')};transform:scale(${attr(obj.photoZoom || 1)});transform-origin:${attr(obj.photoPosition || '50% 50%')};filter:brightness(${attr(obj.photoBrightness ?? 1)})"
              onerror="this.onerror=null;this.src='${fallback}';this.classList.add('obs-card__photo--fallback')">
         <span class="obs-card__credit">${obj.photoCredit}</span>
+        <span class="obs-card__photo-note" data-i18n="observe.photoNote">${t('observe.photoNote', 'Фото для ориентира — в окуляре тише и мягче')}</span>
       </div>
       <div class="obs-card__body">
         <h2 class="obs-card__name" data-i18n="${base}.name">${t(`${base}.name`, obj.key)}</h2>
