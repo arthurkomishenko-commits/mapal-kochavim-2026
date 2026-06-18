@@ -18,29 +18,12 @@ import { i18n } from '../core/i18n.js';
 
 // ─── Object catalog ──────────────────────────────────────────────────
 // `key` maps to i18n keys: observe.objects.{key}.{name,type,see,when,where,find,tip}
-// `photo` is a hotlinked Wikimedia thumbnail (TODO: rehost into
-// public/images/observe/ once we lock the page down).
+// Photos are locally hosted in public/images/observe/ — small JPGs (12-93 KB).
 const OBJECTS = [
-  {
-    key: 'saturn',
-    photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Saturn_during_Equinox.jpg/640px-Saturn_during_Equinox.jpg',
-    photoCredit: 'NASA / Cassini',
-  },
-  {
-    key: 'm13',
-    photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Messier_13_by_NASA.jpg/640px-Messier_13_by_NASA.jpg',
-    photoCredit: 'NASA / Hubble',
-  },
-  {
-    key: 'andromeda',
-    photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Andromeda_Galaxy_%28with_h-alpha%29.jpg/640px-Andromeda_Galaxy_%28with_h-alpha%29.jpg',
-    photoCredit: 'Adam Evans / CC BY 2.0',
-  },
-  {
-    key: 'albireo',
-    photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Albireo.jpg/640px-Albireo.jpg',
-    photoCredit: 'Hewholooks / CC BY-SA 3.0',
-  },
+  { key: 'saturn',    photo: 'images/observe/saturn.jpg',    photoCredit: '' },
+  { key: 'm13',       photo: 'images/observe/m13.jpg',       photoCredit: '' },
+  { key: 'andromeda', photo: 'images/observe/andromeda.jpg', photoCredit: '' },
+  { key: 'albireo',   photo: 'images/observe/albireo.jpg',   photoCredit: '' },
 ];
 
 // Translation helper: i18n.t returns the key itself on miss (truthy), so the
