@@ -24,8 +24,12 @@ service cloud.firestore {
                     && !request.resource.data.diff(resource.data).affectedKeys()
                         .hasAny(['phone', 'token', 'createdAt']);
 
-      // No hard deletes
-      allow delete: if false;
+      // Hard delete is wide-open by design — same posture as photos delete.
+      // Closed friends-only WhatsApp event, no Firebase Auth, used by the
+      // admin trash button in me.js to clear junk/test registrations. If
+      // this ever needs a real boundary, route through a Cloud Function
+      // that verifies the participant token from the existing custom auth.
+      allow delete: if request.auth == null;
     }
 
     // ── Photos (user-uploaded after the event) ──

@@ -77,15 +77,43 @@ async function getAllParticipants() {
 }
 
 /**
- * Hard-delete a participant — used by admin UI to wipe junk/test rows.
- * Removes the Firestore doc AND the local cache. Companions live inside
- * the primary doc's array, so they go with it; we do NOT chase any
- * companion-as-primary records — that's an explicit second click.
+ * Remove a participant — used by admin UI to clear junk/test rows.
+ *
+ * Tries a hard Firestore delete first. The rules file in this repo allows
+ * it, but until those rules are deployed (`firebase deploy --only
+ * firestore:rules`) the production project still has the old "delete: if
+ * false" rule and the call returns PERMISSION_DENIED. In that case we
+ * fall back to a soft delete (cancelled:true), which is already filtered
+ * out everywhere by getAllParticipants(), so the row disappears from the
+ * "Кто едет" list and the admin panel either way. localStorage entry is
+ * dropped in both paths.
  */
 async function deleteParticipant(phone) {
   await loadSDK();
   const fs = getFS();
-  await fs.deleteDoc(fs.doc(dbInstance, 'participants', phone));
+  const docRef = fs.doc(dbInstance, 'participants', phone);
+
+  try {
+    await fs.deleteDoc(docRef);
+  } catch (err) {
+    if (err && (err.code === 'permission-denied' || /permission/i.test(String(err.message || '')))) {
+      // Soft-delete fallback. setDoc with merge:true preserves token /
+      // createdAt so the update rule passes (token == resource.data.token,
+      // and only cancelled/updatedAt show up in diff.affectedKeys()).
+      const snap = await fs.getDoc(docRef);
+      if (snap.exists()) {
+        const existing = snap.data();
+        await fs.setDoc(docRef, {
+          ...existing,
+          cancelled: true,
+          updatedAt: fs.serverTimestamp(),
+        }, { merge: true });
+      }
+    } else {
+      throw err;
+    }
+  }
+
   try { localStorage.removeItem('mapal-rsvp-' + phone); } catch {}
 }
 
