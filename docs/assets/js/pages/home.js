@@ -624,7 +624,7 @@ function renderHomePast(container) {
       <div class="home-section__inner">
         <h2 class="home-section__title" data-i18n="past.people.title">${i18n.t('past.people.title')}</h2>
         <div class="home-past__was" id="home-past-was">
-          <p class="home-past__was-empty" data-i18n="past.people.empty">${i18n.t('past.people.empty') || ''}</p>
+          <p class="home-past__was-empty" data-i18n="past.people.empty">${i18n.tf('past.people.empty', '')}</p>
         </div>
       </div>
     </section>
@@ -633,7 +633,7 @@ function renderHomePast(container) {
       <div class="home-section__inner">
         <h2 class="home-section__title" data-i18n="past.home.galleryHint">${i18n.t('past.home.galleryHint')}</h2>
         <div class="home-past__gallery" id="home-past-gallery">
-          <p class="home-past__gallery-empty" data-i18n="past.home.galleryEmpty">${i18n.t('past.home.galleryEmpty') || ''}</p>
+          <p class="home-past__gallery-empty" data-i18n="past.home.galleryEmpty">${i18n.tf('past.home.galleryEmpty', '')}</p>
         </div>
         <a class="home-past__gallery-cta" href="#gallery" data-i18n="past.home.openGallery">${i18n.t('past.home.openGallery')}</a>
       </div>
@@ -689,18 +689,10 @@ function initPastAfterword(container) {
   const root = container.querySelector('#home-past-afterword');
   if (!root) return;
   const idx = pickAfterwordIndex();
-  const text = safeT('past.home.afterword.m' + (idx + 1), '');
+  const text = i18n.tf('past.home.afterword.m' + (idx + 1), '');
   if (!text) { root.innerHTML = ''; return; }
   const paras = text.split(/\n{2,}/).map(p => `<p>${escapeHtml(p)}</p>`).join('');
   root.innerHTML = `<div class="afterword-message">${paras}</div>`;
-}
-
-// Returns the translation if it differs from the key; falls back otherwise.
-// Used everywhere we previously wrote `i18n.t(k) || fallback` (which silently
-// stayed the key because i18n.t echoes missing keys).
-function safeT(key, fallback) {
-  const v = i18n.t(key);
-  return (v && v !== key) ? v : fallback;
 }
 
 function initPastHero(container) {

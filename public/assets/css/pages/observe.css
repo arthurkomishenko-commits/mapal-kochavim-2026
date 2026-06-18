@@ -131,8 +131,8 @@
 
 @media (max-width: 480px) {
   /* Hebrew labels ("מתי", "איפה", "איך למצוא") + uppercase + letter-spacing
-     no longer fit in a fixed 80px column. Stack labels above values on
-     narrow viewports. */
+     don't fit in the 96px label column above. Stack labels above values
+     on narrow viewports. */
   .obs-card__meta > div {
     grid-template-columns: 1fr;
     gap: var(--space-1);

@@ -7,13 +7,6 @@
 import { i18n } from '../core/i18n.js';
 import { siteMode } from '../core/site-mode.js';
 
-// i18n.t echoes the key when a translation is missing, so `i18n.t(k) || fallback`
-// never fires the fallback. Use this helper instead.
-const safeT = (k, fallback) => {
-  const v = i18n.t(k);
-  return (v && v !== k) ? v : fallback;
-};
-
 export function initNav() {
   const header = document.querySelector('.nav');
   if (!header) return;
@@ -27,7 +20,7 @@ export function initNav() {
       const badge = document.createElement('span');
       badge.className = 'nav__archive';
       badge.setAttribute('data-i18n', 'past.archiveBadge');
-      badge.textContent = safeT('past.archiveBadge', 'Archive · 2026');
+      badge.textContent = i18n.tf('past.archiveBadge', 'Archive · 2026');
       navInner.appendChild(badge);
     }
   }
@@ -81,7 +74,7 @@ export function initNav() {
     const bar = document.getElementById('bottom-bar');
     const past = siteMode.is('past');
     if (past) {
-      rsvpBtn.textContent = safeT('past.rsvpCta', rsvpBtn.textContent);
+      rsvpBtn.textContent = i18n.tf('past.rsvpCta', rsvpBtn.textContent);
       if (bar) bar.classList.add('bottom-bar--hidden');
     } else if (bar) {
       bar.classList.toggle('bottom-bar--hidden', loggedIn || onRsvp);
@@ -103,7 +96,7 @@ export function initNav() {
     // Past-mode CTA label has priority over home.cta — re-derive via updateNav.
     rsvpBtn.textContent = i18n.t('home.cta');
     const badge = header.querySelector('.nav__archive');
-    if (badge) badge.textContent = safeT('past.archiveBadge', badge.textContent);
+    if (badge) badge.textContent = i18n.tf('past.archiveBadge', badge.textContent);
     updateNav();
   });
 

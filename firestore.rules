@@ -37,7 +37,13 @@ service cloud.firestore {
     match /photos/{photoId} {
       allow read: if true;
 
-      allow create: if request.resource.data.uploaderPhone is string
+      allow create: if request.resource.data.keys().hasOnly([
+                      'id', 'url', 'kind', 'capturedAt',
+                      'uploaderPhone', 'uploaderName',
+                      'width', 'height',
+                      'cloudinaryPublicId', 'createdAt'
+                    ])
+                    && request.resource.data.uploaderPhone is string
                     && request.resource.data.uploaderPhone.size() > 0
                     && request.resource.data.uploaderPhone.size() < 30
                     && request.resource.data.uploaderName is string
@@ -59,15 +65,30 @@ service cloud.firestore {
                     && request.resource.data.kind in ['photo', 'video']
                     && request.resource.data.cloudinaryPublicId is string
                     && request.resource.data.cloudinaryPublicId.size() > 0
-                    && request.resource.data.cloudinaryPublicId.size() < 200;
+                    && request.resource.data.cloudinaryPublicId.size() < 200
+                    // width/height are bounded so a client can't ship
+                    // arbitrary garbage in numeric fields the rule used to
+                    // ignore.
+                    && request.resource.data.width is int
+                    && request.resource.data.width >= 0
+                    && request.resource.data.width < 100000
+                    && request.resource.data.height is int
+                    && request.resource.data.height >= 0
+                    && request.resource.data.height < 100000;
 
       allow update: if false;
-      // Delete is wide-open by design: no Firebase Auth, closed-event app,
-      // the UI gates own-vs-admin client-side only. ADMIN red ring in
-      // gallery.js is NOT a security boundary — anyone with the site URL
-      // can call db.deletePhoto(id) from DevTools. Risk accepted; if this
-      // ever needs to be a real boundary, move delete behind a Cloud
-      // Function that verifies the participant token.
+      // Delete is effectively wide-open by design:
+      // - The two predicates (auth==null + uploaderPhone is string) are
+      //   always true for any doc that passed create. There is no Firebase
+      //   Auth, and every photo doc carries uploaderPhone. So in practice
+      //   any unauthenticated request can delete any photo doc.
+      // - The UI gates own-vs-admin client-side only. The ADMIN red ring
+      //   in gallery.js is NOT a security boundary — anyone with the site
+      //   URL can call db.deletePhoto(id) from DevTools and succeed.
+      // - Risk accepted: closed friends-only WhatsApp event, blast radius
+      //   is moderate-storage. If this ever needs a real boundary, move
+      //   delete behind a Cloud Function that verifies the participant
+      //   token from the existing custom auth (auth.js).
       allow delete: if request.auth == null
                     && resource.data.uploaderPhone is string;
     }

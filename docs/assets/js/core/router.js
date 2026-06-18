@@ -9,6 +9,7 @@
  */
 
 import { siteMode } from './site-mode.js';
+import { i18n } from './i18n.js';
 
 const routes = new Map();
 let currentRoute = null;
@@ -116,7 +117,8 @@ function addBackButton(routeName) {
   const backBtn = document.createElement('a');
   backBtn.href = '#home';
   backBtn.className = 'back-btn';
-  backBtn.setAttribute('aria-label', 'Back');
+  backBtn.setAttribute('aria-label', i18n.tf('common.back', 'Back'));
+  backBtn.setAttribute('data-i18n-aria', 'common.back');
   backBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
   firstSection.prepend(backBtn);
 }

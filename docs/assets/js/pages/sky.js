@@ -5,7 +5,7 @@
 import { i18n } from '../core/i18n.js';
 import { moonSvg } from '../components/moon-svg.js';
 
-const DATA_URL = './assets/data/moon-2026.json?v=62';
+const DATA_URL = './assets/data/moon-2026.json?v=63';
 
 export function renderSky(container) {
   container.innerHTML = `
@@ -72,7 +72,7 @@ export function renderSky(container) {
             </div>
           </div>
 
-          <div class="sky-strip" id="sky-cal-strip" aria-label="${i18n.t('sky.calStripLabel') || 'Calendar preview'}">
+          <div class="sky-strip" id="sky-cal-strip" aria-label="${i18n.tf('sky.calStripLabel', 'Calendar preview')}">
             <!-- async-populated -->
           </div>
         </div>

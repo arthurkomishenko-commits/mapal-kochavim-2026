@@ -131,14 +131,25 @@ function createLightbox() {
 // RENDER
 // ═══════════════════════════════════════════════════
 
-// Tracks the pending unlock-boundary timer so re-renders don't stack them.
+// Tracks the pending unlock-boundary timer so re-renders don't stack them
+// AND so that navigating away from #gallery cancels the timer — otherwise a
+// stale unlock callback would clobber whatever route the user is on now.
 let albumUnlockCancel = null;
+let albumUnlockRouteListener = null;
+
+function cancelAlbumUnlock() {
+  if (albumUnlockCancel) { albumUnlockCancel(); albumUnlockCancel = null; }
+  if (albumUnlockRouteListener) {
+    window.removeEventListener('routechange', albumUnlockRouteListener);
+    albumUnlockRouteListener = null;
+  }
+}
 
 export function renderGallery(container) {
   // The user-uploaded album opens early (2026-08-11) so people can drop
   // arrival photos before the camp. From that moment, gallery looks just like
   // post-event mode: upload UI + live Firestore lentа.
-  if (albumUnlockCancel) { albumUnlockCancel(); albumUnlockCancel = null; }
+  cancelAlbumUnlock();
   if (siteMode.isAlbumUnlocked()) return renderGalleryPast(container);
 
   // Locked branch: schedule a one-shot re-render when the wall-clock crosses
@@ -146,8 +157,17 @@ export function renderGallery(container) {
   // need a manual refresh. No-op if an override is active or already past.
   albumUnlockCancel = siteMode.onAlbumUnlock(() => {
     albumUnlockCancel = null;
+    // Don't render if the user has navigated elsewhere. routechange listener
+    // below should have cancelled us already, but guard anyway.
+    if (window.location.hash.replace(/^#/, '') !== 'gallery') return;
     renderGallery(container);
   });
+  // Cancel the timer the moment the user leaves #gallery. The listener
+  // self-unwires inside cancelAlbumUnlock so it never lingers.
+  albumUnlockRouteListener = (e) => {
+    if (e?.detail?.route !== 'gallery') cancelAlbumUnlock();
+  };
+  window.addEventListener('routechange', albumUnlockRouteListener);
 
   container.innerHTML = `
     <section class="page-section" aria-labelledby="gallery-title">
@@ -545,8 +565,7 @@ function buildTile(rec) {
         if (lightboxEl && lightboxEl.classList.contains('lightbox--visible')) closeLightbox();
       } catch (err) {
         console.error('delete failed', err);
-        const safeT = (k, fb) => { const v = i18n.t(k); return (v && v !== k) ? v : fb; };
-        alert(safeT('past.gallery.deleteFailed', 'Не удалось удалить фото. Попробуй ещё раз.'));
+        alert(i18n.tf('past.gallery.deleteFailed', 'Не удалось удалить фото. Попробуй ещё раз.'));
       }
     };
     del.addEventListener('click', doDelete);

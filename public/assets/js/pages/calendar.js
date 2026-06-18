@@ -9,7 +9,7 @@
 import { i18n } from '../core/i18n.js';
 import { moonSvg } from '../components/moon-svg.js';
 
-const DATA_URL = './assets/data/moon-2026.json?v=62';
+const DATA_URL = './assets/data/moon-2026.json?v=63';
 
 let DATA = null;
 let dialog = null;
@@ -124,7 +124,7 @@ export async function renderCalendar(container) {
         ${renderHero(data, today, lang)}
         ${renderWeekNav(lang)}
         ${renderWeekdayHeader(lang)}
-        <div class="cal-grid" role="grid" aria-label="${i18n.t('calendar.gridLabel') || 'Moon calendar'}" id="cal-grid"></div>
+        <div class="cal-grid" role="grid" aria-label="${i18n.tf('calendar.gridLabel', 'Moon calendar')}" id="cal-grid"></div>
         ${renderPerseids(data, lang)}
         ${renderObserveCta(lang)}
         ${renderGlossary(lang)}
@@ -186,9 +186,9 @@ function renderHero(data, today, lang) {
 function renderWeekNav(lang) {
   return `
     <div class="cal-nav">
-      <button class="cal-nav__btn" id="cal-prev" aria-label="${i18n.t('calendar.prevWeek') || 'Previous week'}">‹</button>
+      <button class="cal-nav__btn" id="cal-prev" aria-label="${i18n.tf('calendar.prevWeek', 'Previous week')}">‹</button>
       <span class="cal-nav__label" id="cal-week-label"></span>
-      <button class="cal-nav__btn" id="cal-next" aria-label="${i18n.t('calendar.nextWeek') || 'Next week'}">›</button>
+      <button class="cal-nav__btn" id="cal-next" aria-label="${i18n.tf('calendar.nextWeek', 'Next week')}">›</button>
     </div>
   `;
 }
@@ -275,8 +275,8 @@ const dateDay = (iso) => parseInt(iso.slice(-2), 10);
 
 function buildAriaLabel(d, iso, lang) {
   const dateStr = fmtDateLong(iso, lang);
-  const phase = i18n.t('calendar.phase.' + d.phase) || d.phase;
-  const score = `${i18n.t('calendar.starScore') || 'score'} ${d.starScore.toFixed(1)}`;
+  const phase = i18n.tf('calendar.phase.' + d.phase, d.phase);
+  const score = `${i18n.tf('calendar.starScore', 'score')} ${d.starScore.toFixed(1)}`;
   return `${dateStr}. ${phase}. ${score}.`.replace(/"/g, '');
 }
 
@@ -499,7 +499,7 @@ function renderPerseids(data, lang) {
 
 function perseidsSection(hKey, pKey) {
   const heading = i18n.t('calendar.' + hKey);
-  const body = (i18n.t('calendar.' + pKey) || '').split(/\n{2,}/).map(p => `<p>${p}</p>`).join('');
+  const body = i18n.tf('calendar.' + pKey, '').split(/\n{2,}/).map(p => `<p>${p}</p>`).join('');
   return `<section class="cal-perseids__section">
     <h3 data-i18n="calendar.${hKey}">${heading}</h3>
     ${body}
@@ -509,14 +509,9 @@ function perseidsSection(hKey, pKey) {
 // ─── Observe CTA (link to telescope-target page) ──────────────────────
 
 function renderObserveCta(lang) {
-  // Local fallback resolution — i18n.t returns the key string on miss.
-  const safeT = (k, fb) => {
-    const v = i18n.t(k);
-    return (v && v !== k) ? v : fb;
-  };
-  const title = safeT('calendar.observeCta.title', 'Через окуляр');
-  const text  = safeT('calendar.observeCta.text',  'Что точно покажет телескоп в эти ночи: четыре объекта с временами, направлениями и подсказкой как найти.');
-  const btn   = safeT('calendar.observeCta.btn',   'Посмотреть');
+  const title = i18n.tf('calendar.observeCta.title', 'Через окуляр');
+  const text  = i18n.tf('calendar.observeCta.text',  'Что точно покажет телескоп в эти ночи: четыре объекта с временами, направлениями и подсказкой как найти.');
+  const btn   = i18n.tf('calendar.observeCta.btn',   'Посмотреть');
   return `
     <div class="cal-observe-cta">
       <h2 class="cal-observe-cta__title">${title}</h2>

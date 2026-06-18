@@ -39,7 +39,7 @@ function detectBrowserLang() {
  */
 async function loadTranslations(lang) {
   const basePath = document.documentElement.dataset.basePath || '.';
-  const response = await fetch(`${basePath}/assets/locales/${lang}.json?v=62`);
+  const response = await fetch(`${basePath}/assets/locales/${lang}.json?v=63`);
   if (!response.ok) {
     console.error(`Failed to load translations for "${lang}"`);
     return {};
@@ -56,10 +56,13 @@ function applyToDOM() {
   document.documentElement.dir = meta.dir || (currentLang === 'he' ? 'rtl' : 'ltr');
   document.title = meta.title || '';
 
+  // t() returns the KEY STRING on miss — we must NOT write that back into
+  // the DOM, or users would see literal "calendar.gridLabel" etc. instead
+  // of text. Every block guards with `value !== key`.
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     const value = t(key);
-    if (value) {
+    if (value && value !== key) {
       el.textContent = value;
     }
   });
@@ -67,7 +70,7 @@ function applyToDOM() {
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
     const key = el.getAttribute('data-i18n-placeholder');
     const value = t(key);
-    if (value) {
+    if (value && value !== key) {
       el.placeholder = value;
     }
   });
@@ -75,7 +78,7 @@ function applyToDOM() {
   document.querySelectorAll('[data-i18n-aria]').forEach(el => {
     const key = el.getAttribute('data-i18n-aria');
     const value = t(key);
-    if (value) {
+    if (value && value !== key) {
       el.setAttribute('aria-label', value);
     }
   });

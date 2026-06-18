@@ -61,6 +61,15 @@ function readAlbumOverride() {
     const fromUrl = url.get('album');
     if (fromUrl === ALBUM_RESET) {
       localStorage.removeItem(ALBUM_STORAGE);
+      // Strip the sticky ?album=auto from the address bar so this isn't a
+      // permanent state for the tab. history.replaceState keeps the rest
+      // of the URL intact.
+      try {
+        url.delete('album');
+        const qs = url.toString();
+        const cleaned = window.location.pathname + (qs ? '?' + qs : '') + window.location.hash;
+        window.history.replaceState(null, '', cleaned);
+      } catch {}
       return null;
     }
     if (fromUrl && ALBUM_VALID.includes(fromUrl)) {
@@ -74,22 +83,37 @@ function readAlbumOverride() {
 }
 
 /**
- * Schedule a one-shot callback when the album unlock boundary is crossed.
- * If the override is set, or we're already past the unlock instant, this
- * is a no-op. Otherwise sets a timer (capped at 24h to avoid setTimeout
- * 32-bit overflow on tabs left open for weeks).
+ * Schedule a ONE-SHOT callback when the album unlock boundary is crossed.
+ * - No-op if already unlocked (real clock or override).
+ * - No-op if an explicit ?album=open/lock override is active — don't
+ *   surprise the user who has manually fixed state.
+ * - For deltas > 24h we self-reschedule with a 24h cap (avoids the
+ *   setTimeout 32-bit overflow on tabs left open for weeks) and the
+ *   callback only fires when wall-clock actually reaches ALBUM_UNLOCK.
  */
 function scheduleAlbumUnlock(callback) {
   if (typeof callback !== 'function') return () => {};
-  // Already unlocked (real clock or override) → nothing to schedule.
   if (Date.now() >= ALBUM_UNLOCK) return () => {};
-  // Any persisted/url override means the user has manually fixed state →
-  // don't surprise them with an auto-refresh on the wall-clock boundary.
   const ov = readAlbumOverride();
   if (ov === 'open' || ov === 'lock') return () => {};
-  const delta = Math.min(ALBUM_UNLOCK - Date.now(), 24 * 3600 * 1000);
-  const id = setTimeout(callback, delta);
-  return () => clearTimeout(id);
+
+  let id = null;
+  let cancelled = false;
+  const tick = () => {
+    if (cancelled) return;
+    const remaining = ALBUM_UNLOCK - Date.now();
+    if (remaining <= 0) {
+      id = null;
+      callback();
+      return;
+    }
+    id = setTimeout(tick, Math.min(remaining, 24 * 3600 * 1000));
+  };
+  tick();
+  return () => {
+    cancelled = true;
+    if (id !== null) { clearTimeout(id); id = null; }
+  };
 }
 
 let current = 'before';

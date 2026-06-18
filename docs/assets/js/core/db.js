@@ -196,11 +196,13 @@ async function addPhoto({ blob, capturedAt, kind, uploaderPhone, uploaderName,
  *
  * @returns {Promise<{secureUrl:string, publicId:string, width:number, height:number}>}
  */
-// 5-minute hard ceiling. Without this the camp's desert 3G can stall an XHR
-// mid-upload forever (TCP-level timeout on iOS Safari can take many minutes,
-// sometimes never fires) — meanwhile the row sits at e.g. 37% and the queue
-// pool slot is permanently held.
-const UPLOAD_TIMEOUT_MS = 5 * 60 * 1000;
+// Idle-style timeout: abort only when there has been NO progress for this
+// many ms. A 100 MB video on desert 3G takes ~6 minutes — a hard wall-clock
+// ceiling would falsely abort it, so we measure stalls instead of total time.
+const UPLOAD_IDLE_MS = 60 * 1000;
+// An overall ceiling, as a sanity backstop only (~30 min). Anything that
+// genuinely runs longer than this is broken regardless of throughput.
+const UPLOAD_MAX_MS = 30 * 60 * 1000;
 
 function uploadToCloudinary(blob, publicId, { uploaderPhone, capturedAt, kind, onProgress }) {
   return new Promise((resolve, reject) => {
@@ -217,15 +219,32 @@ function uploadToCloudinary(blob, publicId, { uploaderPhone, capturedAt, kind, o
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', cloudinaryConfig.uploadEndpoint);
-    xhr.timeout = UPLOAD_TIMEOUT_MS;
+
+    let idleTimer = null;
+    let hardTimer = null;
+    let stalled = false;
+    const clearTimers = () => {
+      if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+      if (hardTimer) { clearTimeout(hardTimer); hardTimer = null; }
+    };
+    const resetIdle = () => {
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => { stalled = true; xhr.abort(); }, UPLOAD_IDLE_MS);
+    };
+    hardTimer = setTimeout(() => { stalled = true; xhr.abort(); }, UPLOAD_MAX_MS);
+    resetIdle();
 
     if (onProgress) {
       xhr.upload.addEventListener('progress', (e) => {
+        resetIdle();
         if (e.lengthComputable) onProgress(e.loaded / e.total);
       });
+    } else {
+      xhr.upload.addEventListener('progress', resetIdle);
     }
 
     xhr.addEventListener('load', () => {
+      clearTimers();
       if (xhr.status < 200 || xhr.status >= 300) {
         let msg = `Cloudinary upload failed: HTTP ${xhr.status}`;
         try {
@@ -247,9 +266,13 @@ function uploadToCloudinary(blob, publicId, { uploaderPhone, capturedAt, kind, o
       }
     });
 
-    xhr.addEventListener('error',   () => reject(new Error('Network error uploading to Cloudinary')));
-    xhr.addEventListener('abort',   () => reject(new Error('Upload aborted')));
-    xhr.addEventListener('timeout', () => reject(new Error(`Upload timed out after ${Math.round(UPLOAD_TIMEOUT_MS/1000)}s`)));
+    xhr.addEventListener('error',   () => { clearTimers(); reject(new Error('Network error uploading to Cloudinary')); });
+    xhr.addEventListener('abort',   () => {
+      clearTimers();
+      reject(new Error(stalled
+        ? `Upload stalled — no progress for ${Math.round(UPLOAD_IDLE_MS/1000)}s`
+        : 'Upload aborted'));
+    });
 
     xhr.send(form);
   });

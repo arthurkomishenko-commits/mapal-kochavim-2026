@@ -186,7 +186,7 @@ function renderProfile(data) {
           ` : ''}
           <div class="me-field">
             <span class="me-field__label" data-i18n="rsvp.daysTitle">${i18n.t('rsvp.daysTitle')}</span>
-            <span class="me-field__value">${data.arrivalDay || '13'} – ${data.departureDay || '15'} ${i18n.t('rsvp.aug')}</span>
+            <span class="me-field__value">${data.arrivalDay || '13'} – ${data.departureDay || '15'} ${i18n.tf('rsvp.aug', 'авг')}</span>
           </div>
           <div class="me-field">
             <span class="me-field__label" data-i18n="rsvp.drivingLabel">${i18n.t('rsvp.drivingLabel')}</span>

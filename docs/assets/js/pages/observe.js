@@ -18,7 +18,7 @@ import { i18n } from '../core/i18n.js';
 
 // ─── Object catalog ──────────────────────────────────────────────────
 // `key` maps to i18n keys: observe.objects.{key}.{name,type,see,when,where,find,tip}
-// Photos are locally hosted in public/images/observe/ — small JPGs (12-93 KB).
+// Photos are locally hosted in public/images/observe/ — small JPGs (~10-160 KB).
 // `photoPosition` shifts the object-fit:cover crop window (default 50% 50%).
 // `photoZoom` scales the cropped image up (default 1.0).
 // `photoBrightness` runs the image through CSS filter: brightness() (default 1.0).
@@ -30,13 +30,8 @@ const OBJECTS = [
   { key: 'albireo',   photo: 'images/observe/albireo.jpg',   photoCredit: '', photoPosition: '50% 50%', photoZoom: 2, photoBrightness: 0.84 },
 ];
 
-// Translation helper: i18n.t returns the key itself on miss (truthy), so the
-// `|| fallback` pattern silently swallows missing keys. This helper makes
-// "missing = falsy" so fallbacks actually fire.
-function t(key, fallback = '') {
-  const v = i18n.t(key);
-  return (v && v !== key) ? v : fallback;
-}
+// Local alias for i18n.tf — the rest of the file uses a short `t(key, fb)` form.
+const t = (key, fallback = '') => i18n.tf(key, fallback);
 
 // Minimal HTML-attribute escape — locale files are author-controlled today,
 // but if anyone ever wires in user-translated content this stops " or & from
@@ -86,7 +81,7 @@ function renderCard(obj) {
     <article class="obs-card">
       <div class="obs-card__photo">
         <img src="${attr(obj.photo)}" alt="${attr(t(`${base}.name`, obj.key))}" loading="lazy"
-             style="object-position:${attr(obj.photoPosition || '50% 50%')};transform:scale(${attr(obj.photoZoom || 1)});transform-origin:${attr(obj.photoPosition || '50% 50%')};filter:brightness(${attr(obj.photoBrightness ?? 1)})"
+             style="object-position:${attr(obj.photoPosition || '50% 50%')};transform:scale(${attr(obj.photoZoom > 0 ? obj.photoZoom : 1)});transform-origin:${attr(obj.photoPosition || '50% 50%')};filter:brightness(${attr(obj.photoBrightness > 0 ? obj.photoBrightness : 1)})"
              onerror="this.onerror=null;this.src='${fallback}';this.classList.add('obs-card__photo--fallback')">
         <span class="obs-card__credit">${obj.photoCredit}</span>
         <span class="obs-card__photo-note" data-i18n="observe.photoNote">${t('observe.photoNote', 'Фото для ориентира — в окуляре тише и мягче')}</span>
