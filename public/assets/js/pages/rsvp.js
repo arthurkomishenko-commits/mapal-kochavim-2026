@@ -890,12 +890,34 @@ function renderRsvpPast(container) {
   const choices = [...container.querySelectorAll('.rsvp-past__choice')];
   choices.forEach(btn => {
     btn.addEventListener('click', async () => {
-      const name = container.querySelector('#rp-name').value.trim();
-      const phone = container.querySelector('#rp-phone').value.trim();
-      if (!name || !phone) {
-        form.reportValidity();
+      const nameEl  = container.querySelector('#rp-name');
+      const phoneEl = container.querySelector('#rp-phone');
+      const name    = nameEl.value.trim();
+      const phoneRaw = phoneEl.value.trim();
+
+      // Clear any prior error state from a previous attempt.
+      nameEl.classList.remove('form-input--error');
+      phoneEl.classList.remove('form-input--error');
+
+      // Name — non-empty (already required, but trim catches whitespace-only).
+      if (!name) {
+        nameEl.classList.add('form-input--error');
+        nameEl.focus();
         return;
       }
+
+      // Phone — normalize and require an Israeli-mobile-ish length. Same gate
+      // as pre-event handlePhoneSubmit (rsvp.js:208) and as me.js phone
+      // lookup. Without this, a 3-digit "121" used to slip through to
+      // localStorage and live forever as a ghost on the home list (the
+      // "1212" incident on 2026-06-19).
+      const phone = auth.normalizePhone(phoneRaw);
+      if (phone.length < 9) {
+        phoneEl.classList.add('form-input--error');
+        phoneEl.focus();
+        return;
+      }
+
       const attended = btn.dataset.attended === 'true';
 
       // Disable all buttons while we save — prevents double-clicks and shows progress.
@@ -926,6 +948,17 @@ function renderRsvpPast(container) {
 }
 
 async function saveLateRegistration({ name, phone, attended }) {
+  // Defensive normalize at function boundary — the click handler in
+  // renderRsvpPast already validates and normalizes, but any future caller
+  // (programmatic, console, refactor) that passes a raw phone here would
+  // otherwise create a duplicate-keyed localStorage entry under a non-
+  // canonical key. This guarantees a single canonical key per identity.
+  phone = auth.normalizePhone(phone);
+  if (!name || !name.trim() || phone.length < 9) {
+    throw new Error('saveLateRegistration: invalid name/phone');
+  }
+  name = name.trim();
+
   // Read any prior record for this phone — pre-event RSVP may have stored
   // companions / bringing / kids / driving info that we MUST NOT wipe.
   let prior = {};
