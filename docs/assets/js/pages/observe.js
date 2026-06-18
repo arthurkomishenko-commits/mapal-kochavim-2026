@@ -26,7 +26,7 @@ import { i18n } from '../core/i18n.js';
 const OBJECTS = [
   { key: 'saturn',    photo: 'images/observe/saturn.jpg',    photoCredit: '', photoPosition: '50% 50%', photoZoom: 1 },
   { key: 'm13',       photo: 'images/observe/m13.jpg',       photoCredit: '', photoPosition: '50% 50%', photoZoom: 1 },
-  { key: 'andromeda', photo: 'images/observe/andromeda.jpg', photoCredit: '', photoPosition: '50% 50%', photoZoom: 2 },
+  { key: 'andromeda', photo: 'images/observe/andromeda.jpg', photoCredit: '', photoPosition: '50% 50%', photoZoom: 1 },
   { key: 'albireo',   photo: 'images/observe/albireo.jpg',   photoCredit: '', photoPosition: '50% 50%', photoZoom: 1 },
 ];
 

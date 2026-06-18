@@ -39,7 +39,7 @@ function detectBrowserLang() {
  */
 async function loadTranslations(lang) {
   const basePath = document.documentElement.dataset.basePath || '.';
-  const response = await fetch(`${basePath}/assets/locales/${lang}.json?v=52`);
+  const response = await fetch(`${basePath}/assets/locales/${lang}.json?v=53`);
   if (!response.ok) {
     console.error(`Failed to load translations for "${lang}"`);
     return {};
