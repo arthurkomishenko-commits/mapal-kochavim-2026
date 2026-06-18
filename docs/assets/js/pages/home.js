@@ -175,11 +175,12 @@ async function loadParticipants() {
   const me = auth.getUser();
   const myPhone = me ? me.phone : '';
 
-  if (remoteOk) {
-    // Sweep ghosts from localStorage. Self is always preserved; cancelled
-    // remote records (filtered by getAllParticipants) get swept locally too,
-    // which is the desired behaviour — admin's × is the single canonical
-    // delete path and it should propagate visually everywhere on next load.
+  // Sweep ONLY when Firestore returned a plausible result. An empty array
+  // is suspicious — could be partial response, replication blip, or a
+  // bug in the rules — and we'd rather leave ghosts than wipe legitimate
+  // data the user might still need offline. For the current event the
+  // remote has 25 docs, so an empty reply almost certainly means trouble.
+  if (remoteOk && remote.length > 0) {
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const key = localStorage.key(i);
       if (!key || !key.startsWith('mapal-rsvp-')) continue;
