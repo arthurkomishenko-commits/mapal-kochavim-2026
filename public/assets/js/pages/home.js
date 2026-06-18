@@ -72,31 +72,37 @@ function renderHomeBringing() {
     }
   });
 
-  // Render count section (participants + cars)
+  // Render count section — ALWAYS visible. Previously the section was
+  // display:none until totalPeople/totalMaybe > 0, which produced a giant
+  // empty gap on the home page whenever the Firestore SDK failed to load
+  // (gstatic.com blocked by adblockers / corporate proxies, slow 3G, etc.)
+  // AND the user had no participants in localStorage. Now we always render
+  // the section's structure; missing numbers show as "—" so the user sees
+  // the page skeleton, not a void.
   const countSection = document.getElementById('home-count-section');
   const countGrid = document.getElementById('home-count-grid');
   if (countSection && countGrid) {
-    if (totalPeople > 0 || totalMaybe > 0) {
-      countSection.style.display = '';
-      countGrid.innerHTML = `
-        <div class="home-bring-item home-bring-item--highlight">
-          <span class="home-bring-item__count">${totalPeople}${totalKids > 0 ? `<span class="home-bring-item__kids">+${totalKids}</span>` : ''}</span>
-          <span class="home-bring-item__label">${i18n.t('people.confirmed')}</span>
-        </div>
-        <div class="home-bring-item home-bring-item--highlight">
-          <span class="home-bring-item__count">${totalCars}</span>
-          <span class="home-bring-item__label">${i18n.t('people.cars')}</span>
-        </div>
-        ${totalMaybe > 0 ? `
-        <div class="home-bring-item home-bring-item--maybe">
-          <span class="home-bring-item__count">${totalMaybe}</span>
-          <span class="home-bring-item__label">${i18n.t('people.maybe')}</span>
-        </div>
-        ` : ''}
-      `;
-    } else {
-      countSection.style.display = 'none';
-    }
+    countSection.style.display = '';
+    const peopleStr = totalPeople > 0
+      ? `${totalPeople}${totalKids > 0 ? `<span class="home-bring-item__kids">+${totalKids}</span>` : ''}`
+      : '—';
+    const carsStr   = totalCars   > 0 ? String(totalCars)   : '—';
+    countGrid.innerHTML = `
+      <div class="home-bring-item home-bring-item--highlight">
+        <span class="home-bring-item__count">${peopleStr}</span>
+        <span class="home-bring-item__label" data-i18n="people.confirmed">${i18n.t('people.confirmed')}</span>
+      </div>
+      <div class="home-bring-item home-bring-item--highlight">
+        <span class="home-bring-item__count">${carsStr}</span>
+        <span class="home-bring-item__label" data-i18n="people.cars">${i18n.t('people.cars')}</span>
+      </div>
+      ${totalMaybe > 0 ? `
+      <div class="home-bring-item home-bring-item--maybe">
+        <span class="home-bring-item__count">${totalMaybe}</span>
+        <span class="home-bring-item__label" data-i18n="people.maybe">${i18n.t('people.maybe')}</span>
+      </div>
+      ` : ''}
+    `;
   }
 
   // Render bringing section (items only)
@@ -369,10 +375,23 @@ export function renderHome(container) {
     </section>
 
     <!-- ═══ How many of us ═══ -->
-    <section class="home-section" id="home-count-section" style="display:none;">
+    <section class="home-section" id="home-count-section">
       <div class="home-section__inner home-section__inner--center">
         <h2 class="home-section__title" data-i18n="home.countTitle">${i18n.t('home.countTitle')}</h2>
-        <div id="home-count-grid" class="home-bringing-grid"></div>
+        <div id="home-count-grid" class="home-bringing-grid">
+          <!-- Skeleton placeholder for first paint; renderHomeBringing
+               replaces this once data (Firestore or localStorage) is ready.
+               If both sources fail the "…" stays — strictly better than the
+               previous "section vanishes entirely" failure mode. -->
+          <div class="home-bring-item home-bring-item--highlight">
+            <span class="home-bring-item__count">…</span>
+            <span class="home-bring-item__label" data-i18n="people.confirmed">${i18n.t('people.confirmed')}</span>
+          </div>
+          <div class="home-bring-item home-bring-item--highlight">
+            <span class="home-bring-item__count">…</span>
+            <span class="home-bring-item__label" data-i18n="people.cars">${i18n.t('people.cars')}</span>
+          </div>
+        </div>
         <div class="home-action-btns" style="margin-block-start:var(--space-5);">
           <button type="button" class="home-who-btn" id="home-who-btn" data-i18n="home.whoBtn">${i18n.t('home.whoBtn')}</button>
           <a href="#pack" class="home-who-btn" data-i18n="nav.pack">${i18n.t('nav.pack')}</a>
@@ -552,14 +571,21 @@ export function renderHome(container) {
 
   initCountdown();
 
-  // Load from Firestore then render
+  // First paint from localStorage — instant, works offline, fills the
+  // skeleton "…" with whatever the user saw last time. Then Firestore
+  // refines it. Pre-seeding the cache also means the "Кто едет" button
+  // (initWhoButton) is wired up against real data immediately.
+  cachedParticipants = getAllParticipantsLocal();
+  renderHomeBringing();
+  initWhoButton();
+
   loadParticipants().then(() => {
     renderHomeBringing();
     initWhoButton();
-  }).catch(() => {
-    cachedParticipants = getAllParticipantsLocal();
-    renderHomeBringing();
-    initWhoButton();
+  }).catch((err) => {
+    console.warn('loadParticipants failed (using localStorage only)', err);
+    // cache stays as the localStorage snapshot above; nothing else to do —
+    // renderHomeBringing already ran with that data.
   });
 
   // Start meteors only after welcome overlay is dismissed
