@@ -582,6 +582,17 @@ export function renderHome(container) {
   loadParticipants().then(() => {
     renderHomeBringing();
     initWhoButton();
+    // If the user already opened the "Кто едет" table while we were
+    // waiting for Firestore (or before async resolved), the table is
+    // showing the stale local-only snapshot (e.g. 2 entries) while the
+    // count grid above it shows the refreshed full number (e.g. 24).
+    // Re-render the open table so it matches the cache that just
+    // landed. Closed table needs nothing — next open call will pull
+    // fresh data on its own.
+    const table = document.getElementById('home-who-table');
+    if (table && table.style.display !== 'none') {
+      renderWhoTable(table);
+    }
   }).catch((err) => {
     console.warn('loadParticipants failed (using localStorage only)', err);
     // cache stays as the localStorage snapshot above; nothing else to do —
