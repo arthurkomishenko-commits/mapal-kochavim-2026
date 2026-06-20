@@ -233,7 +233,12 @@ function initWhoButton() {
   const table = document.getElementById('home-who-table');
   if (!btn || !table) return;
 
-  btn.addEventListener('click', () => {
+  // Use .onclick rather than addEventListener so a second call (we now
+  // run sync-then-async on home init) does NOT stack a duplicate
+  // listener. With two listeners the first opens the table and the
+  // second immediately closes it, producing the "button does nothing"
+  // symptom that surfaced right after the v=73 cache-bust.
+  btn.onclick = () => {
     const isOpen = table.style.display !== 'none';
     if (isOpen) {
       table.style.display = 'none';
@@ -243,7 +248,7 @@ function initWhoButton() {
       table.style.display = '';
       btn.textContent = i18n.t('home.whoBtnClose');
     }
-  });
+  };
 }
 
 function renderWhoTable(container) {
